@@ -1,0 +1,139 @@
+.gate-pass-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 24px;
+  background: #fafafa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-section,
+.bill-to-section,
+.gatepass-info-section,
+.items-section,
+.footer-section,
+.submit-section {
+  margin-bottom: 24px;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.gate-pass-title {
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.add-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.measurement-group {
+  display: flex;
+  gap: 4px;
+}
+
+.measurement-group .mat-form-field {
+  width: 60px; /* narrow width for measurement fields */
+}
+
+/* Table styling */
+.items-table-container {
+  overflow-x: auto;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.items-table th,
+.items-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.items-table th {
+  background-color: #f5f5f5;
+  font-weight: 500;
+}
+
+.totals-row td {
+  font-weight: bold;
+}
+
+.submit-section {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.mat-form-field {
+  flex: 1;
+}
+
+/* Add these styles to your existing billing.component.scss */
+
+/* Style for readonly/disabled fields */
+.mat-form-field input[readonly] {
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.mat-form-field input:disabled {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+/* Style for totals row */
+.totals-row {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  border-top: 2px solid #ddd;
+}
+
+.totals-row td {
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.totals-row td:first-child {
+  text-align: left;
+}
+
+/* Optional: Add some visual distinction for the totals */
+.totals-row strong {
+  color: #1976d2;
+  font-size: 15px;
+}

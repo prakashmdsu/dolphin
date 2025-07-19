@@ -1,0 +1,6 @@
+@Dolphin.Service_HostAddress = http://localhost:5163
+
+GET {{Dolphin.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

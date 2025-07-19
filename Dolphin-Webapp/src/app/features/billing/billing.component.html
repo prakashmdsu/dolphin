@@ -1,0 +1,367 @@
+<div class="gate-pass-container">
+  <form [formGroup]="gatePassForm" (ngSubmit)="onSubmit()">
+    <!-- Header Section -->
+    <div class="header-section">
+      <div class="logo-section">
+        <div class="logo">LOGO</div>
+        <h2 class="gate-pass-title">GATE PASS</h2>
+      </div>
+
+      <!-- <div class="company-info">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Company Name</mat-label>
+          <label>Dolphin International</label>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Address</mat-label>
+          <label>AP Puttageri Tq : Kusngi, Dt Koppai</label>
+        </mat-form-field>
+      </div> -->
+    </div>
+
+    <!-- Gate Pass Info Section -->
+    <div class="gatepass-info-section form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Gate Pass No</mat-label>
+        <input matInput formControlName="gatePassNo" />
+        <mat-error *ngIf="isFieldInvalid('gatePassNo')">
+          {{ getFieldErrorMessage("gatePassNo") }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Dispatch Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          formControlName="dispatchDate"
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="isFieldInvalid('dispatchDate')">
+          {{ getFieldErrorMessage("dispatchDate") }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Bill To Section -->
+    <div class="bill-to-section">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Bill To</mat-label>
+          <mat-select
+            formControlName="billTo"
+            (selectionChange)="onClientChange($event.value)"
+          >
+            <mat-option value="">Select Client</mat-option>
+            <mat-option *ngFor="let type of clients" [value]="type.clientName">
+              {{ type.clientName }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="isFieldInvalid('billTo')">
+            {{ getFieldErrorMessage("billTo") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Country</mat-label>
+          <input matInput formControlName="country" />
+          <mat-error *ngIf="isFieldInvalid('country')">
+            {{ getFieldErrorMessage("country") }}
+          </mat-error>
+        </mat-form-field>
+
+        <!-- <mat-form-field appearance="outline">
+          <mat-label>Ref #</mat-label>
+          <input matInput formControlName="refNo" />
+        </mat-form-field> -->
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Bill To Address</mat-label>
+          <input matInput formControlName="billToAddress" />
+          <mat-error *ngIf="isFieldInvalid('billToAddress')">
+            {{ getFieldErrorMessage("billToAddress") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>GP Type</mat-label>
+          <mat-select formControlName="gpType">
+            <mat-option value="">Select GP Type</mat-option>
+            <mat-option *ngFor="let type of gpTypes" [value]="type.id">
+              {{ type.gp }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="isFieldInvalid('gpType')">
+            {{ getFieldErrorMessage("gpType") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>GSTIN</mat-label>
+          <input matInput formControlName="gstin" />
+          <mat-error *ngIf="isFieldInvalid('gstin')">
+            {{ getFieldErrorMessage("gstin") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone" />
+          <mat-error *ngIf="isFieldInvalid('phone')">
+            {{ getFieldErrorMessage("phone") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Place of Dispatch</mat-label>
+        <input matInput formControlName="placeOfDispatch" />
+        <mat-error *ngIf="isFieldInvalid('placeOfDispatch')">
+          {{ getFieldErrorMessage("placeOfDispatch") }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Items Section -->
+    <div class="items-section">
+      <div class="section-header">
+        <h3>Items</h3>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="multi-block-selector">
+            <mat-label>Select Blocks to Add</mat-label>
+            <mat-select
+              multiple
+              [(value)]="selectedBlockNos"
+              (selectionChange)="onBlocksSelected()"
+            >
+              <mat-option
+                *ngFor="let block of graniteBlocks"
+                [value]="block.blockNo"
+              >
+                {{ block.blockNo }} - {{ block.categoryGrade }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Items table -->
+      <div class="items-table-container">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>SR No</th>
+              <th>Block No</th>
+              <th>Item Description</th>
+              <th>HSN/SAC</th>
+              <th>Category/Grade</th>
+              <th>Measurement</th>
+              <th>Quarry CBM</th>
+              <th>UOM</th>
+              <th>DMG Tonnage</th>
+              <th>Net CBM</th>
+              <th>Permit No</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody formArrayName="graniteStocks">
+            <tr
+              *ngFor="let item of items.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <td>{{ i + 1 }}</td>
+              <td>
+                <mat-form-field appearance="outline" class="disabled-field">
+                  <input matInput formControlName="blockNo" readonly />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'blockNo')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline">
+                  <input matInput formControlName="itemDescription" />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'itemDescription')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline">
+                  <input matInput formControlName="hsn" />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'hsn')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline">
+                  <input matInput formControlName="categoryGrade" />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'categoryGrade')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td formGroupName="measurement">
+                <div class="measurement-group">
+                  <mat-form-field appearance="outline" class="disabled-field">
+                    <input
+                      matInput
+                      placeholder="LG"
+                      formControlName="lg"
+                      type="number"
+                      readonly
+                    />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="disabled-field">
+                    <input
+                      matInput
+                      placeholder="WD"
+                      formControlName="wd"
+                      type="number"
+                      readonly
+                    />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="disabled-field">
+                    <input
+                      matInput
+                      placeholder="HT"
+                      formControlName="ht"
+                      type="number"
+                      readonly
+                    />
+                  </mat-form-field>
+                </div>
+              </td>
+              <td>
+                <mat-form-field appearance="outline" class="disabled-field">
+                  <input
+                    matInput
+                    formControlName="quarryCbm"
+                    type="number"
+                    readonly
+                  />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'quarryCbm')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline">
+                  <input matInput formControlName="uom" />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'uom')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline" class="disabled-field">
+                  <input
+                    matInput
+                    formControlName="dmgTonnage"
+                    type="number"
+                    readonly
+                  />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'dmgTonnage')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline" class="disabled-field">
+                  <input
+                    matInput
+                    formControlName="netCbm"
+                    type="number"
+                    readonly
+                  />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'netCbm')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <mat-form-field appearance="outline">
+                  <input matInput formControlName="permitNo" />
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'permitNo')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <td>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  type="button"
+                  (click)="removeItem(i)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td colspan="6" class="totals-label"><strong>TOTALS:</strong></td>
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
+              </td>
+              <td></td>
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalDmgTonnage }}</strong>
+              </td>
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalNetCbm }}</strong>
+              </td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notes</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+    </mat-form-field>
+
+    <!-- Footer -->
+    <div class="footer-section form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Prepared By</mat-label>
+        <input matInput readonly />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Authorised Signatory</mat-label>
+        <input matInput readonly />
+      </mat-form-field>
+    </div>
+
+    <!-- Submit Buttons -->
+    <div class="submit-section">
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="gatePassForm.invalid"
+      >
+        Submit Gate Pass
+      </button>
+      <button
+        mat-stroked-button
+        color="warn"
+        type="button"
+        (click)="gatePassForm.reset()"
+      >
+        Reset
+      </button>
+    </div>
+  </form>
+</div>

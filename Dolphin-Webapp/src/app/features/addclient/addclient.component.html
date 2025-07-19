@@ -1,0 +1,70 @@
+<div class="client-form-container">
+  <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+    <h2 class="form-title">Add / Edit Client</h2>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Client Name</mat-label>
+        <input matInput formControlName="clientName" />
+        <mat-error *ngIf="clientForm.get('clientName')?.hasError('required')"
+          >Required</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>GSTIN</mat-label>
+        <input matInput formControlName="gstin" />
+        <mat-error *ngIf="clientForm.get('gstin')?.hasError('required')"
+          >Required</mat-error
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Phone</mat-label>
+        <input matInput formControlName="phone" />
+        <mat-error *ngIf="clientForm.get('phone')?.hasError('required')"
+          >Required</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Country</mat-label>
+        <input matInput formControlName="country" />
+        <mat-error *ngIf="clientForm.get('country')?.hasError('required')"
+          >Required</mat-error
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Address</mat-label>
+        <input matInput formControlName="address" />
+        <mat-error *ngIf="clientForm.get('address')?.hasError('required')"
+          >Required</mat-error
+        >
+      </mat-form-field>
+    </div>
+
+    <div class="submit-section">
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="clientForm.invalid"
+      >
+        Save Client
+      </button>
+      <button
+        mat-stroked-button
+        color="warn"
+        type="button"
+        (click)="clientForm.reset()"
+      >
+        Reset
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "XX425VnAWg4Cql8lnkCHs1KHqIN+X86n5p54dDgobpA=",
+  "Source": "Dolphin.Service",
+  "BasePath": "_content/Dolphin.Service",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
