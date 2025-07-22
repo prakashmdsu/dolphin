@@ -1,0 +1,13 @@
+<div
+  class="navbar"
+  [class.expanded]="isExpanded && !isMobile"
+  (mouseover)="toggleNavbar(true)"
+  (mouseleave)="toggleNavbar(false)"
+>
+  <div class="nav-item" *ngFor="let item of navItems">
+    <a [routerLink]="item.route" routerLinkActive="active" class="nav-link">
+      <i [class]="item.icon"></i>
+      <span class="nav-text">{{ item.label }}</span>
+    </a>
+  </div>
+</div>

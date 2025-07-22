@@ -54,10 +54,10 @@ export class GranitestocksComponent implements OnInit {
   // Options for dropdowns
   statusOptions = [
     { value: '', label: 'All Status' },
-    { value: null, label: 'No Status' },
-    { value: 'Billing', label: 'Billing' },
-    { value: 'Sold', label: 'Sold' },
-    { value: 'Reserved', label: 'Reserved' },
+    { value: 'UnBilled', label: 'UnBilled' },
+    { value: 'Billed', label: 'Billed' },
+    // { value: 'Sold', label: 'Sold' },
+    // { value: 'Reserved', label: 'Reserved' },
   ];
 
   pitOptions = [1, 2, 3, 4, 5]; // Add your pit options
