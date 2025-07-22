@@ -1,0 +1,158 @@
+<!-- billing-summary.component.html -->
+<div class="billing-summary-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading invoice data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <p>{{ error }}</p>
+    <button class="retry-btn" (click)="loadInvoice()">Retry</button>
+  </div>
+
+  <!-- Invoice Content -->
+  <div *ngIf="invoice && !loading && !error" class="invoice-content">
+    <!-- Header -->
+    <div class="invoice-header">
+      <h1>BILLING SUMMARY</h1>
+      <button class="export-btn" (click)="exportToPDF()">
+        <i class="icon-download">📄</i>
+        Export PDF
+      </button>
+    </div>
+
+    <!-- Invoice Info Cards -->
+    <div class="info-cards-container">
+      <div class="info-card">
+        <h3>Bill To</h3>
+        <div class="card-content">
+          <p class="company-name">{{ invoice.billTo }}</p>
+          <p class="address">{{ invoice.billToAddress }}</p>
+          <p><span class="label">Country:</span> {{ invoice.country }}</p>
+          <p><span class="label">Phone:</span> {{ invoice.phone }}</p>
+          <p><span class="label">GSTIN:</span> {{ invoice.gstin }}</p>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>Dispatch Details</h3>
+        <div class="card-content">
+          <p>
+            <span class="label">Gate Pass No:</span> {{ invoice.gatePassNo }}
+          </p>
+          <p><span class="label">GP Type:</span> {{ invoice.gpType }}</p>
+          <p>
+            <span class="label">Dispatch Date:</span>
+            {{ formatDate(invoice.dispatchDate) }}
+          </p>
+          <p>
+            <span class="label">Place of Dispatch:</span>
+            {{ invoice.placeOfDispatch }}
+          </p>
+        </div>
+      </div>
+
+      <div class="info-card totals-card">
+        <h3>Summary Totals</h3>
+        <div class="card-content">
+          <div class="total-item">
+            <span class="total-label">Total Quarry CBM:</span>
+            <span class="total-value">{{ totals.totalQuarryCbm }}</span>
+          </div>
+          <div class="total-item">
+            <span class="total-label">Total DMG Tonnage:</span>
+            <span class="total-value">{{ totals.totalDmgTonnage }}</span>
+          </div>
+          <div class="total-item">
+            <span class="total-label">Total Net CBM:</span>
+            <span class="total-value">{{ totals.totalNetCbm }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Granite Blocks Table -->
+    <div class="table-container">
+      <h3>Granite Blocks Details</h3>
+      <div class="table-wrapper">
+        <table class="granite-table">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Block No</th>
+              <th>Buyer Block No</th>
+              <th>Dimensions (mm)</th>
+              <th>Category/Grade</th>
+              <th>Quarry CBM</th>
+              <th>DMG Tonnage</th>
+              <th>Net CBM</th>
+              <th>HSN</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let block of invoice.graniteStocks; let i = index"
+              class="data-row"
+            >
+              <td>{{ i + 1 }}</td>
+              <td class="block-no">{{ block.blockNo }}</td>
+              <td>{{ block.buyerBlockNo || "-" }}</td>
+              <td class="dimensions">
+                {{ block.measurement.lg }} × {{ block.measurement.wd }} ×
+                {{ block.measurement.ht }}
+              </td>
+              <td class="category">{{ block.categoryGrade }}</td>
+              <td class="metric">
+                {{ calculateDerivedFields(block.measurement).quarryCbm }}
+              </td>
+              <td class="metric">
+                {{ calculateDerivedFields(block.measurement).dmgTonnage }}
+              </td>
+              <td class="metric">
+                {{ calculateDerivedFields(block.measurement).netCbm }}
+              </td>
+              <td>{{ block.hsn || "-" }}</td>
+              <td>
+                <span class="status-badge" [class.active]="block.status">
+                  {{ block.status || "Active" }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td colspan="5" class="total-label-cell">TOTALS</td>
+              <td class="total-value">{{ totals.totalQuarryCbm }}</td>
+              <td class="total-value">{{ totals.totalDmgTonnage }}</td>
+              <td class="total-value">{{ totals.totalNetCbm }}</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div *ngIf="invoice.notes" class="notes-section">
+      <h3>Notes</h3>
+      <div class="notes-content">
+        <p>{{ invoice.notes }}</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="invoice-footer">
+      <div class="footer-content">
+        <p>
+          This is a computer-generated document and does not require a
+          signature.
+        </p>
+        <!-- <p>Generated on: {{ new Date() | date:'dd/MM/yyyy HH:mm' }}</p> -->
+      </div>
+    </div>
+  </div>
+</div>

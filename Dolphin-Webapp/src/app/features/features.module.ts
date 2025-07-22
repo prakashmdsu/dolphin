@@ -27,6 +27,7 @@ import { AddclientComponent } from './addclient/addclient.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { NavbarComponent } from './navbar/navbar.component';
+import { BillingSummaryComponent } from './billing-summary/billing-summary.component';
 @NgModule({
   declarations: [
     LayoutComponent,
@@ -37,6 +38,7 @@ import { NavbarComponent } from './navbar/navbar.component';
     GranitestocksComponent,
     AddclientComponent,
     NavbarComponent,
+    BillingSummaryComponent,
   ],
   providers: [HttpService],
   imports: [

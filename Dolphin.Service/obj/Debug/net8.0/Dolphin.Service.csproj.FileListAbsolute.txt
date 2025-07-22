@@ -37,3 +37,4 @@
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.pdb
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.genruntimeconfig.cache
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/ref/Dolphin.Service.dll
+/home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.sourcelink.json

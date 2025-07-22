@@ -62,6 +62,8 @@ public class DolphinController : ControllerBase
     // }
 
 
+
+    // Enhanced Controller Method
     [HttpGet("getgranitesblockscategory")]
     public async Task<ActionResult<object>> Get(
         string? status,
@@ -86,10 +88,27 @@ public class DolphinController : ControllerBase
         if (pageSize < 1) pageSize = 10;
         if (pageSize > 100) pageSize = 100; // Limit max page size
 
+        // Prepare status list - by default include both "Billed" and null status
+        List<string?> statusList;
+        if (string.IsNullOrEmpty(status))
+        {
+            // Default: include both "Billed" and null (unbilled)
+            statusList = new List<string?> { "Billed", null };
+        }
+        else if (status == "UnBilled")
+        {
+            statusList = new List<string?> { null };
+        }
+        else
+        {
+            // User provided specific status
+            statusList = new List<string?> { status };
+        }
+
         try
         {
-            var result = await _myService.GetGraniteBlocksFilteredAsync(
-                new List<string?> { status },
+            var result = await _myService.GetGraniteBlocksFilteredWithCalculationsAsync(
+                statusList,
                 blockNo,
                 effectiveStartDate,
                 effectiveEndDate,
@@ -105,32 +124,25 @@ public class DolphinController : ControllerBase
 
             if (result?.Data == null || !result.Data.Any())
             {
-                return Ok(new
+                return Ok(new GraniteBlocksResponseDto
                 {
-                    data = new List<GraniteStockBlock>(),
-                    totalCount = 0,
-                    pageNumber = pageNumber,
-                    pageSize = pageSize,
-                    totalPages = 0
+                    Data = new List<GraniteStockBlockDto>(),
+                    TotalCount = 0,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize,
+                    TotalPages = 0,
+                    HasNextPage = false,
+                    HasPreviousPage = false,
+                    BilledTotals = new GraniteTotalsDto(),
+                    UnbilledTotals = new GraniteTotalsDto(),
+                    GrandTotals = new GraniteTotalsDto()
                 });
             }
 
-            var totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize);
-
-            return Ok(new
-            {
-                data = result.Data,
-                totalCount = result.TotalCount,
-                pageNumber = pageNumber,
-                pageSize = pageSize,
-                totalPages = totalPages,
-                hasNextPage = pageNumber < totalPages,
-                hasPreviousPage = pageNumber > 1
-            });
+            return Ok(result);
         }
         catch (Exception ex)
         {
-            // _logger.LogError(ex, "Error occurred while fetching granite blocks");
             return StatusCode(500, new
             {
                 message = "An error occurred while processing your request",
@@ -176,6 +188,20 @@ public class DolphinController : ControllerBase
         return Ok(analysedCollection);
     }
 
+
+    [HttpGet("getinvoicebyid")]
+    public async Task<ActionResult<Invoice>> GetInvoiceById(string id)
+    {
+        var invoices = await _myService.GetInvoiceByIdAsync(id);
+
+
+        if (invoices == null)
+        {
+            return NotFound("No analysed collections found.");
+        }
+
+        return Ok(invoices);
+    }
     [HttpPost("addclient")]
     public async Task<ActionResult<Client>> AddClient([FromBody] Client client)
     {

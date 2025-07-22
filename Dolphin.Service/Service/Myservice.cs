@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using System.Linq;
 using Dolphin.Services.Models;
+using Dolphin.Services.Helper;
 
 public class MyService
 {
@@ -12,16 +13,19 @@ public class MyService
     private readonly IExtendedRepository<Invoice> _dolphinInvoice;
     private readonly IExtendedRepository<Client> _dolphinClient;
     private readonly IExtendedRepository<GpType> _dolphinGp;
+    private readonly MetricCalculation _metricHelper;
     public MyService(IExtendedRepository<GraniteStockBlock> dolphinRepository,
     IExtendedRepository<Invoice> dolphinInvoice,
       IExtendedRepository<Client> dolphinClient,
-        IExtendedRepository<GpType> dolphinGp
+        IExtendedRepository<GpType> dolphinGp,
+        MetricCalculation metricHelper
 )
     {
         _dolphinRepository = dolphinRepository;
         _dolphinInvoice = dolphinInvoice;
         _dolphinClient = dolphinClient;
         _dolphinGp = dolphinGp;
+        _metricHelper = metricHelper;
     }
 
     public async Task<List<GraniteStockBlock>> GetGraniteBlocksByStatusesAsync(List<string?> statuses)
@@ -52,54 +56,7 @@ public class MyService
         return await collection.Find(combinedFilter).ToListAsync();
     }
 
-    // public async Task<List<GraniteStockBlock>> GetGraniteBlocksFilteredAsync(
-    //     List<string?> statuses,
-    //     int? blockNo,
-    //     DateTime startDate,
-    //     DateTime endDate,
-    //     int pageNumber,
-    //     int pageSize)
-    // {
-    //     var collection = _dolphinRepository.GetCollection("granitestockblock") as IMongoCollection<GraniteStockBlock>;
 
-    //     var filters = new List<FilterDefinition<GraniteStockBlock>>();
-
-    //     // Status filters
-    //     if (statuses.Any(s => string.IsNullOrEmpty(s)))
-    //     {
-    //         filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, null));
-    //     }
-
-    //     var nonNullStatuses = statuses.Where(s => !string.IsNullOrEmpty(s)).ToList();
-    //     if (nonNullStatuses.Any())
-    //     {
-    //         filters.Add(Builders<GraniteStockBlock>.Filter.In(s => s.Status, nonNullStatuses));
-    //     }
-
-    //     // BlockNo filter
-    //     if (blockNo.HasValue)
-    //     {
-    //         filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, blockNo.Value));
-    //     }
-
-    //     // Date filter (based on DateOfEntry)
-    //     filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Date, startDate));
-    //     filters.Add(Builders<GraniteStockBlock>.Filter.Lte(s => s.Date, endDate));
-
-    //     var combinedFilter = filters.Count switch
-    //     {
-    //         0 => Builders<GraniteStockBlock>.Filter.Empty,
-    //         1 => filters[0],
-    //         _ => Builders<GraniteStockBlock>.Filter.And(filters)
-    //     };
-
-    //     // Apply pagination
-    //     return await collection
-    //         .Find(combinedFilter)
-    //         .Skip((pageNumber - 1) * pageSize)
-    //         .Limit(pageSize)
-    //         .ToListAsync();
-    // }
 
     public async Task<PaginatedResult<GraniteStockBlock>> GetGraniteBlocksFilteredAsync(
         List<string?> statuses,
@@ -232,8 +189,12 @@ public class MyService
         };
     }
 
-    // Alternative method if you need to filter by calculated CBM values
-    public async Task<PaginatedResult<GraniteStockBlock>> GetGraniteBlocksFilteredWithCalculatedCbmAsync(
+
+
+
+
+    // Enhanced Service Method
+    public async Task<GraniteBlocksResponseDto> GetGraniteBlocksFilteredWithCalculationsAsync(
         List<string?> statuses,
         int? blockNo,
         DateTime startDate,
@@ -251,9 +212,64 @@ public class MyService
 
         var filters = new List<FilterDefinition<GraniteStockBlock>>();
 
-        // Add all filters except CBM range (same as above method)
-        // ... (copy the filter logic from above, excluding CBM filters)
+        // Status filters - by default include both "Billed" and null status
+        if (statuses != null && statuses.Any())
+        {
+            var statusFilters = new List<FilterDefinition<GraniteStockBlock>>();
 
+            // Handle null status (No Status)
+            if (statuses.Any(s => s == null))
+            {
+                statusFilters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, null));
+            }
+
+            // Handle non-null statuses
+            var nonNullStatuses = statuses.Where(s => !string.IsNullOrEmpty(s)).ToList();
+            if (nonNullStatuses.Any())
+            {
+                statusFilters.Add(Builders<GraniteStockBlock>.Filter.In(s => s.Status, nonNullStatuses));
+            }
+
+            if (statusFilters.Any())
+            {
+                filters.Add(statusFilters.Count == 1
+                    ? statusFilters[0]
+                    : Builders<GraniteStockBlock>.Filter.Or(statusFilters));
+            }
+        }
+        else
+        {
+            // Default: include both "Billed" status and null status (unbilled)
+            var defaultStatusFilter = Builders<GraniteStockBlock>.Filter.Or(
+                Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, "Billed"),
+                Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, null)
+            );
+            filters.Add(defaultStatusFilter);
+        }
+
+        // BlockNo filter
+        if (blockNo.HasValue)
+        {
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, blockNo.Value));
+        }
+
+        // Date filter (based on Date field)
+        filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Date, startDate));
+        filters.Add(Builders<GraniteStockBlock>.Filter.Lte(s => s.Date, endDate));
+
+        // PitNo filter
+        if (pitNo.HasValue)
+        {
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.PitNo, pitNo.Value));
+        }
+
+        // Grade filter (CategoryGrade)
+        if (!string.IsNullOrEmpty(grade))
+        {
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.CategoryGrade, grade));
+        }
+
+        // Combine all filters
         var combinedFilter = filters.Count switch
         {
             0 => Builders<GraniteStockBlock>.Filter.Empty,
@@ -261,107 +277,90 @@ public class MyService
             _ => Builders<GraniteStockBlock>.Filter.And(filters)
         };
 
-        // If CBM filtering is needed, we'll need to use aggregation pipeline
+        // First, get all data to calculate totals (without pagination)
+        var allDataQuery = collection.Find(combinedFilter);
+        var allData = await allDataQuery.ToListAsync();
+
+        // Calculate derived fields for all records using injected helper
+        var allCalculatedData = allData.Select(_metricHelper.CalculateDerivedFieldsForBlock).ToList();
+
+        // Apply CBM filters after calculation if needed
         if (minCbm.HasValue || maxCbm.HasValue)
         {
-            var pipeline = new List<BsonDocument>();
+            allCalculatedData = allCalculatedData.Where(item =>
+            {
+                if (minCbm.HasValue && item.QuarryCbm < (double)minCbm.Value) return false;
+                if (maxCbm.HasValue && item.QuarryCbm > (double)maxCbm.Value) return false;
+                return true;
+            }).ToList();
+        }
 
-            // Match stage for basic filters
-            if (combinedFilter != Builders<GraniteStockBlock>.Filter.Empty)
-            {
-                var renderedFilter = combinedFilter.Render(
-                    new RenderArgs<GraniteStockBlock>(
-                        collection.DocumentSerializer,
-                        collection.Settings.SerializerRegistry
-                    )
-                );
+        // Calculate totals for billed and unbilled using injected helper
+        var billedItems = allCalculatedData.Where(x => !string.IsNullOrEmpty(x.Status)).ToList();
+        var unbilledItems = allCalculatedData.Where(x => string.IsNullOrEmpty(x.Status)).ToList();
 
-                pipeline.Add(new BsonDocument("$match", renderedFilter));
-            }
-            // Add calculated field for CBM
-            pipeline.Add(new BsonDocument("$addFields", new BsonDocument
-            {
-                ["quarryCbm"] = new BsonDocument("$divide", new BsonArray
-            {
-                new BsonDocument("$multiply", new BsonArray
-                {
-                    "$measurement.lg",
-                    "$measurement.wd",
-                    "$measurement.ht"
-                }),
-                1000000
-            })
-            }));
+        var billedTotals = _metricHelper.CalculateTotals(billedItems);
+        var unbilledTotals = _metricHelper.CalculateTotals(unbilledItems);
+        var grandTotals = _metricHelper.CalculateTotals(allCalculatedData);
 
-            // Add CBM range filters
-            var cbmFilters = new BsonDocument();
-            if (minCbm.HasValue)
-            {
-                cbmFilters["quarryCbm"] = new BsonDocument("$gte", minCbm.Value);
-            }
-            if (maxCbm.HasValue)
-            {
-                if (cbmFilters.Contains("quarryCbm"))
-                {
-                    cbmFilters["quarryCbm"].AsBsonDocument.Add("$lte", maxCbm.Value);
-                }
-                else
-                {
-                    cbmFilters["quarryCbm"] = new BsonDocument("$lte", maxCbm.Value);
-                }
-            }
-
-            if (cbmFilters.ElementCount > 0)
-            {
-                pipeline.Add(new BsonDocument("$match", cbmFilters));
-            }
-
-            // Count total documents
-            var countPipeline = new List<BsonDocument>(pipeline)
+        // Apply sorting
+        if (!string.IsNullOrEmpty(sortBy))
         {
-            new BsonDocument("$count", "total")
-        };
+            var isAscending = string.IsNullOrEmpty(sortDirection) ||
+                             sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase);
 
-            var countResult = await collection.Aggregate<BsonDocument>(countPipeline).FirstOrDefaultAsync();
-            var totalCount = countResult?.GetValue("total", 0).ToInt32() ?? 0;
-
-            // Add sorting
-            if (!string.IsNullOrEmpty(sortBy))
+            allCalculatedData = sortBy.ToLower() switch
             {
-                var sortOrder = string.IsNullOrEmpty(sortDirection) ||
-                                  sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase) ? 1 : -1;
-                pipeline.Add(new BsonDocument("$sort", new BsonDocument(sortBy, sortOrder)));
-            }
-            else
-            {
-                pipeline.Add(new BsonDocument("$sort", new BsonDocument("date", -1)));
-            }
-
-            // Add pagination
-            pipeline.Add(new BsonDocument("$skip", (pageNumber - 1) * pageSize));
-            pipeline.Add(new BsonDocument("$limit", pageSize));
-
-            var data = await collection.Aggregate<GraniteStockBlock>(pipeline).ToListAsync();
-
-            return new PaginatedResult<GraniteStockBlock>
-            {
-                Data = data,
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                "quarrycbm" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.QuarryCbm).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.QuarryCbm).ToList(),
+                "dmgtonnage" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.DmgTonnage).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.DmgTonnage).ToList(),
+                "netcbm" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.NetCbm).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.NetCbm).ToList(),
+                "date" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.Date).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.Date).ToList(),
+                "blockno" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.BlockNo).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.BlockNo).ToList(),
+                _ => allCalculatedData.OrderByDescending(x => x.Date).ToList()
             };
         }
         else
         {
-            // Use the simpler method when no CBM filtering is needed
-            return await GetGraniteBlocksFilteredAsync(statuses, blockNo, startDate, endDate,
-                pageNumber, pageSize, pitNo, grade, null, null, sortBy, sortDirection);
+            // Default sort by Date descending (newest first)
+            allCalculatedData = allCalculatedData.OrderByDescending(x => x.Date).ToList();
         }
+
+        // Apply pagination
+        var totalCount = allCalculatedData.Count;
+        var paginatedData = allCalculatedData
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        // Convert to DTOs using injected helper
+        var dtoData = paginatedData.Select(_metricHelper.MapToDto).ToList();
+
+        return new GraniteBlocksResponseDto
+        {
+            Data = dtoData,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalPages = totalPages,
+            HasNextPage = pageNumber < totalPages,
+            HasPreviousPage = pageNumber > 1,
+            BilledTotals = billedTotals,
+            UnbilledTotals = unbilledTotals,
+            GrandTotals = grandTotals
+        };
     }
-
-
-
     public async Task<GraniteStockBlock> AddStock(GraniteStockBlock stock)
     {
         var collection = (IMongoCollection<GraniteStockBlock>)_dolphinRepository.GetCollection("granitestockblock");
@@ -426,12 +425,19 @@ public class MyService
         var collection = _dolphinInvoice.GetCollection("invoice");
         return collection.Find(FilterDefinition<Invoice>.Empty).ToList(); // Example: Fetch all stocks
     }
-    public List<Invoice> GetAllInvoiceById(string id)
+    public async Task<Invoice?> GetInvoiceByIdAsync(string id)
     {
-        // Fetch the collection dynamically
         var collection = _dolphinInvoice.GetCollection("invoice");
-        return collection.Find(FilterDefinition<Invoice>.Empty).ToList(); // Example: Fetch all stocks
+
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            throw new ArgumentException("Invalid ObjectId format", nameof(id));
+        }
+
+        var filter = Builders<Invoice>.Filter.Eq(i => i.Id, objectId.ToString());
+        return await collection.Find(filter).FirstOrDefaultAsync();
     }
+
 
     public async Task<Client> AddNewClient(Client client)
     {

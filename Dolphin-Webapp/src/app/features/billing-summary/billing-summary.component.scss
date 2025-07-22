@@ -1,0 +1,440 @@
+/* billing-summary.component.scss */
+.billing-summary-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e3e3e3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    margin-top: 16px;
+    color: #666;
+    font-size: 16px;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error-container {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: #e74c3c;
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+
+  .retry-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: #2980b9;
+    }
+  }
+}
+
+/* Invoice Content */
+.invoice-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Header */
+.invoice-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .export-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .icon-download {
+      font-size: 18px;
+    }
+  }
+}
+
+/* Info Cards */
+.info-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  padding: 30px;
+  background: #f8f9fa;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #3498db;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  &.totals-card {
+    border-left-color: #e74c3c;
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+  }
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 700;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #ecf0f1;
+  }
+
+  .card-content {
+    p {
+      margin: 8px 0;
+      line-height: 1.6;
+
+      &.company-name {
+        font-size: 18px;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 12px;
+      }
+
+      &.address {
+        color: #7f8c8d;
+        font-style: italic;
+        margin-bottom: 12px;
+      }
+    }
+
+    .label {
+      font-weight: 600;
+      color: #34495e;
+    }
+
+    .total-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      margin: 8px 0;
+      background: #f1f3f4;
+      border-radius: 8px;
+      border-left: 3px solid #e74c3c;
+
+      .total-label {
+        font-weight: 600;
+        color: #2c3e50;
+      }
+
+      .total-value {
+        font-weight: 700;
+        font-size: 16px;
+        color: #e74c3c;
+        background: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+      }
+    }
+  }
+}
+
+/* Table */
+.table-container {
+  padding: 30px;
+
+  h3 {
+    margin: 0 0 24px 0;
+    color: #2c3e50;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+  }
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.granite-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    th {
+      color: white;
+      font-weight: 700;
+      padding: 16px 12px;
+      text-align: left;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+
+      &:first-child {
+        border-top-left-radius: 12px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 12px;
+      }
+    }
+  }
+
+  tbody {
+    .data-row {
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #f8f9fa;
+        transform: scale(1.01);
+      }
+
+      &:nth-child(even) {
+        background: rgba(103, 126, 234, 0.03);
+      }
+
+      td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #ecf0f1;
+
+        &.block-no {
+          font-weight: 700;
+          color: #2c3e50;
+        }
+
+        &.dimensions {
+          font-family: "Courier New", monospace;
+          background: #f8f9fa;
+          border-radius: 4px;
+        }
+
+        &.category {
+          font-weight: 600;
+          color: #8e44ad;
+        }
+
+        &.metric {
+          font-weight: 600;
+          color: #27ae60;
+          text-align: right;
+        }
+
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          background: #95a5a6;
+          color: white;
+
+          &.active {
+            background: #27ae60;
+          }
+        }
+      }
+    }
+  }
+
+  tfoot {
+    .totals-row {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      font-weight: 700;
+
+      td {
+        padding: 16px 12px;
+        border: none;
+
+        &.total-label-cell {
+          font-size: 16px;
+          letter-spacing: 1px;
+        }
+
+        &.total-value {
+          font-size: 16px;
+          text-align: right;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+      }
+    }
+  }
+}
+
+/* Notes Section */
+.notes-section {
+  padding: 30px;
+  background: #f8f9fa;
+  border-top: 1px solid #ecf0f1;
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: #2c3e50;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .notes-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #f39c12;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    p {
+      margin: 0;
+      line-height: 1.8;
+      color: #2c3e50;
+      font-size: 15px;
+    }
+  }
+}
+
+/* Footer */
+.invoice-footer {
+  padding: 24px 30px;
+  background: #2c3e50;
+  color: white;
+
+  .footer-content {
+    text-align: center;
+
+    p {
+      margin: 8px 0;
+      font-size: 14px;
+      opacity: 0.9;
+
+      &:first-child {
+        font-weight: 600;
+      }
+
+      &:last-child {
+        font-style: italic;
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .billing-summary-container {
+    padding: 10px;
+  }
+
+  .invoice-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+
+    h1 {
+      font-size: 24px;
+    }
+  }
+
+  .info-cards-container {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .table-container {
+    padding: 20px 10px;
+  }
+
+  .granite-table {
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 10px 8px;
+    }
+  }
+
+  .notes-section,
+  .invoice-footer {
+    padding: 20px;
+  }
+}

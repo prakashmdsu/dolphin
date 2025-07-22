@@ -1,3 +1,4 @@
+using Dolphin.Services.Helper;
 using Dolphin.Services.Models;
 using Finance.Service.Repository;
 using Finance.Service.Settings;
@@ -19,6 +20,8 @@ builder.Services.AddMongoRepository<GraniteStockBlock>();
 builder.Services.AddMongoRepository<Invoice>();
 builder.Services.AddMongoRepository<Client>();
 builder.Services.AddMongoRepository<GpType>();
+// Register in Program.cs or Startup.cs
+builder.Services.AddScoped<MetricCalculation>();
 
 
 builder.Services.AddTransient<MyService>();

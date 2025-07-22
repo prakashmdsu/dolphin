@@ -7,6 +7,7 @@ import { LayoutComponent } from './layout/layout.component';
 import { StockgraniteblockComponent } from './stockgraniteblock/stockgraniteblock.component';
 import { GranitestocksComponent } from './granitestocks/granitestocks.component';
 import { AddclientComponent } from './addclient/addclient.component';
+import { BillingSummaryComponent } from './billing-summary/billing-summary.component';
 
 const routes: Routes = [
   {
@@ -36,6 +37,10 @@ const routes: Routes = [
       {
         path: 'addclient',
         component: AddclientComponent,
+      },
+      {
+        path: 'summary',
+        component: BillingSummaryComponent,
       },
     ],
   },

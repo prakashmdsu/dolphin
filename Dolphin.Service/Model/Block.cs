@@ -1,3 +1,4 @@
+// Enhanced Model with calculated properties
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -27,15 +28,6 @@ namespace Dolphin.Services.Models
         [BsonElement("measurement")]
         public Measurement Measurement { get; set; }
 
-        // [BsonElement("quarryCbm")]
-        // public double QuarryCbm { get; set; }
-
-        // [BsonElement("dmgTonnage")]
-        // public double DmgTonnage { get; set; }
-
-        // [BsonElement("netCbm")]
-        // public double NetCbm { get; set; }
-
         [BsonElement("status")]
         public string? Status { get; set; }
 
@@ -45,11 +37,18 @@ namespace Dolphin.Services.Models
         [BsonElement("note")]
         public string? Note { get; set; }
 
-
         [BsonElement("enteredBy")]
         public string? EnteredBy { get; set; }
 
+        // Calculated properties (not stored in DB)
+        [BsonIgnore]
+        public double QuarryCbm { get; set; }
 
+        [BsonIgnore]
+        public double DmgTonnage { get; set; }
+
+        [BsonIgnore]
+        public double NetCbm { get; set; }
     }
 
     public class Measurement
@@ -64,4 +63,3 @@ namespace Dolphin.Services.Models
         public int Ht { get; set; }
     }
 }
-
