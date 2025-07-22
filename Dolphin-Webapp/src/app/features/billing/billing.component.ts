@@ -4,6 +4,7 @@ import { GraniteBlock } from '../shared/GraniteBlock';
 import { HttpService } from '../shared/http-serve.service';
 import { Client } from '../shared/Client';
 import { PreBilling } from '../shared/PreBilling';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-billing',
@@ -18,7 +19,11 @@ export class BillingComponent implements OnInit {
   graniteBlocks: GraniteBlock[] = []; // available blocks to add
   selectedBlockNos: number[] = [];
 
-  constructor(private fb: FormBuilder, private httpService: HttpService) {
+  constructor(
+    private fb: FormBuilder,
+    private httpService: HttpService,
+    private router: Router
+  ) {
     this.gatePassForm = this.createForm();
   }
 
@@ -237,11 +242,25 @@ export class BillingComponent implements OnInit {
   onSubmit(): void {
     if (this.gatePassForm.valid) {
       console.log('Gate Pass Form Data:', this.gatePassForm.value);
-      // alert('Gate Pass submitted successfully!');
 
       this.httpService
-        .post('dolphin/invoice', this.gatePassForm.value)
-        .subscribe((res) => {});
+        .post<any>('dolphin/invoice', this.gatePassForm.value)
+        .subscribe({
+          next: (res) => {
+            // Assuming the response contains the newly created invoice ID
+            if (res && res.id) {
+              this.router.navigate(['/features/summary'], {
+                queryParams: { id: res.id },
+              });
+            } else {
+              alert('Invoice saved, but ID not returned.');
+            }
+          },
+          error: (err) => {
+            console.error('Error saving invoice:', err);
+            alert('Failed to save invoice. Please try again.');
+          },
+        });
     } else {
       this.markFormGroupTouched(this.gatePassForm);
       alert('Please fill all required fields correctly.');

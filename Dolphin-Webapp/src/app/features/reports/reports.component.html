@@ -1,1 +1,115 @@
-<p>reports works!</p>
+<div class="granite-stocks-container">
+  <div class="page-header">
+    <h1 class="page-title">
+      <mat-icon>inventory_2</mat-icon>
+      Granite Stocks Management
+    </h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="loadData()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-stroked-button>
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading">
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>table_view</mat-icon>
+          Invoice Data Table
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          matSort
+          class="granite-table"
+        >
+          <!-- Dispatch Date -->
+          <ng-container matColumnDef="dispatchDate">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Dispatch Date
+            </th>
+            <td mat-cell *matCellDef="let invoice">
+              {{ invoice.dispatchDate | date }}
+            </td>
+          </ng-container>
+
+          <!-- Bill To -->
+          <ng-container matColumnDef="billTo">
+            <th mat-header-cell *matHeaderCellDef>Bill To</th>
+            <td mat-cell *matCellDef="let invoice">{{ invoice.billTo }}</td>
+          </ng-container>
+
+          <!-- Gate Pass No -->
+          <ng-container matColumnDef="gatePassNo">
+            <th mat-header-cell *matHeaderCellDef>Gate Pass No</th>
+            <td mat-cell *matCellDef="let invoice">{{ invoice.gatePassNo }}</td>
+          </ng-container>
+
+          <!-- GP Type -->
+          <ng-container matColumnDef="gpType">
+            <th mat-header-cell *matHeaderCellDef>GP Type</th>
+            <td mat-cell *matCellDef="let invoice">{{ invoice.gpType }}</td>
+          </ng-container>
+
+          <!-- Category Grade -->
+          <!-- <ng-container matColumnDef="categoryGrade">
+            <th mat-header-cell *matHeaderCellDef>Grade</th>
+            <td mat-cell *matCellDef="let invoice">
+              {{ invoice.graniteStocks[0]?.categoryGrade || "-" }}
+            </td>
+          </ng-container> -->
+
+          <!-- Phone -->
+          <ng-container matColumnDef="phone">
+            <th mat-header-cell *matHeaderCellDef>Phone</th>
+            <td mat-cell *matCellDef="let invoice">{{ invoice.phone }}</td>
+          </ng-container>
+
+          <!-- Notes -->
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Notes</th>
+            <td mat-cell *matCellDef="let invoice">
+              {{ invoice.notes || "-" }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let invoice">
+              <button
+                mat-icon-button
+                color="accent"
+                [routerLink]="['/features/summary']"
+                [queryParams]="{ id: invoice.id }"
+                matTooltip="View Summary"
+              >
+                <mat-icon>open_in_new</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div *ngIf="!isLoading && dataSource.data.length === 0" class="no-data">
+    <mat-card class="no-data-card">
+      <mat-card-content>
+        <mat-icon>inventory_2</mat-icon>
+        <h3>No data found</h3>
+        <p>No invoice data available.</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

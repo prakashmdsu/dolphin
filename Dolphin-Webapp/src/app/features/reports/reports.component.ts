@@ -1,9 +1,50 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { HttpService } from '../shared/http-serve.service';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
+import { Invoice } from '../shared/Invoice';
 
 @Component({
   selector: 'app-reports',
-  standalone: false,
   templateUrl: './reports.component.html',
-  styleUrl: './reports.component.scss',
+  styleUrls: ['./reports.component.scss'],
 })
-export class ReportsComponent {}
+export class ReportsComponent implements OnInit {
+  displayedColumns: string[] = [
+    'dispatchDate',
+    'billTo',
+    'gatePassNo',
+    'gpType',
+    // 'categoryGrade',
+    'phone',
+    'notes',
+    'actions',
+  ];
+
+  dataSource = new MatTableDataSource<Invoice>([]);
+  isLoading = false;
+
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(private httpService: HttpService) {}
+
+  ngOnInit() {
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.isLoading = true;
+
+    this.httpService.get<Invoice[]>('Dolphin/getallinvoice').subscribe({
+      next: (response) => {
+        this.dataSource = new MatTableDataSource(response);
+        this.dataSource.sort = this.sort;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading invoice data:', error);
+        this.isLoading = false;
+      },
+    });
+  }
+}

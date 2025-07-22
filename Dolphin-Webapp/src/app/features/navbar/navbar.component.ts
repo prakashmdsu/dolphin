@@ -37,6 +37,11 @@ export class NavbarComponent {
       route: '/features/stockentry',
       icon: 'fas fa-exchange-alt',
     },
+    {
+      label: 'Billed Invoices',
+      route: '/features/reports',
+      icon: 'fas fa-exchange-alt',
+    },
 
     // { label: 'Settings', route: '/settings', icon: 'fas fa-cog' },
     // { label: 'Help', route: '/help', icon: 'fas fa-question-circle' },

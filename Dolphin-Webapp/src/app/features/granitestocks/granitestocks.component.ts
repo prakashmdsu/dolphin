@@ -55,7 +55,7 @@ export class GranitestocksComponent implements OnInit {
   statusOptions = [
     { value: '', label: 'All Status' },
     { value: 'UnBilled', label: 'UnBilled' },
-    { value: 'Billed', label: 'Billed' },
+    { value: 'billed', label: 'Billed' },
     // { value: 'Sold', label: 'Sold' },
     // { value: 'Reserved', label: 'Reserved' },
   ];

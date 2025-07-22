@@ -27,7 +27,7 @@ namespace Dolphin.Services.Models
         public string GatePassNo { get; set; }
 
         [BsonElement("gpType")]
-        [BsonRepresentation(BsonType.ObjectId)]
+        // [BsonRepresentation(BsonType.ObjectId)]
         public string GpType { get; set; }
 
         [BsonElement("graniteStocks")]

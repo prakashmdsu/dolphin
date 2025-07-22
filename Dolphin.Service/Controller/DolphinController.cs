@@ -93,7 +93,7 @@ public class DolphinController : ControllerBase
         if (string.IsNullOrEmpty(status))
         {
             // Default: include both "Billed" and null (unbilled)
-            statusList = new List<string?> { "Billed", null };
+            statusList = new List<string?> { "billed", null };
         }
         else if (status == "UnBilled")
         {

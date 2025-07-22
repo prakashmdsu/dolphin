@@ -91,7 +91,7 @@
           <mat-label>GP Type</mat-label>
           <mat-select formControlName="gpType">
             <mat-option value="">Select GP Type</mat-option>
-            <mat-option *ngFor="let type of gpTypes" [value]="type.id">
+            <mat-option *ngFor="let type of gpTypes" [value]="type.gp">
               {{ type.gp }}
             </mat-option>
           </mat-select>

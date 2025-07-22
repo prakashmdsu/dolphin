@@ -374,7 +374,7 @@ public class MyService
         var collectionInvoice = _dolphinInvoice.GetCollection("invoice");
 
         // 1. Keep track of successfully updated block numbers
-        var updatedBlocks = new List<string>();
+        var updatedBlocks = new List<int>();
 
         try
         {
@@ -387,7 +387,7 @@ public class MyService
 
                 if (updateResult.ModifiedCount == 1)
                 {
-                    updatedBlocks.Add((stock.BlockNo).ToString());
+                    updatedBlocks.Add(stock.BlockNo);
                 }
                 else
                 {
@@ -404,9 +404,9 @@ public class MyService
             if (updatedBlocks.Count > 0)
             {
                 await collectionStock.UpdateManyAsync(
-                    Builders<GraniteStockBlock>.Filter.In(s => (s.BlockNo).ToString(), updatedBlocks),
-                    Builders<GraniteStockBlock>.Update.Set(s => s.Status, null)
-                );
+     Builders<GraniteStockBlock>.Filter.In(s => s.BlockNo, updatedBlocks),
+     Builders<GraniteStockBlock>.Update.Set(s => s.Status, null)
+ );
             }
 
             // 4. Log and rethrow

@@ -10,7 +10,7 @@
   <div *ngIf="error" class="error-container">
     <div class="error-icon">⚠️</div>
     <p>{{ error }}</p>
-    <button class="retry-btn" (click)="loadInvoice()">Retry</button>
+    <button class="retry-btn">Retry</button>
   </div>
 
   <!-- Invoice Content -->
@@ -152,6 +152,7 @@
           signature.
         </p>
         <!-- <p>Generated on: {{ new Date() | date:'dd/MM/yyyy HH:mm' }}</p> -->
+        <p>Generated on: {{ currentDate | date : "dd/MM/yyyy HH:mm" }}</p>
       </div>
     </div>
   </div>
