@@ -1,6 +1,6 @@
 <div class="granite-stocks-container">
   <!-- Header Section -->
-  <div class="header-actions">
+  <!-- <div class="page-header">
     <button mat-raised-button color="accent" (click)="openAddBlockDialog()">
       <mat-icon>add</mat-icon>
       Add Block
@@ -13,6 +13,26 @@
       <mat-icon>download</mat-icon>
       Export
     </button>
+  </div> -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <mat-icon>inventory_2</mat-icon>
+      Granite Stocks Management
+    </h1>
+    <div class="header-actions">
+      <button mat-raised-button color="accent" (click)="openAddBlockDialog()">
+        <mat-icon>add</mat-icon>
+        Add Block
+      </button>
+      <button mat-raised-button color="primary" (click)="loadData()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+      <button mat-stroked-button>
+        <mat-icon>download</mat-icon>
+        Export
+      </button>
+    </div>
   </div>
 
   <!-- Filter Section -->
