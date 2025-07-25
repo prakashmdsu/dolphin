@@ -452,7 +452,18 @@ public class MyService
         var collection = _dolphinClient.GetCollection("client");
         return collection.Find(FilterDefinition<Client>.Empty).ToList(); // Example: Fetch all stocks
     }
+    public async Task<string?> GetLastGatePassNo()
+    {
+        var collectionInvoice = _dolphinInvoice.GetCollection("invoice");
 
+        var lastInvoice = await collectionInvoice
+            .Find(FilterDefinition<Invoice>.Empty)
+            .SortByDescending(inv => inv.Id)
+            .FirstOrDefaultAsync();
+
+        // Return null if no invoice found or if GatePassNo is null
+        return lastInvoice?.GatePassNo;
+    }
 
 
 

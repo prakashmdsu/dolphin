@@ -8,6 +8,9 @@ namespace Dolphin.Services.Models
     {
         public List<GpType> gpTypes { get; set; }
         public List<Client> clients { get; set; }
+
+        public string? gatePass { get; set; }
+
         public List<GraniteStockBlock> graniteStockBlocks { get; set; }
 
     }

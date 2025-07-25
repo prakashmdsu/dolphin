@@ -28,6 +28,7 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { NavbarComponent } from './navbar/navbar.component';
 import { BillingSummaryComponent } from './billing-summary/billing-summary.component';
+import { MatDialogModule } from '@angular/material/dialog';
 @NgModule({
   declarations: [
     LayoutComponent,
@@ -51,6 +52,7 @@ import { BillingSummaryComponent } from './billing-summary/billing-summary.compo
     MatFormFieldModule,
     MatSelectModule,
     MatDatepickerModule,
+    MatDialogModule,
     MatNativeDateModule,
     MatButtonModule,
     MatIconModule,

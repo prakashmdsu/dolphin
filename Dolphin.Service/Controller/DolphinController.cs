@@ -25,7 +25,9 @@ public class DolphinController : ControllerBase
         {
             gpTypes = _myService.GetAllGp(),   // initialize lists to avoid null references
             clients = _myService.GetAllClients(),
+            gatePass = await _myService.GetLastGatePassNo(),
             graniteStockBlocks = await _myService.GetGraniteBlocksByStatusesAsync(new List<string?> { null })
+
 
         };
         return Ok(data);

@@ -5,6 +5,11 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { GraniteBlock } from '../shared/GraniteBlock';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  DialogData,
+  StockgraniteblockComponent,
+} from '../stockgraniteblock/stockgraniteblock.component';
 
 interface ApiResponse {
   data: GraniteBlock[];
@@ -65,7 +70,7 @@ export class GranitestocksComponent implements OnInit {
 
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private httpService: HttpService) {}
+  constructor(private httpService: HttpService, private dialog: MatDialog) {}
 
   totals = { totalQuarryCbm: 0, totalDmgTonnage: 0, totalNetCbm: 0 };
 
@@ -310,5 +315,46 @@ export class GranitestocksComponent implements OnInit {
     const netCbm = +(dmgTonnage / 6.5).toFixed(4); // example factor
 
     return { quarryCbm, dmgTonnage, netCbm };
+  }
+
+  // Method to open dialog for adding new block
+  openAddBlockDialog(): void {
+    const dialogRef = this.dialog.open(StockgraniteblockComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'add',
+      } as DialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Block added:', result);
+        this.loadData(); // Refresh the table data
+        // You can also show a success message here
+      }
+    });
+  }
+
+  // Method to open dialog for editing existing block
+  openEditBlockDialog(block: GraniteBlock): void {
+    const dialogRef = this.dialog.open(StockgraniteblockComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'edit',
+        block: block,
+      } as DialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Block updated:', result);
+        this.loadData(); // Refresh the table data
+        // You can also show a success message here
+      }
+    });
   }
 }

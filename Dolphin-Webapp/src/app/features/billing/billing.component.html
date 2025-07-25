@@ -24,7 +24,7 @@
     <div class="gatepass-info-section form-row">
       <mat-form-field appearance="outline">
         <mat-label>Gate Pass No</mat-label>
-        <input matInput formControlName="gatePassNo" />
+        <input matInput formControlName="gatePassNo" readonly />
         <mat-error *ngIf="isFieldInvalid('gatePassNo')">
           {{ getFieldErrorMessage("gatePassNo") }}
         </mat-error>
@@ -66,7 +66,7 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Country</mat-label>
-          <input matInput formControlName="country" />
+          <input matInput formControlName="country" readonly />
           <mat-error *ngIf="isFieldInvalid('country')">
             {{ getFieldErrorMessage("country") }}
           </mat-error>
@@ -81,7 +81,7 @@
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>Bill To Address</mat-label>
-          <input matInput formControlName="billToAddress" />
+          <input matInput formControlName="billToAddress" readonly />
           <mat-error *ngIf="isFieldInvalid('billToAddress')">
             {{ getFieldErrorMessage("billToAddress") }}
           </mat-error>
@@ -104,7 +104,7 @@
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>GSTIN</mat-label>
-          <input matInput formControlName="gstin" />
+          <input matInput formControlName="gstin" readonly />
           <mat-error *ngIf="isFieldInvalid('gstin')">
             {{ getFieldErrorMessage("gstin") }}
           </mat-error>

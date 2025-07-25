@@ -5,4 +5,5 @@ export interface PreBilling {
   clients: Client[];
   graniteStockBlocks: StockGraniteBlock[];
   gpTypes: string[];
+  gatePass?: string;
 }

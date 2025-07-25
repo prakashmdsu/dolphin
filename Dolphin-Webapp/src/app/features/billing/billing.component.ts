@@ -18,7 +18,7 @@ export class BillingComponent implements OnInit {
   clients: Client[] = [];
   graniteBlocks: GraniteBlock[] = []; // available blocks to add
   selectedBlockNos: number[] = [];
-
+  gatePassNo?: string;
   constructor(
     private fb: FormBuilder,
     private httpService: HttpService,
@@ -37,10 +37,13 @@ export class BillingComponent implements OnInit {
         this.gpTypes = res.gpTypes;
         this.clients = res.clients;
         this.graniteBlocks = res.graniteStockBlocks;
-        // make a deep copy so you always have the “master” list:
         this.allBlocksSnapshot = JSON.parse(
           JSON.stringify(res.graniteStockBlocks)
         );
+
+        // Auto-generate next gate pass number
+        this.gatePassNo = this.getNextGatePassNo(res?.gatePass ?? 'GP-001');
+        this.gatePassForm.patchValue({ gatePassNo: this.gatePassNo });
       });
   }
 
@@ -104,6 +107,20 @@ export class BillingComponent implements OnInit {
         country: '',
       });
     }
+  }
+
+  private getNextGatePassNo(currentGatePassNo: string): string {
+    const match = currentGatePassNo.match(/^([A-Za-z\-]*)(\d+)$/);
+    if (!match) return 'GP-001'; // fallback
+
+    const prefix = match[1]; // 'GP-'
+    const number = parseInt(match[2], 10); // e.g., 1 from '001'
+    const nextNumber = number + 1;
+
+    // Pad with leading zeros to maintain length (e.g., '002')
+    const padded = nextNumber.toString().padStart(match[2].length, '0');
+
+    return `${prefix}${padded}`;
   }
 
   private calculateDerivedFields(measurement: {
