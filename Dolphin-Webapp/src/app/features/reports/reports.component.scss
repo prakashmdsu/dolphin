@@ -114,7 +114,7 @@
     margin-bottom: 16px;
 
     &.basic-filters {
-      grid-template-columns: 1fr 200px 2fr;
+      grid-template-columns: 1fr 2fr;
       align-items: end;
 
       @media (max-width: 1024px) {
@@ -140,17 +140,22 @@
   .date-range-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+
+    .mat-form-field {
+      flex: 1;
+    }
 
     .date-separator {
       color: #64748b;
       font-weight: 500;
       margin: 0 8px;
+      flex-shrink: 0;
     }
 
     @media (max-width: 768px) {
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
 
       .date-separator {
         transform: rotate(90deg);
@@ -165,20 +170,172 @@
       width: 150px;
     }
 
-    .mat-select-panel {
-      .status-option {
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    // Enhanced datepicker styling
+    .mat-datepicker-toggle {
+      .mat-icon-button {
+        color: #6366f1;
 
-        &.status-billing {
-          color: #2563eb;
+        &:hover {
+          background-color: rgba(99, 102, 241, 0.1);
         }
-        &.status-sold {
-          color: #059669;
+      }
+    }
+
+    .mat-form-field-outline {
+      color: #d1d5db;
+
+      &.mat-form-field-outline-thick {
+        color: #6366f1;
+      }
+    }
+
+    .mat-form-field-label {
+      color: #6b7280;
+    }
+
+    &.mat-focused {
+      .mat-form-field-label {
+        color: #6366f1;
+      }
+    }
+
+    .mat-input-element {
+      color: #374151;
+
+      &::placeholder {
+        color: #9ca3af;
+      }
+    }
+  }
+}
+
+// Global datepicker overlay styles (these need to be global)
+:host ::ng-deep {
+  .mat-datepicker-popup {
+    .mat-calendar {
+      font-family: inherit;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+
+    .mat-calendar-header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      padding: 16px;
+
+      .mat-calendar-arrow {
+        border-top-color: white;
+      }
+
+      .mat-calendar-controls {
+        .mat-icon-button {
+          color: white;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
         }
-        &.status-reserved {
-          color: #dc2626;
+      }
+
+      .mat-calendar-period-button {
+        color: white;
+        font-weight: 600;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+
+    .mat-calendar-content {
+      padding: 16px;
+      background: white;
+
+      .mat-calendar-table {
+        .mat-calendar-table-header {
+          th {
+            color: #6b7280;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px;
+          }
+        }
+
+        .mat-calendar-body-cell {
+          border-radius: 6px;
+          margin: 2px;
+
+          &:not(.mat-calendar-body-disabled):hover {
+            .mat-calendar-body-cell-content {
+              background-color: #ede9fe;
+              color: #6366f1;
+            }
+          }
+
+          &.mat-calendar-body-selected {
+            .mat-calendar-body-cell-content {
+              background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+              color: white;
+              font-weight: 600;
+            }
+          }
+
+          &.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+            .mat-calendar-body-cell-content {
+              border: 2px solid #6366f1;
+              color: #6366f1;
+              font-weight: 600;
+            }
+          }
+
+          .mat-calendar-body-cell-content {
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+          }
+        }
+
+        .mat-calendar-body-disabled {
+          .mat-calendar-body-cell-content {
+            color: #d1d5db;
+          }
+        }
+      }
+    }
+  }
+
+  // Date input field enhancements
+  .mat-form-field-appearance-outline {
+    .mat-form-field-outline {
+      transition: color 0.2s ease;
+    }
+
+    &.mat-focused .mat-form-field-outline-thick {
+      color: #6366f1;
+    }
+
+    .mat-form-field-suffix {
+      .mat-datepicker-toggle {
+        .mat-icon-button {
+          color: #6b7280;
+          transition: all 0.2s ease;
+
+          &:hover {
+            color: #6366f1;
+            background-color: rgba(99, 102, 241, 0.1);
+          }
+
+          .mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
         }
       }
     }
@@ -196,11 +353,35 @@
   .filter-results {
     color: #64748b;
     font-weight: 500;
+    font-size: 14px;
+
+    // Add loading indicator style
+    &.loading {
+      color: #6366f1;
+
+      &::after {
+        content: "...";
+        animation: dots 1.5s infinite;
+      }
+    }
   }
 
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 12px;
+  }
+}
+
+@keyframes dots {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
@@ -304,6 +485,10 @@
   justify-content: center;
   padding: 80px 24px;
   text-align: center;
+
+  .mat-spinner {
+    margin-bottom: 24px;
+  }
 
   p {
     margin-top: 24px;
@@ -413,7 +598,7 @@
     color: #374151;
   }
 
-  .data-row {
+  .mat-row {
     transition: all 0.2s ease;
 
     &:hover {
@@ -697,6 +882,25 @@
   }
 }
 
+// Loading overlay for table
+.table-loading-overlay {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+}
+
 // Print Styles
 @media print {
   .page-header,
@@ -715,7 +919,7 @@
     border: 1px solid #000;
   }
 
-  .granite-table .data-row:hover {
+  .granite-table .mat-row:hover {
     background: none !important;
     transform: none !important;
     box-shadow: none !important;

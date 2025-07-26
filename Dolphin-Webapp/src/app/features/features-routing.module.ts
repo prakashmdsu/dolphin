@@ -22,10 +22,7 @@ const routes: Routes = [
         path: 'billing',
         component: BillingComponent,
       },
-      {
-        path: 'stockentry',
-        component: StockgraniteblockComponent,
-      },
+
       {
         path: 'reports',
         component: ReportsComponent,

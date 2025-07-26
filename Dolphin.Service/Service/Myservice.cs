@@ -361,6 +361,139 @@ public class MyService
             GrandTotals = grandTotals
         };
     }
+
+
+    // Enhanced Service Method
+public async Task<InvoiceDto> GetBilledFilteredWithCalculationsAsync(
+    int? blockNo,
+    DateTime startDate,
+    DateTime endDate,
+    int pageNumber,
+    int pageSize,
+    string? grade = null,
+    string? sortBy = null,
+    string? sortDirection = "asc")
+{
+    try
+    {
+        // Use the same pattern as your working GetAllInvoice method
+        var collection = _dolphinInvoice.GetCollection("invoice");
+        
+        var filterBuilder = Builders<Invoice>.Filter;
+        var filters = new List<FilterDefinition<Invoice>>();
+
+        // Date filter (based on DispatchDate field)
+        // Convert to UTC for comparison since your dates are in UTC
+        var utcStartDate = startDate.ToUniversalTime();
+        var utcEndDate = endDate.ToUniversalTime();
+        
+        filters.Add(filterBuilder.Gte(x => x.DispatchDate, utcStartDate));
+        filters.Add(filterBuilder.Lte(x => x.DispatchDate, utcEndDate));
+
+        // Block number filter (search within graniteStocks array)
+        if (blockNo.HasValue)
+        {
+            filters.Add(filterBuilder.ElemMatch(x => x.GraniteStocks, 
+                Builders<GraniteStock>.Filter.Eq(gs => gs.BlockNo, blockNo.Value)));
+        }
+
+        // Grade filter (search within graniteStocks array)
+        if (!string.IsNullOrEmpty(grade))
+        {
+            filters.Add(filterBuilder.ElemMatch(x => x.GraniteStocks,
+                Builders<GraniteStock>.Filter.Eq(gs => gs.CategoryGrade, grade)));
+        }
+
+        // Combine all filters
+        var combinedFilter = filters.Count > 0 
+            ? filterBuilder.And(filters) 
+            : FilterDefinition<Invoice>.Empty;
+
+        // Build sort definition
+        var sortBuilder = Builders<Invoice>.Sort;
+        SortDefinition<Invoice> sortDefinition;
+        
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            var isAscending = sortDirection?.ToLower() != "desc";
+            
+            sortDefinition = sortBy.ToLower() switch
+            {
+                "dispatchdate" => isAscending 
+                    ? sortBuilder.Ascending(x => x.DispatchDate)
+                    : sortBuilder.Descending(x => x.DispatchDate),
+                "billto" => isAscending 
+                    ? sortBuilder.Ascending(x => x.BillTo)
+                    : sortBuilder.Descending(x => x.BillTo),
+                "country" => isAscending 
+                    ? sortBuilder.Ascending(x => x.Country)
+                    : sortBuilder.Descending(x => x.Country),
+                "gatepassno" => isAscending 
+                    ? sortBuilder.Ascending(x => x.GatePassNo)
+                    : sortBuilder.Descending(x => x.GatePassNo),
+                _ => sortBuilder.Descending(x => x.DispatchDate) // Default sort
+            };
+        }
+        else
+        {
+            // Default sort by dispatch date descending (most recent first)
+            sortDefinition = sortBuilder.Descending(x => x.DispatchDate);
+        }
+
+        // Get total count for pagination (use synchronous method like your working example)
+        var totalCount = collection.Find(combinedFilter).CountDocuments();
+
+        // Calculate pagination values
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        var skip = (pageNumber - 1) * pageSize;
+
+        // Execute the query with pagination and sorting (use synchronous methods)
+        var invoices = collection
+            .Find(combinedFilter)
+            .Sort(sortDefinition)
+            .Skip(skip)
+            .Limit(pageSize)
+            .ToList();
+
+        // Calculate pagination flags
+        var hasNextPage = pageNumber < totalPages;
+        var hasPreviousPage = pageNumber > 1;
+
+        // Return the response DTO
+        return new InvoiceDto
+        {
+            Data = invoices ?? new List<Invoice>(),
+            TotalCount = (int)totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalPages = totalPages,
+            HasNextPage = hasNextPage,
+            HasPreviousPage = hasPreviousPage
+        };
+    }
+    catch (Exception ex)
+    {
+        // Log the exception for debugging
+        Console.WriteLine($"Error in GetBilledFilteredWithCalculationsAsync: {ex.Message}");
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        
+        // Return empty result instead of throwing
+        return new InvoiceDto
+        {
+            Data = new List<Invoice>(),
+            TotalCount = 0,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalPages = 0,
+            HasNextPage = false,
+            HasPreviousPage = false
+        };
+    }
+}
+
+
+
+
     public async Task<GraniteStockBlock> AddStock(GraniteStockBlock stock)
     {
         var collection = (IMongoCollection<GraniteStockBlock>)_dolphinRepository.GetCollection("granitestockblock");

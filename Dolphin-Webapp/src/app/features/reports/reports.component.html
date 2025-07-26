@@ -5,7 +5,7 @@
       Granite Stocks Management
     </h1>
     <div class="header-actions">
-      <button mat-raised-button color="primary" (click)="loadData()">
+      <button mat-raised-button color="primary" (click)="refreshData()">
         <mat-icon>refresh</mat-icon>
         Refresh
       </button>
@@ -16,6 +16,129 @@
     </div>
   </div>
 
+  <!-- Filter Section -->
+  <mat-card class="filter-card" [class.expanded]="showAdvancedFilters">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>filter_list</mat-icon>
+        Filters & Search
+      </mat-card-title>
+      <div class="filter-toggle">
+        <button
+          mat-icon-button
+          (click)="toggleAdvancedFilters()"
+          matTooltip="Toggle advanced filters"
+        >
+          <mat-icon>{{
+            showAdvancedFilters ? "expand_less" : "expand_more"
+          }}</mat-icon>
+        </button>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <!-- Basic Filters Row -->
+        <div class="filter-row basic-filters">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search Block Number</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="blockNo"
+              placeholder="Enter block number"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <div class="date-range-container">
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="startDatePicker"
+                formControlName="startDate"
+                readonly
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="startDatePicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #startDatePicker></mat-datepicker>
+            </mat-form-field>
+
+            <span class="date-separator">to</span>
+
+            <mat-form-field appearance="outline">
+              <mat-label>End Date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="endDatePicker"
+                formControlName="endDate"
+                readonly
+              />
+              <mat-datepicker-toggle
+                matSuffix
+                [for]="endDatePicker"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #endDatePicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Advanced Filters (Expandable) -->
+        <div class="filter-row advanced-filters" *ngIf="showAdvancedFilters">
+          <mat-form-field appearance="outline">
+            <mat-label>Min CBM</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="minCbm"
+              step="0.01"
+              placeholder="0.00"
+            />
+            <mat-icon matSuffix>straighten</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Max CBM</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="maxCbm"
+              step="0.01"
+              placeholder="0.00"
+            />
+            <mat-icon matSuffix>straighten</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="filter-actions">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="clearFilters()"
+            type="button"
+          >
+            <mat-icon>clear_all</mat-icon>
+            Clear Filters
+          </button>
+          <span class="filter-results" [class.loading]="isLoading">
+            {{ isLoading ? "Loading" : totalItems + " results found" }}
+          </span>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <!-- <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading invoice data...</p>
+  </div> -->
+
+  <!-- Table Container -->
   <div class="table-container" *ngIf="!isLoading">
     <mat-card class="table-card">
       <mat-card-header>
@@ -23,92 +146,203 @@
           <mat-icon>table_view</mat-icon>
           Invoice Data Table
         </mat-card-title>
+        <div class="table-actions">
+          <mat-form-field appearance="outline" class="page-size-selector">
+            <mat-label>Rows per page</mat-label>
+            <mat-select
+              [value]="pageSize"
+              (selectionChange)="changePageSize($event.value)"
+            >
+              <mat-option [value]="5">5</mat-option>
+              <mat-option [value]="10">10</mat-option>
+              <mat-option [value]="25">25</mat-option>
+              <mat-option [value]="50">50</mat-option>
+              <mat-option [value]="100">100</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
       </mat-card-header>
 
       <mat-card-content>
-        <table
-          mat-table
-          [dataSource]="dataSource"
-          matSort
-          class="granite-table"
-        >
-          <!-- Dispatch Date -->
-          <ng-container matColumnDef="dispatchDate">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>
-              Dispatch Date
-            </th>
-            <td mat-cell *matCellDef="let invoice">
-              {{ invoice.dispatchDate | date }}
-            </td>
-          </ng-container>
+        <div class="table-wrapper">
+          <table
+            mat-table
+            [dataSource]="dataSource"
+            matSort
+            class="granite-table"
+          >
+            <!-- Dispatch Date -->
+            <ng-container matColumnDef="dispatchDate">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>event</mat-icon>
+                Dispatch Date
+              </th>
+              <td mat-cell *matCellDef="let invoice" class="date-cell">
+                {{ invoice.dispatchDate | date : "MMM dd, yyyy" }}
+              </td>
+            </ng-container>
 
-          <!-- Bill To -->
-          <ng-container matColumnDef="billTo">
-            <th mat-header-cell *matHeaderCellDef>Bill To</th>
-            <td mat-cell *matCellDef="let invoice">{{ invoice.billTo }}</td>
-          </ng-container>
+            <!-- Bill To -->
+            <ng-container matColumnDef="billTo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>person</mat-icon>
+                Bill To
+              </th>
+              <td mat-cell *matCellDef="let invoice" class="buyer-block">
+                {{ invoice.billTo }}
+              </td>
+            </ng-container>
 
-          <!-- Gate Pass No -->
-          <ng-container matColumnDef="gatePassNo">
-            <th mat-header-cell *matHeaderCellDef>Gate Pass No</th>
-            <td mat-cell *matCellDef="let invoice">{{ invoice.gatePassNo }}</td>
-          </ng-container>
+            <!-- Gate Pass No -->
+            <ng-container matColumnDef="gatePassNo">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>confirmation_number</mat-icon>
+                Gate Pass No
+              </th>
+              <td mat-cell *matCellDef="let invoice" class="block-number">
+                {{ invoice.gatePassNo }}
+              </td>
+            </ng-container>
 
-          <!-- GP Type -->
-          <ng-container matColumnDef="gpType">
-            <th mat-header-cell *matHeaderCellDef>GP Type</th>
-            <td mat-cell *matCellDef="let invoice">{{ invoice.gpType }}</td>
-          </ng-container>
+            <!-- GP Type -->
+            <ng-container matColumnDef="gpType">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>category</mat-icon>
+                GP Type
+              </th>
+              <td mat-cell *matCellDef="let invoice">
+                <mat-chip class="pit-chip">{{ invoice.gpType }}</mat-chip>
+              </td>
+            </ng-container>
 
-          <!-- Category Grade -->
-          <!-- <ng-container matColumnDef="categoryGrade">
-            <th mat-header-cell *matHeaderCellDef>Grade</th>
-            <td mat-cell *matCellDef="let invoice">
-              {{ invoice.graniteStocks[0]?.categoryGrade || "-" }}
-            </td>
-          </ng-container> -->
+            <!-- Phone -->
+            <ng-container matColumnDef="phone">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>phone</mat-icon>
+                Phone
+              </th>
+              <td mat-cell *matCellDef="let invoice">
+                {{ invoice.phone || "-" }}
+              </td>
+            </ng-container>
 
-          <!-- Phone -->
-          <ng-container matColumnDef="phone">
-            <th mat-header-cell *matHeaderCellDef>Phone</th>
-            <td mat-cell *matCellDef="let invoice">{{ invoice.phone }}</td>
-          </ng-container>
+            <!-- Notes -->
+            <ng-container matColumnDef="notes">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>note</mat-icon>
+                Notes
+              </th>
+              <td mat-cell *matCellDef="let invoice" class="note-cell">
+                <span [class.no-note]="!invoice.notes">
+                  {{ invoice.notes || "No notes available" }}
+                </span>
+              </td>
+            </ng-container>
 
-          <!-- Notes -->
-          <ng-container matColumnDef="notes">
-            <th mat-header-cell *matHeaderCellDef>Notes</th>
-            <td mat-cell *matCellDef="let invoice">
-              {{ invoice.notes || "-" }}
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let invoice">
+            <!-- Actions -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>settings</mat-icon>
+                Actions
+              </th>
+              <td mat-cell *matCellDef="let invoice">
+                <button
+                  mat-icon-button
+                  color="accent"
+                  [routerLink]="['/features/summary']"
+                  [queryParams]="{ id: invoice.id }"
+                  matTooltip="View Summary"
+                >
+                  <mat-icon>open_in_new</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              class="data-row"
+            ></tr>
+          </table>
+        </div>
+
+        <!-- Custom Pagination -->
+        <div class="custom-pagination">
+          <div class="pagination-info">
+            <span>
+              Showing {{ getStartIndex() }}-{{ getEndIndex() }} of
+              {{ totalItems }} results
+            </span>
+          </div>
+
+          <div class="pagination-controls">
+            <button
+              mat-icon-button
+              [disabled]="pageIndex === 0"
+              (click)="goToFirstPage()"
+              matTooltip="First page"
+            >
+              <mat-icon>first_page</mat-icon>
+            </button>
+
+            <button
+              mat-icon-button
+              [disabled]="pageIndex === 0"
+              (click)="goToPreviousPage()"
+              matTooltip="Previous page"
+            >
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+
+            <!-- Page numbers -->
+            <div class="page-numbers">
               <button
-                mat-icon-button
-                color="accent"
-                [routerLink]="['/features/summary']"
-                [queryParams]="{ id: invoice.id }"
-                matTooltip="View Summary"
+                *ngFor="let page of getVisiblePages()"
+                mat-button
+                [class.current-page]="page === pageIndex + 1"
+                [disabled]="page === '...'"
+                (click)="page !== '...' && goToPage(+page - 1)"
+                class="page-button"
               >
-                <mat-icon>open_in_new</mat-icon>
+                {{ page }}
               </button>
-            </td>
-          </ng-container>
+            </div>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-        </table>
+            <button
+              mat-icon-button
+              [disabled]="pageIndex >= getTotalPages() - 1"
+              (click)="goToNextPage()"
+              matTooltip="Next page"
+            >
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+
+            <button
+              mat-icon-button
+              [disabled]="pageIndex >= getTotalPages() - 1"
+              (click)="goToLastPage()"
+              matTooltip="Last page"
+            >
+              <mat-icon>last_page</mat-icon>
+            </button>
+          </div>
+        </div>
       </mat-card-content>
     </mat-card>
   </div>
 
+  <!-- No Data State -->
   <div *ngIf="!isLoading && dataSource.data.length === 0" class="no-data">
     <mat-card class="no-data-card">
       <mat-card-content>
         <mat-icon>inventory_2</mat-icon>
         <h3>No data found</h3>
-        <p>No invoice data available.</p>
+        <p>No invoice data matches your current filter criteria.</p>
+        <button mat-raised-button color="primary" (click)="clearFilters()">
+          <mat-icon>clear_all</mat-icon>
+          Clear Filters
+        </button>
       </mat-card-content>
     </mat-card>
   </div>

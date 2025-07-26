@@ -33,11 +33,6 @@ export class NavbarComponent {
       icon: 'fas fa-industry',
     },
     {
-      label: 'Enter stock',
-      route: '/features/stockentry',
-      icon: 'fas fa-exchange-alt',
-    },
-    {
       label: 'Billed Invoices',
       route: '/features/reports',
       icon: 'fas fa-exchange-alt',

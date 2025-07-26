@@ -32,37 +32,6 @@ public class DolphinController : ControllerBase
         };
         return Ok(data);
     }
-    //if need mutipple status (new List<string> { "billed", "null" });
-    // [HttpGet("getgranitesblockscategory")]
-    // public async Task<ActionResult<IEnumerable<GraniteStockBlock>>> Get(
-    //     string? status,
-    //     int pageNumber = 1,
-    //     int pageSize = 10,
-    //     int? blockNo = null,
-    //     DateTime? startDate = null,
-    //     DateTime? endDate = null)
-    // {
-    //     // Set default date range to one month if not provided
-    //     DateTime effectiveEndDate = endDate ?? DateTime.UtcNow;
-    //     DateTime effectiveStartDate = startDate ?? effectiveEndDate.AddMonths(-1);
-
-    //     var result = await _myService.GetGraniteBlocksFilteredAsync(
-    //         new List<string?> { status },
-    //         blockNo,
-    //         effectiveStartDate,
-    //         effectiveEndDate,
-    //         pageNumber,
-    //         pageSize
-    //     );
-
-    //     if (result == null || !result.Any())
-    //     {
-    //         return NotFound("No granite stock blocks found for the given filters.");
-    //     }
-
-    //     return Ok(result);
-    // }
-
 
 
     // Enhanced Controller Method
@@ -176,8 +145,10 @@ public class DolphinController : ControllerBase
     }
 
 
+
     [HttpGet("getallinvoice")]
     public async Task<ActionResult<IEnumerable<Invoice>>> GetAllInvoice()
+
     {
         var analysedCollection = _myService.GetAllInvoice();
 
@@ -191,6 +162,77 @@ public class DolphinController : ControllerBase
     }
 
 
+[HttpGet("getallinvoicepaginated")]
+public async Task<ActionResult<InvoiceDto>> GetAllInvoiceSearchPagination(
+    int pageNumber = 1,
+    int pageSize = 10,
+    int? blockNo = null,
+    DateTime? startDate = null,
+    DateTime? endDate = null,
+    string? grade = null,
+    string? sortBy = null,
+    string? sortDirection = "asc")
+{
+    try
+    {
+        // Set default date range to one month if not provided
+        DateTime effectiveEndDate = endDate ?? DateTime.UtcNow;
+        DateTime effectiveStartDate = startDate ?? effectiveEndDate.AddMonths(-1);
+
+        // Validate pagination parameters
+        if (pageNumber < 1) pageNumber = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100; // Limit max page size
+
+        // Check if service is null
+        if (_myService == null)
+        {
+            return StatusCode(500, new
+            {
+                Message = "Service is not properly initialized"
+            });
+        }
+
+        var result = await _myService.GetBilledFilteredWithCalculationsAsync(
+            blockNo,
+            effectiveStartDate,
+            effectiveEndDate,
+            pageNumber,
+            pageSize,
+            grade,
+            sortBy,
+            sortDirection
+        );
+
+        // Always return the result, even if empty
+        return Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return StatusCode(500, new
+        {
+            Message = "Configuration error",
+            Error = ex.Message
+        });
+    }
+    catch (ArgumentException ex)
+    {
+        return BadRequest(new
+        {
+            Message = "Invalid parameters provided",
+            Error = ex.Message
+        });
+    }
+    catch (Exception ex)
+    {
+        // Log the exception here if you have logging configured
+        return StatusCode(500, new
+        {
+            Message = "An error occurred while processing your request",
+            Error = ex.Message
+        });
+    }
+}
     [HttpGet("getinvoicebyid")]
     public async Task<ActionResult<Invoice>> GetInvoiceById(string id)
     {

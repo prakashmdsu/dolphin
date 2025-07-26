@@ -23,6 +23,7 @@
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.csproj.CoreCompileInputs.cache
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.MvcApplicationPartsAssemblyInfo.cs
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.MvcApplicationPartsAssemblyInfo.cache
+/home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.sourcelink.json
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/staticwebassets.build.json
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/staticwebassets.development.json
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/staticwebassets/msbuild.Dolphin.Service.Microsoft.AspNetCore.StaticWebAssets.props
@@ -37,4 +38,3 @@
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.pdb
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.genruntimeconfig.cache
 /home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/ref/Dolphin.Service.dll
-/home/gahan/Documents/dolphin/Dolphin.Service/obj/Debug/net8.0/Dolphin.Service.sourcelink.json
