@@ -2,7 +2,9 @@ using Dolphin.Services.Helper;
 using Dolphin.Services.Models;
 using Finance.Service.Repository;
 using Finance.Service.Settings;
-
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,13 +14,31 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 ServiceSettings serviceSettings = new ServiceSettings();
 serviceSettings = builder.Configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
-// builder.Services.AddMongo().AddMongoRepository<Stocks>("stocks");
-// builder.Services.AddMongo().AddMongoRepository<AnalysedCollection>("AnalysedCollection");
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+builder.Services.AddTransient<IEmailService, EmailService>();
+
+builder.Services.AddScoped<JwtTokenGenerator>();
 
 builder.Services.AddMongo();
 builder.Services.AddMongoRepository<GraniteStockBlock>();
 builder.Services.AddMongoRepository<Invoice>();
 builder.Services.AddMongoRepository<Client>();
+builder.Services.AddMongoRepository<User>();
 builder.Services.AddMongoRepository<GpType>();
 // Register in Program.cs or Startup.cs
 builder.Services.AddScoped<MetricCalculation>();

@@ -14,11 +14,13 @@ public class MyService
     private readonly IExtendedRepository<Client> _dolphinClient;
     private readonly IExtendedRepository<GpType> _dolphinGp;
     private readonly MetricCalculation _metricHelper;
+    private readonly IExtendedRepository<User> _userCollection;
     public MyService(IExtendedRepository<GraniteStockBlock> dolphinRepository,
     IExtendedRepository<Invoice> dolphinInvoice,
       IExtendedRepository<Client> dolphinClient,
         IExtendedRepository<GpType> dolphinGp,
-        MetricCalculation metricHelper
+        MetricCalculation metricHelper,
+         IExtendedRepository<User> userCollection
 )
     {
         _dolphinRepository = dolphinRepository;
@@ -26,6 +28,7 @@ public class MyService
         _dolphinClient = dolphinClient;
         _dolphinGp = dolphinGp;
         _metricHelper = metricHelper;
+        _userCollection = userCollection;
     }
 
     public async Task<List<GraniteStockBlock>> GetGraniteBlocksByStatusesAsync(List<string?> statuses)
@@ -364,132 +367,132 @@ public class MyService
 
 
     // Enhanced Service Method
-public async Task<InvoiceDto> GetBilledFilteredWithCalculationsAsync(
-    int? blockNo,
-    DateTime startDate,
-    DateTime endDate,
-    int pageNumber,
-    int pageSize,
-    string? grade = null,
-    string? sortBy = null,
-    string? sortDirection = "asc")
-{
-    try
+    public async Task<InvoiceDto> GetBilledFilteredWithCalculationsAsync(
+        int? blockNo,
+        DateTime startDate,
+        DateTime endDate,
+        int pageNumber,
+        int pageSize,
+        string? grade = null,
+        string? sortBy = null,
+        string? sortDirection = "asc")
     {
-        // Use the same pattern as your working GetAllInvoice method
-        var collection = _dolphinInvoice.GetCollection("invoice");
-        
-        var filterBuilder = Builders<Invoice>.Filter;
-        var filters = new List<FilterDefinition<Invoice>>();
-
-        // Date filter (based on DispatchDate field)
-        // Convert to UTC for comparison since your dates are in UTC
-        var utcStartDate = startDate.ToUniversalTime();
-        var utcEndDate = endDate.ToUniversalTime();
-        
-        filters.Add(filterBuilder.Gte(x => x.DispatchDate, utcStartDate));
-        filters.Add(filterBuilder.Lte(x => x.DispatchDate, utcEndDate));
-
-        // Block number filter (search within graniteStocks array)
-        if (blockNo.HasValue)
+        try
         {
-            filters.Add(filterBuilder.ElemMatch(x => x.GraniteStocks, 
-                Builders<GraniteStock>.Filter.Eq(gs => gs.BlockNo, blockNo.Value)));
-        }
+            // Use the same pattern as your working GetAllInvoice method
+            var collection = _dolphinInvoice.GetCollection("invoice");
 
-        // Grade filter (search within graniteStocks array)
-        if (!string.IsNullOrEmpty(grade))
-        {
-            filters.Add(filterBuilder.ElemMatch(x => x.GraniteStocks,
-                Builders<GraniteStock>.Filter.Eq(gs => gs.CategoryGrade, grade)));
-        }
+            var filterBuilder = Builders<Invoice>.Filter;
+            var filters = new List<FilterDefinition<Invoice>>();
 
-        // Combine all filters
-        var combinedFilter = filters.Count > 0 
-            ? filterBuilder.And(filters) 
-            : FilterDefinition<Invoice>.Empty;
+            // Date filter (based on DispatchDate field)
+            // Convert to UTC for comparison since your dates are in UTC
+            var utcStartDate = startDate.ToUniversalTime();
+            var utcEndDate = endDate.ToUniversalTime();
 
-        // Build sort definition
-        var sortBuilder = Builders<Invoice>.Sort;
-        SortDefinition<Invoice> sortDefinition;
-        
-        if (!string.IsNullOrEmpty(sortBy))
-        {
-            var isAscending = sortDirection?.ToLower() != "desc";
-            
-            sortDefinition = sortBy.ToLower() switch
+            filters.Add(filterBuilder.Gte(x => x.DispatchDate, utcStartDate));
+            filters.Add(filterBuilder.Lte(x => x.DispatchDate, utcEndDate));
+
+            // Block number filter (search within graniteStocks array)
+            if (blockNo.HasValue)
             {
-                "dispatchdate" => isAscending 
-                    ? sortBuilder.Ascending(x => x.DispatchDate)
-                    : sortBuilder.Descending(x => x.DispatchDate),
-                "billto" => isAscending 
-                    ? sortBuilder.Ascending(x => x.BillTo)
-                    : sortBuilder.Descending(x => x.BillTo),
-                "country" => isAscending 
-                    ? sortBuilder.Ascending(x => x.Country)
-                    : sortBuilder.Descending(x => x.Country),
-                "gatepassno" => isAscending 
-                    ? sortBuilder.Ascending(x => x.GatePassNo)
-                    : sortBuilder.Descending(x => x.GatePassNo),
-                _ => sortBuilder.Descending(x => x.DispatchDate) // Default sort
+                filters.Add(filterBuilder.ElemMatch(x => x.GraniteStocks,
+                    Builders<GraniteStock>.Filter.Eq(gs => gs.BlockNo, blockNo.Value)));
+            }
+
+            // Grade filter (search within graniteStocks array)
+            if (!string.IsNullOrEmpty(grade))
+            {
+                filters.Add(filterBuilder.ElemMatch(x => x.GraniteStocks,
+                    Builders<GraniteStock>.Filter.Eq(gs => gs.CategoryGrade, grade)));
+            }
+
+            // Combine all filters
+            var combinedFilter = filters.Count > 0
+                ? filterBuilder.And(filters)
+                : FilterDefinition<Invoice>.Empty;
+
+            // Build sort definition
+            var sortBuilder = Builders<Invoice>.Sort;
+            SortDefinition<Invoice> sortDefinition;
+
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                var isAscending = sortDirection?.ToLower() != "desc";
+
+                sortDefinition = sortBy.ToLower() switch
+                {
+                    "dispatchdate" => isAscending
+                        ? sortBuilder.Ascending(x => x.DispatchDate)
+                        : sortBuilder.Descending(x => x.DispatchDate),
+                    "billto" => isAscending
+                        ? sortBuilder.Ascending(x => x.BillTo)
+                        : sortBuilder.Descending(x => x.BillTo),
+                    "country" => isAscending
+                        ? sortBuilder.Ascending(x => x.Country)
+                        : sortBuilder.Descending(x => x.Country),
+                    "gatepassno" => isAscending
+                        ? sortBuilder.Ascending(x => x.GatePassNo)
+                        : sortBuilder.Descending(x => x.GatePassNo),
+                    _ => sortBuilder.Descending(x => x.DispatchDate) // Default sort
+                };
+            }
+            else
+            {
+                // Default sort by dispatch date descending (most recent first)
+                sortDefinition = sortBuilder.Descending(x => x.DispatchDate);
+            }
+
+            // Get total count for pagination (use synchronous method like your working example)
+            var totalCount = collection.Find(combinedFilter).CountDocuments();
+
+            // Calculate pagination values
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            var skip = (pageNumber - 1) * pageSize;
+
+            // Execute the query with pagination and sorting (use synchronous methods)
+            var invoices = collection
+                .Find(combinedFilter)
+                .Sort(sortDefinition)
+                .Skip(skip)
+                .Limit(pageSize)
+                .ToList();
+
+            // Calculate pagination flags
+            var hasNextPage = pageNumber < totalPages;
+            var hasPreviousPage = pageNumber > 1;
+
+            // Return the response DTO
+            return new InvoiceDto
+            {
+                Data = invoices ?? new List<Invoice>(),
+                TotalCount = (int)totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                HasNextPage = hasNextPage,
+                HasPreviousPage = hasPreviousPage
             };
         }
-        else
+        catch (Exception ex)
         {
-            // Default sort by dispatch date descending (most recent first)
-            sortDefinition = sortBuilder.Descending(x => x.DispatchDate);
+            // Log the exception for debugging
+            Console.WriteLine($"Error in GetBilledFilteredWithCalculationsAsync: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            // Return empty result instead of throwing
+            return new InvoiceDto
+            {
+                Data = new List<Invoice>(),
+                TotalCount = 0,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalPages = 0,
+                HasNextPage = false,
+                HasPreviousPage = false
+            };
         }
-
-        // Get total count for pagination (use synchronous method like your working example)
-        var totalCount = collection.Find(combinedFilter).CountDocuments();
-
-        // Calculate pagination values
-        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-        var skip = (pageNumber - 1) * pageSize;
-
-        // Execute the query with pagination and sorting (use synchronous methods)
-        var invoices = collection
-            .Find(combinedFilter)
-            .Sort(sortDefinition)
-            .Skip(skip)
-            .Limit(pageSize)
-            .ToList();
-
-        // Calculate pagination flags
-        var hasNextPage = pageNumber < totalPages;
-        var hasPreviousPage = pageNumber > 1;
-
-        // Return the response DTO
-        return new InvoiceDto
-        {
-            Data = invoices ?? new List<Invoice>(),
-            TotalCount = (int)totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalPages = totalPages,
-            HasNextPage = hasNextPage,
-            HasPreviousPage = hasPreviousPage
-        };
     }
-    catch (Exception ex)
-    {
-        // Log the exception for debugging
-        Console.WriteLine($"Error in GetBilledFilteredWithCalculationsAsync: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
-        
-        // Return empty result instead of throwing
-        return new InvoiceDto
-        {
-            Data = new List<Invoice>(),
-            TotalCount = 0,
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalPages = 0,
-            HasNextPage = false,
-            HasPreviousPage = false
-        };
-    }
-}
 
 
 
@@ -613,6 +616,107 @@ public async Task<InvoiceDto> GetBilledFilteredWithCalculationsAsync(
         // Fetch the collection dynamically
         var collection = _dolphinGp.GetCollection("gp");
         return collection.Find(FilterDefinition<GpType>.Empty).ToList(); // Example: Fetch all stocks
+    }
+
+
+
+
+    //For all user related 
+    public async Task<string> AddUser(string collectionName, User userdata)
+    {
+        var collection = _userCollection.GetCollection(collectionName);
+
+        // Check if user already exists
+        var existingUser = await collection.Find(u => u.Email == userdata.Email)
+                                         .FirstOrDefaultAsync();
+        if (existingUser != null)
+        {
+            return "UserExist";
+        }
+
+        // Hash the provided password, not a generated one
+        userdata.PasswordHash = PasswordHelper.HashPassword(userdata.PasswordHash); // Assuming Password is the plain text password
+
+        var newUser = new User
+        {
+            UserName = userdata.UserName,
+            Email = userdata.Email,
+            Role = userdata.Role,
+            PhoneNumber = userdata.PhoneNumber,
+            PasswordHash = userdata.PasswordHash
+        };
+
+        await collection.InsertOneAsync(newUser);
+        return newUser.userId.ToString();
+    }
+
+
+    public async Task<List<User>> GetAllUser(string collectionName)
+    {
+        var collection = _userCollection.GetCollection(collectionName);
+        return await collection.Find(FilterDefinition<User>.Empty).ToListAsync();
+    }
+
+
+    public async Task<User> GetLoginUser(string collectionName, LoginRequest request)
+    {
+        var collection = _userCollection.GetCollection(collectionName);
+        return await collection.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+    }
+    public async Task<User> GetUserProfile(string collectionName, string email)
+    {
+        var collection = _userCollection.GetCollection(collectionName);
+        return await collection.Find(u => u.Email == email).FirstOrDefaultAsync();
+    }
+
+
+    public async Task<string> UpadatePassword(string collectionName, User profile)
+    {
+
+        var collection = _userCollection.GetCollection(collectionName);
+        string tempPassword = GenerateTempPassword();
+        var filter = Builders<User>.Filter.Eq(p => p.Email, profile.Email);
+        var hashedPassword = PasswordHelper.HashPassword(tempPassword);
+        var updateProfile = Builders<User>.Update
+            .Set(p => p.PasswordHash, hashedPassword);
+
+
+        // Execute the update
+        var updateResult = await collection.UpdateOneAsync(filter, updateProfile);
+
+        // Check if the update was successful
+        if (updateResult.ModifiedCount == 0)
+        {
+            throw new Exception("User not found or password update failed.");
+        }
+
+        // Return the generated temporary password
+        return tempPassword;
+    }
+
+    // Helper method to generate a secure temporary password
+    private string GenerateTempPassword()
+    {
+        const int length = 12;
+        const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+        var random = new Random();
+        return new string(Enumerable.Repeat(validChars, length)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
+    }
+
+
+    public async Task<List<string>> GetAdminEmails()
+    {
+        // Access the MongoDB collection
+        var collection = _userCollection.GetCollection("UserCollections");
+
+        // Query for users with the role "admin" and project only the Email field
+        var emails = await collection
+            .Find(u => u.Role == "Admin")
+            .Project(u => u.Email)
+            .ToListAsync();
+
+        return emails;
     }
 
 }
