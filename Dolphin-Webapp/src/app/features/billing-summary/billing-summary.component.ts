@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpService } from '../shared/http-serve.service';
+import { HttpService } from '../../shared/http-serve.service';
 import { Invoice } from '../shared/Invoice';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';

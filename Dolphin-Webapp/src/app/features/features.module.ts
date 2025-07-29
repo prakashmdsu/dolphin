@@ -21,7 +21,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatOptionModule } from '@angular/material/core'; // sometimes needed explicitly
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { StockgraniteblockComponent } from './stockgraniteblock/stockgraniteblock.component';
-import { HttpService } from './shared/http-serve.service';
+import { HttpService } from '../shared/http-serve.service';
 import { GranitestocksComponent } from './granitestocks/granitestocks.component';
 import { AddclientComponent } from './addclient/addclient.component';
 import { MatPaginatorModule } from '@angular/material/paginator';

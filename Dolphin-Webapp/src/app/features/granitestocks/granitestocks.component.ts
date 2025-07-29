@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
-import { HttpService } from '../shared/http-serve.service';
+import { HttpService } from '../../shared/http-serve.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { GraniteBlock } from '../shared/GraniteBlock';

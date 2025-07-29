@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GraniteBlock } from '../shared/GraniteBlock';
-import { HttpService } from '../shared/http-serve.service';
+import { HttpService } from '../../shared/http-serve.service';
 import { Client } from '../shared/Client';
 import { PreBilling } from '../shared/PreBilling';
 import { Router } from '@angular/router';

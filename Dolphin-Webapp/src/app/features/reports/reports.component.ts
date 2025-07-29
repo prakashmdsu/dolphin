@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
-import { HttpService } from '../shared/http-serve.service';
+import { HttpService } from '../../shared/http-serve.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { Invoice } from '../shared/Invoice';

@@ -2,7 +2,7 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { StockGraniteBlock } from '../shared/StockBlock';
-import { HttpService } from '../shared/http-serve.service';
+import { HttpService } from '../../shared/http-serve.service';
 
 export interface DialogData {
   block?: StockGraniteBlock;

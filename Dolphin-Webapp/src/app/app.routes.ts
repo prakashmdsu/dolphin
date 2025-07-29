@@ -8,7 +8,12 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/features.module').then((m) => m.FeaturesModule),
   },
-  { path: '', redirectTo: 'features/dashboard', pathMatch: 'full' }, // Optional default route
+  {
+    path: 'login',
+    loadChildren: () =>
+      import('./login/login.module').then((m) => m.LoginModule),
+  },
+  { path: '', redirectTo: 'login', pathMatch: 'full' }, // Optional default route
 ];
 
 @NgModule({
