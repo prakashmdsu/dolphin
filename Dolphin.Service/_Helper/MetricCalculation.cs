@@ -53,7 +53,7 @@ namespace Dolphin.Services.Helper
                 BuyerBlockNo = block.BuyerBlockNo,
                 CategoryGrade = block.CategoryGrade,
                 Measurement = block.Measurement,
-                Status = block.Status,
+                // Status = bloc.Status,
                 UpdatedDate = block.UpdatedDate,
                 Note = block.Note,
                 EnteredBy = block.EnteredBy,

@@ -9,7 +9,9 @@ import { MatDialog } from '@angular/material/dialog';
 import {
   DialogData,
   StockgraniteblockComponent,
-} from '../stockgraniteblock/stockgraniteblock.component';
+} from '../addstockgraniteblock/stockgraniteblock.component';
+import { DispatchStatus } from '../../shared/enum/stausenum';
+import { UpdategraniteBlockStatusComponent } from '../updategranite-block-status/updategranite-block-status.component';
 
 interface ApiResponse {
   data: GraniteBlock[];
@@ -23,6 +25,10 @@ interface ApiResponse {
   styleUrls: ['./granitestocks.component.scss'],
 })
 export class GranitestocksComponent implements OnInit {
+
+
+   dispatchStatus = DispatchStatus;
+  dispatchStatusKeys: { key: number; label: string }[] = [];
   displayedColumns: string[] = [
     'date',
     'pitNo',
@@ -42,7 +48,7 @@ export class GranitestocksComponent implements OnInit {
   pageSize = 10;
   pageIndex = 0;
   isLoading = false;
-  showAdvancedFilters = false;
+  showAdvancedFilters = true;
 
   // Filter form with additional fields
   filterForm = new FormGroup({
@@ -57,14 +63,13 @@ export class GranitestocksComponent implements OnInit {
   });
 
   // Options for dropdowns
-  statusOptions = [
-    { value: '', label: 'All Status' },
-    { value: 'UnBilled', label: 'UnBilled' },
-    { value: 'billed', label: 'Billed' },
-    // { value: 'Sold', label: 'Sold' },
-    // { value: 'Reserved', label: 'Reserved' },
-  ];
-
+statusOptions = [
+  { value: DispatchStatus.ReadyForDispatch, label: 'Ready For Dispatch' },
+  { value: DispatchStatus.LoadedOnTruck, label: 'Loaded On Truck' },
+  { value: DispatchStatus.AtPort, label: 'At Port' },
+  { value: DispatchStatus.Shipped, label: 'Shipped' },
+  { value: DispatchStatus.Cancelled, label: 'Cancelled' }
+];
   pitOptions = [1, 2, 3, 4, 5]; // Add your pit options
   gradeOptions = ['A', 'B', 'C', 'D']; // Add your grade options
 
@@ -75,6 +80,17 @@ export class GranitestocksComponent implements OnInit {
   totals = { totalQuarryCbm: 0, totalDmgTonnage: 0, totalNetCbm: 0 };
 
   ngOnInit() {
+
+    this.dispatchStatusKeys = Object.keys(this.dispatchStatus)
+      .filter(key => !isNaN(Number(key))) // Filters numeric keys from reverse mapping
+      .map(key => {
+        const value = Number(key);
+        return {
+          key: value,
+          label: DispatchStatus[value]
+        };
+      });
+  
     // Set default date range (last month)
     const endDate = new Date();
     const startDate = new Date();
@@ -321,6 +337,26 @@ export class GranitestocksComponent implements OnInit {
   openAddBlockDialog(): void {
     const dialogRef = this.dialog.open(StockgraniteblockComponent, {
       width: '800px',
+      maxWidth: '90vw',
+      disableClose: true,
+      data: {
+        mode: 'add',
+      } as DialogData,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Block added:', result);
+        this.loadData(); // Refresh the table data
+        // You can also show a success message here
+      }
+    });
+  }
+
+
+   openUpadateBlockStockStatusDialog(): void {
+    const dialogRef = this.dialog.open(UpdategraniteBlockStatusComponent, {
+      width: '1000px',
       maxWidth: '90vw',
       disableClose: true,
       data: {

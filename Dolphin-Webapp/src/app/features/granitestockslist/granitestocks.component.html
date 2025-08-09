@@ -1,19 +1,6 @@
 <div class="granite-stocks-container">
   <!-- Header Section -->
-  <!-- <div class="page-header">
-    <button mat-raised-button color="accent" (click)="openAddBlockDialog()">
-      <mat-icon>add</mat-icon>
-      Add Block
-    </button>
-    <button mat-raised-button color="primary" (click)="refreshData()">
-      <mat-icon>refresh</mat-icon>
-      Refresh
-    </button>
-    <button mat-stroked-button (click)="exportData()">
-      <mat-icon>download</mat-icon>
-      Export
-    </button>
-  </div> -->
+
   <div class="page-header">
     <h1 class="page-title">
       <mat-icon>inventory_2</mat-icon>
@@ -27,6 +14,10 @@
       <button mat-raised-button color="primary" (click)="loadData()">
         <mat-icon>refresh</mat-icon>
         Refresh
+      </button>
+       <button mat-raised-button color="accent" (click)="openUpadateBlockStockStatusDialog()">
+        <mat-icon>update</mat-icon>
+        Update Block
       </button>
       <button mat-stroked-button>
         <mat-icon>download</mat-icon>
@@ -70,19 +61,20 @@
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
 
+
           <mat-form-field appearance="outline">
-            <mat-label>Status</mat-label>
-            <mat-select formControlName="status">
-              <mat-option
-                *ngFor="let status of statusOptions"
-                [value]="status.value"
-              >
-                <span class="status-option" [class]="'status-' + status.value">
-                  {{ status.label }}
-                </span>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+  <mat-label>Status</mat-label>
+  <mat-select formControlName="status">
+    <mat-option
+      *ngFor="let status of statusOptions"
+      [value]="status.value"
+    >
+      <span class="status-option" [class]="'status-' + status.value">
+        {{ status.label }}
+      </span>
+    </mat-option>
+  </mat-select>
+</mat-form-field>
 
           <!-- <div class="date-range-container">
             <mat-form-field appearance="outline">

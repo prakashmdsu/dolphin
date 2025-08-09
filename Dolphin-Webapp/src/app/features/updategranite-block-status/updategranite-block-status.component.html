@@ -1,0 +1,154 @@
+<div class="block-dialog-container">
+  <!-- Dialog Header -->
+  <div mat-dialog-title class="dialog-header">
+    <mat-icon>inventory_2</mat-icon>
+    <h2>{{ getDialogTitle() }}</h2>
+    <button mat-icon-button mat-dialog-close class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Search Section -->
+  <div class="filter-row basic-filters">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search Gate Pass</mat-label>
+      <input
+        matInput
+        [(ngModel)]="blockNumber"
+        name="blockNumber"
+        type="text"
+        placeholder="Enter Gate Pass"
+      />
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="searchBlockNumber()"
+      >
+        <mat-icon>search</mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <!-- Data Table -->
+  <div class="table-container" *ngIf="blocksData.length > 0">
+    <table mat-table [dataSource]="blocksData" class="mat-elevation-8">
+      
+      <!-- Checkbox Column -->
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox (change)="toggleAllRows()"
+                        [checked]="selection.hasValue() && isAllSelected()"
+                        [indeterminate]="selection.hasValue() && !isAllSelected()"
+                        [aria-label]="checkboxLabel()">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox (click)="$event.stopPropagation()"
+                        (change)="selection.toggle(row)"
+                        [checked]="selection.isSelected(row)"
+                        [aria-label]="checkboxLabel(row)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Block Number Column -->
+      <ng-container matColumnDef="blockNo">
+        <th mat-header-cell *matHeaderCellDef> Block No </th>
+        <td mat-cell *matCellDef="let element"> {{element.blockNo}} </td>
+      </ng-container>
+
+      <!-- Gate Pass No Column -->
+      <ng-container matColumnDef="gatePassNo">
+        <th mat-header-cell *matHeaderCellDef> Gate Pass No </th>
+        <td mat-cell *matCellDef="let element"> {{element.gatePassNo}} </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef> Status </th>
+        <td mat-cell *matCellDef="let element">
+          <span class="status-badge" [class]="getStatusClass(element.status)">
+            {{ getStatusLabel(element.status) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+
+  <!-- No Data Message -->
+  <div class="no-data-message" *ngIf="blocksData.length === 0">
+    <mat-icon>info</mat-icon>
+    <p>No blocks found. Please search using Gate Pass number.</p>
+  </div>
+
+  <!-- Update Status Section -->
+  <div class="update-section" *ngIf="blocksData.length > 0">
+    <form [formGroup]="updateForm" (ngSubmit)="onSubmit()">
+      <div class="status-update-row">
+        <mat-form-field appearance="outline" class="status-field">
+          <mat-label>Update Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option
+              *ngFor="let status of statusOptions"
+              [value]="status.value"
+            >
+              <span class="status-option" [class]="'status-' + status.value">
+                {{ status.label }}
+              </span>
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="updateForm.get('status')?.hasError('required')">
+            Status is required
+          </mat-error>
+        </mat-form-field>
+
+        <div class="selection-info">
+          <mat-chip-set>
+            <mat-chip>
+              <mat-icon matChipAvatar>check_circle</mat-icon>
+              {{ selection.selected.length }} selected
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="dialog-actions">
+        <button
+          mat-button
+          type="button"
+          (click)="onReset()"
+          class="reset-button"
+        >
+          <mat-icon>refresh</mat-icon>
+          Reset
+        </button>
+
+        <div class="action-buttons">
+          <button
+            mat-button
+            type="button"
+            (click)="onCancel()"
+            class="cancel-button"
+          >
+            Cancel
+          </button>
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="selection.isEmpty() || updateForm.invalid"
+            class="update-button"
+          >
+            <mat-icon>update</mat-icon>
+            Update Status
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

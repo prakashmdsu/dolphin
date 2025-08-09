@@ -127,7 +127,42 @@
         </mat-error>
       </mat-form-field>
     </div>
+  <!-- transporter Section -->
+     <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Transporter phone</mat-label>
+          <input matInput formControlName="tansporterContactNo"  />
+          <mat-error *ngIf="isFieldInvalid('tansporterContactNo')">
+            {{ getFieldErrorMessage("tansporterContactNo") }}
+          </mat-error>
+        </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Vehicle No</mat-label>
+          <input matInput formControlName="vehicleNo" />
+          <mat-error *ngIf="isFieldInvalid('vehicleNo')">
+            {{ getFieldErrorMessage("vehicleNo") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+       <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Driver Name</mat-label>
+          <input matInput formControlName="driverName"  />
+          <mat-error *ngIf="isFieldInvalid('driverName')">
+            {{ getFieldErrorMessage("driverName") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Phone No</mat-label>
+          <input matInput formControlName="driverContactNo" />
+          <mat-error *ngIf="isFieldInvalid('driverContactNo')">
+            {{ getFieldErrorMessage("driverContactNo") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
     <!-- Items Section -->
     <div class="items-section">
       <div class="section-header">

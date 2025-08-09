@@ -10,14 +10,18 @@ namespace Dolphin.Services.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-        [BsonElement("dateOfEntry")]
-        public DateTime Date { get; set; }
+         [BsonElement("dateOfEntry")]
+    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)] // Ensure UTC storage
+    public DateTime Date { get; set; }
 
         [BsonElement("pitNo")]
         public int PitNo { get; set; }
 
         [BsonElement("blockNo")]
         public int BlockNo { get; set; }
+
+         [BsonElement("gatePassNo")]
+        public string? GatePassNo { get; set; }
 
         [BsonElement("buyerBlockNo")]
         public int BuyerBlockNo { get; set; }
@@ -28,8 +32,12 @@ namespace Dolphin.Services.Models
         [BsonElement("measurement")]
         public Measurement Measurement { get; set; }
 
+        // [BsonElement("status")]
+        // public int? Status { get; set; }
+
+        [BsonRepresentation(BsonType.Int32)]
         [BsonElement("status")]
-        public string? Status { get; set; }
+        public DispatchStatus? Status { get; set; }
 
         [BsonElement("updatedDate")]
         public DateTime? UpdatedDate { get; set; }
