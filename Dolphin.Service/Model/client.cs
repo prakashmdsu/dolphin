@@ -26,5 +26,10 @@ namespace Dolphin.Services.Models
         [BsonElement("address")]
         public string Address { get; set; }
 
+         [BsonElement("ClientType")]
+        public string? ClientType { get; set; }
+         [BsonElement("pannumber")]
+        public string? PanNumber { get; set; }
+
     }
 }
