@@ -549,7 +549,7 @@ exportTaxInvoiceToPDF(): void {
       2: { halign: 'center', cellWidth: 25 },
       3: { halign: 'center', cellWidth: 25 },
       4: { halign: 'right', cellWidth: 25 },
-      5: { halign: 'right', cellWidth: 35 }
+      5: { halign: 'right', cellWidth: 25 }
     },
     tableWidth: 'wrap',
     margin: { left: 10, right: 10 }
@@ -645,11 +645,11 @@ exportTaxInvoiceToPDF(): void {
     },
     styles: { 
       fontSize: 8, 
-      cellPadding: 2,
+      cellPadding: 3,
       valign: 'middle'
     },
     columnStyles: {
-      0: { halign: 'center', cellWidth: 25 },
+      0: { halign: 'center', cellWidth: 30 },
       1: { halign: 'right', cellWidth: 30 },
       2: { halign: 'center', cellWidth: 25 },
       3: { halign: 'right', cellWidth: 25 },
@@ -657,13 +657,15 @@ exportTaxInvoiceToPDF(): void {
       5: { halign: 'right', cellWidth: 25 },
       6: { halign: 'right', cellWidth: 30 }
     },
-    didParseCell: function (data) {
-      // Make total row bold
-      if (data.row.index === taxTableData.length - 1) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [249, 249, 249];
-      }
-    }
+    // didParseCell: function (data) {
+    //   // Make total row bold
+    //   if (data.row.index === taxTableData.length - 1) {
+    //     data.cell.styles.fontStyle = 'bold';
+    //     data.cell.styles.fillColor = [249, 249, 249];
+    //   }
+    // }
+    tableWidth: 'wrap',
+    margin: { left: 10, right: 10 }
   });
 
   finalY = (doc as any).lastAutoTable?.finalY || finalY + 40;
@@ -735,6 +737,356 @@ exportTaxInvoiceToPDF(): void {
   // Save the PDF
   doc.save(`tax-invoice-${this.invoiceBilling.invoiceNo || 'draft'}.pdf`);
 }
+exportPackingListPDF(): void {
+  if (!this.invoice) return;
+
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
+
+  /** ========== HEADER WITH LOGO ========== **/
+  // Add company logo/header if available
+  doc.setFontSize(8).setFont('helvetica', 'normal');
+  doc.text('Dolphin International', pageWidth / 2, 10, { align: 'center' });
+  doc.text('Granite Exporters & Quarry Owners', pageWidth / 2, 14, { align: 'center' });
+
+  // Main Title
+  doc.setFont('helvetica', 'bold').setFontSize(16);
+  doc.text('PACKING LIST', pageWidth / 2, 25, { align: 'center' });
+
+  // GSTIN
+  doc.setFontSize(10).setFont('helvetica', 'normal');
+  doc.text('GSTIN: 29AABFD0471D1ZV, STATE CODE: 29', pageWidth / 2, 32, { align: 'center' });
+
+  /** ========== MAIN INFO TABLE ========== **/
+  autoTable(doc, {
+    startY: 38,
+    theme: 'grid',
+    styles: { 
+      fontSize: 9, 
+      cellPadding: 1.5,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1
+    },
+    columnStyles: {
+      0: { cellWidth: 25, fontStyle: 'bold', valign: 'top' },
+      1: { cellWidth: 75, valign: 'top' },
+      2: { cellWidth: 30, fontStyle: 'bold' },
+      3: { cellWidth: 40 }
+    },
+    body: [
+      [
+        {
+          content: 'Exporter',
+          rowSpan: 4,
+          styles: { valign: 'top', fontStyle: 'bold' }
+        },
+        {
+          content: `DOLPHIN INTERNATIONAL\nNO 2/10, 4TH FLOOR\n80FT ROAD, OPPOSITE\nRAMAIAH HOSPITAL RMV 2ND STAGE\nBANGALORE 560 094\nKARNATAKA, INDIA.`,
+          rowSpan: 4,
+          styles: { valign: 'top' }
+        },
+        'Invoice Number',
+        'Date'
+      ],
+      [
+        '',
+        '',
+        this.invoice.gatePassNo || 'GP-002',
+        this.formatDate(this.invoice.dispatchDate) || '10/08/2025'
+      ],
+      [
+        '',
+        '',
+        'Buyer\'s Order Number',
+        'Date'
+      ],
+      [
+        '',
+        '',
+        this.invoice.gatePassNo || 'GP-002',
+        this.formatDate(this.invoice.gatePassNo) || '01/02/2001'
+      ],
+      [
+        {
+          content: 'Consignee & Buyer',
+          rowSpan: 7,
+          styles: { valign: 'top', fontStyle: 'bold' }
+        },
+        {
+          content: `${this.invoice.billTo || 'XIAMEN KA UNITED IMP. & EXP. CO., LTD'}\n\nADD: - ${this.invoice.billToAddress || 'China'}`,
+          rowSpan: 7,
+          styles: { valign: 'top' }
+        },
+        'Shipping Bill No',
+        {
+          content: this.invoice.gatePassNo || 'GP-002',
+          colSpan: 1
+        }
+      ],
+      [
+        '',
+        '',
+        '',
+        'Date'
+      ],
+      [
+        '',
+        '',
+        'Port Code',
+        this.invoice.gatePassNo || 'GP-002'
+      ],
+      [
+        '',
+        '',
+        '',
+        this.formatDate(this.invoice.gatePassNo) || '01/02/2001'
+      ],
+      [
+        '',
+        '',
+        'Exporter\'s Ref',
+        ''
+      ],
+      [
+        '',
+        '',
+        `IEC No: -\n${this.invoice.gatePassNo || 'GP-002'}`,
+        {
+          content: 'Last Modified Date: -\n17-Apr-2025',
+          styles: { valign: 'middle' }
+        }
+      ],
+      [
+        '',
+        '',
+        `GSTIN: - ${this.invoice.gstin || '29AABFD0471D1ZV'}, STATE CODE: - 29`,
+        ''
+      ]
+    ]
+  });
+
+  /** ========== SHIPPING DETAILS TABLE ========== **/
+  let currentY = (doc as any).lastAutoTable.finalY + 2;
+
+  autoTable(doc, {
+    startY: currentY,
+    theme: 'grid',
+    styles: { 
+      fontSize: 9, 
+      cellPadding: 1.5,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+      halign: 'left'
+    },
+    columnStyles: {
+      0: { cellWidth: 25, fontStyle: 'bold' },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 35, fontStyle: 'bold' },
+      3: { cellWidth: 60 }
+    },
+    body: [
+      [
+        'Pre-Carriage by',
+        'Place of Receipt by Pre-Carrier',
+        'Country of Origin of Goods',
+        'Country of final Destination'
+      ],
+      [
+        'ROAD',
+        'KRISHNAPATNAM PORT, INDIA',
+        'INDIA',
+        this.invoice.gatePassNo || 'CHINA'
+      ],
+      [
+        'Vessel/Flight No.',
+        'Port of Loading',
+        'Terms of Delivery & Payment',
+        ''
+      ],
+      [
+        this.invoice.gatePassNo || 'MV. SEA LEO VOY NO MU2518',
+        'KRISHNAPATNAM PORT, INDIA',
+        'F.O.B. KRISHNAPATNAM PORT, INDIA',
+        ''
+      ],
+      [
+        'Port of Discharge',
+        'Final Destination',
+        '',
+        ''
+      ],
+      [
+        `${this.invoice.gatePassNo || 'KRISHNAPATNAM PORT,'}\n${this.invoice.gatePassNo || 'INDIA'}`,
+        this.invoice.gatePassNo || 'CHINA',
+        'PAYMENT TT AFTER EMAIL COPY OF ORIGINAL BILL OF LADING.',
+        ''
+      ]
+    ]
+  });
+
+  /** ========== BL & MARKS SECTION ========== **/
+  currentY = (doc as any).lastAutoTable.finalY + 2;
+
+  autoTable(doc, {
+    startY: currentY,
+    theme: 'grid',
+    styles: { 
+      fontSize: 9, 
+      cellPadding: 1.5,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+      halign: 'left'
+    },
+    columnStyles: {
+      0: { cellWidth: 25, fontStyle: 'bold' },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 25, fontStyle: 'bold' },
+      3: { cellWidth: 35, fontStyle: 'bold' },
+      4: { cellWidth: 35, fontStyle: 'bold' }
+    },
+    body: [
+      [
+        'BL No. & Dt',
+        `${this.invoice.gatePassNo || 'KPMXMNSL2518007'} Dt ${this.formatDate(this.invoice.gatePassNo) || '12-Jul-2025'}`,
+        '',
+        'Quantity',
+        'GROSS AND NET WEIGHT.'
+      ],
+      [
+        'Marks & Nos.',
+        'No. & Kind of Packing',
+        'Description of Goods',
+        'CBM',
+        'MT'
+      ],
+      [
+        `SHIPPING MARK\n${this.invoice.gatePassNo || 'FAN / XMN'}`,
+        `${this.invoice.graniteStocks?.length || 205} Granite - Roughly Trimmed Blocks`,
+        '',
+        '',
+        ''
+      ]
+    ]
+  });
+
+  /** ========== MAIN GOODS TABLE ========== **/
+  currentY = (doc as any).lastAutoTable.finalY;
+
+  // Prepare goods data
+  let totalCBM = 0;
+  let totalWeight = 0;
+  const goodsData = this.invoice.graniteStocks.map((block, index) => {
+    const derived = this.calculateDerivedFields(block.measurement);
+    // totalCBM += derived.cbm || 0;
+    totalWeight += derived.dmgTonnage || 0;
+    
+    return [
+      (index + 1).toString(),
+      block.blockNo || `130${index + 1}`,
+      block.measurement.lg?.toString() || '',
+      'X',
+      block.measurement.wd?.toString() || '',
+      'X',
+      block.measurement.ht?.toString() || '',
+      // (derived.cbm || 0).toFixed(3),
+      (derived.dmgTonnage || 0).toFixed(3)
+    ];
+  });
+
+  autoTable(doc, {
+    startY: currentY,
+    theme: 'grid',
+    styles: { 
+      fontSize: 8, 
+      cellPadding: 1,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+      halign: 'center'
+    },
+    columnStyles: {
+      0: { cellWidth: 15 }, // SL.NO
+      1: { cellWidth: 20 }, // BLOCK NO
+      2: { cellWidth: 15 }, // Length
+      3: { cellWidth: 8 },  // X
+      4: { cellWidth: 15 }, // Width  
+      5: { cellWidth: 8 },  // X
+      6: { cellWidth: 15 }, // Height
+      7: { cellWidth: 20 }, // CBM
+      8: { cellWidth: 20 }  // MT
+    },
+    head: [[
+      'SL.NO',
+      'BLOCK NO',
+      'MEASUREMENT',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ]],
+    body: goodsData,
+    didDrawPage: (data) => {
+      // Add header to subsequent pages
+      if (data.pageNumber > 1) {
+        doc.setFontSize(16).setFont('helvetica', 'bold');
+        doc.text('PACKING LIST (Continued)', pageWidth / 2, 15, { align: 'center' });
+        doc.setFontSize(10).setFont('helvetica', 'normal');
+        doc.text('GSTIN: 29AABFD0471D1ZV, STATE CODE: 29', pageWidth / 2, 22, { align: 'center' });
+      }
+    }
+  });
+
+  /** ========== TOTALS ROW ========== **/
+  currentY = (doc as any).lastAutoTable.finalY;
+
+  autoTable(doc, {
+    startY: currentY,
+    theme: 'grid',
+    styles: { 
+      fontSize: 9, 
+      cellPadding: 1.5,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.1,
+      halign: 'center',
+      fontStyle: 'bold'
+    },
+    columnStyles: {
+      0: { cellWidth: 15 },
+      1: { cellWidth: 20 },
+      2: { cellWidth: 15 },
+      3: { cellWidth: 8 },
+      4: { cellWidth: 15 },
+      5: { cellWidth: 8 },
+      6: { cellWidth: 15 },
+      7: { cellWidth: 20 },
+      8: { cellWidth: 20 }
+    },
+    body: [[
+      '',
+      'TOTAL',
+      '',
+      '',
+      '',
+      '',
+      '',
+      totalCBM.toFixed(3),
+      totalWeight.toFixed(3)
+    ]]
+  });
+
+  /** ========== FOOTER ========== **/
+  // Add any additional footer information as needed
+  const footerY = pageHeight - 20;
+  doc.setFontSize(9);
+  doc.text('For DOLPHIN INTERNATIONAL', pageWidth - 60, footerY);
+  doc.text('Authorized Signatory', pageWidth - 60, footerY + 10);
+
+  // Save PDF
+  doc.save(`packing-list-${this.invoice.gatePassNo || 'export'}.pdf`);
+}
+
 // Helper method for date formatting
 public formatDate(date: any): string {
   if (!date) return '';
