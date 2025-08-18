@@ -1,0 +1,103 @@
+/* Modal Container */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+
+/* Loader Container */
+.loader {
+  background: white;
+  padding: 30px 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Main logo container */
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* BTC text */
+.btc {
+  color: #0046B5; /* Boston Technology blue */
+  font-size: 52px;
+  font-weight: 700;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+/* Company name container */
+.company-name {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-left: 5px;
+}
+
+/* Boston text */
+.boston {
+  color: #666666;
+  font-size: 24px;
+  font-weight: normal;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+}
+
+/* Technology text */
+.technology {
+  color: #666666;
+  font-size: 24px;
+  font-weight: normal;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+}
+
+/* Loading dots */
+.loading-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 15px;
+  align-self: center;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background-color: #0046B5;
+  border-radius: 50%;
+  animation: dotPulse 1.4s infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
