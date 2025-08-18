@@ -4,8 +4,8 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { BillingComponent } from './billing/billing.component';
 import { ReportsComponent } from './reports/reports.component';
 import { LayoutComponent } from './layout/layout.component';
-import { StockgraniteblockComponent } from './stockgraniteblock/stockgraniteblock.component';
-import { GranitestocksComponent } from './granitestocks/granitestocks.component';
+import { StockgraniteblockComponent } from './addstockgraniteblock/stockgraniteblock.component';
+import { GranitestocksComponent } from './granitestockslist/granitestocks.component';
 import { AddclientComponent } from './addclient/addclient.component';
 import { BillingSummaryComponent } from './billing-summary/billing-summary.component';
 

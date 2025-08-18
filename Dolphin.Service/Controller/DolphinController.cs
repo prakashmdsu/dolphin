@@ -1,5 +1,6 @@
 using Dolphin.Services.Models;
 using Finance.Service.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 [ApiController]
 [Route("[controller]")]
+// [Authorize]
 public class DolphinController : ControllerBase
 {
     private readonly MyService _myService;
@@ -34,101 +36,169 @@ public class DolphinController : ControllerBase
     }
 
 
-    // Enhanced Controller Method
-    [HttpGet("getgranitesblockscategory")]
-    public async Task<ActionResult<object>> Get(
-        string? status,
-        int pageNumber = 1,
-        int pageSize = 10,
-        int? blockNo = null,
-        DateTime? startDate = null,
-        DateTime? endDate = null,
-        int? pitNo = null,
-        string? grade = null,
-        decimal? minCbm = null,
-        decimal? maxCbm = null,
-        string? sortBy = null,
-        string? sortDirection = "asc")
+   [HttpGet("getgranitesblockscategory")]
+public async Task<ActionResult<object>> Get(
+    string? status,
+    int pageNumber = 1,
+    int pageSize = 10,
+    int? blockNo = null,
+    DateTime? startDate = null,
+    DateTime? endDate = null,
+    int? pitNo = null,
+    string? grade = null,
+    decimal? minCbm = null,
+    decimal? maxCbm = null,
+    string? sortBy = null,
+    string? sortDirection = "asc")
+{
+    // Set default date range to one month if not provided
+    DateTime effectiveEndDate;
+    DateTime effectiveStartDate;
+    
+    if (endDate.HasValue)
     {
-        // Set default date range to one month if not provided
-        DateTime effectiveEndDate = endDate ?? DateTime.UtcNow;
-        DateTime effectiveStartDate = startDate ?? effectiveEndDate.AddMonths(-1);
+        // If endDate is provided, set it to end of day in UTC
+        effectiveEndDate = endDate.Value.ToUniversalTime().Date.AddDays(1).AddTicks(-1);
+    }
+    else
+    {
+        // Default to end of current day in UTC
+        effectiveEndDate = DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
+    }
+    
+    if (startDate.HasValue)
+    {
+        // If startDate is provided, set it to beginning of day in UTC
+        effectiveStartDate = startDate.Value.ToUniversalTime().Date;
+    }
+    else
+    {
+        // Default to beginning of day one month ago
+        effectiveStartDate = effectiveEndDate.AddMonths(-1).Date;
+    }
+    
+    // Validate pagination parameters
+    if (pageNumber < 1) pageNumber = 1;
+    if (pageSize < 1) pageSize = 10;
+    if (pageSize > 100) pageSize = 100; // Limit max page size
 
-        // Validate pagination parameters
-        if (pageNumber < 1) pageNumber = 1;
-        if (pageSize < 1) pageSize = 10;
-        if (pageSize > 100) pageSize = 100; // Limit max page size
+    List<DispatchStatus?> statusList = new List<DispatchStatus?>();
 
-        // Prepare status list - by default include both "Billed" and null status
-        List<string?> statusList;
-        if (string.IsNullOrEmpty(status))
-        {
-            // Default: include both "Billed" and null (unbilled)
-            statusList = new List<string?> { "billed", null };
-        }
-        else if (status == "UnBilled")
-        {
-            statusList = new List<string?> { null };
-        }
-        else
-        {
-            // User provided specific status
-            statusList = new List<string?> { status };
-        }
+    if (string.IsNullOrEmpty(status))
+    {
+        // Default: include ReadyForDispatch and null (unbilled) statuses
+        statusList = new List<DispatchStatus?> { DispatchStatus.ReadyForDispatch, null };
+    }
+    else if (Enum.TryParse<DispatchStatus>(status, out var parsedStatus))
+    {
+        statusList = new List<DispatchStatus?> { parsedStatus };
+    }
+    else
+    {
+        // If status string is not a valid enum, return bad request
+        return BadRequest(new { message = "Invalid status value" });
+    }
 
-        try
-        {
-            var result = await _myService.GetGraniteBlocksFilteredWithCalculationsAsync(
-                statusList,
-                blockNo,
-                effectiveStartDate,
-                effectiveEndDate,
-                pageNumber,
-                pageSize,
-                pitNo,
-                grade,
-                minCbm,
-                maxCbm,
-                sortBy,
-                sortDirection
-            );
+    try
+    {
+        var result = await _myService.GetGraniteBlocksFilteredWithCalculationsAsync(
+            statusList,
+            blockNo,
+            effectiveStartDate,
+            effectiveEndDate,
+            pageNumber,
+            pageSize,
+            pitNo,
+            grade,
+            minCbm,
+            maxCbm,
+            sortBy,
+            sortDirection
+        );
 
-            if (result?.Data == null || !result.Data.Any())
+        if (result?.Data == null || !result.Data.Any())
+        {
+            return Ok(new GraniteBlocksResponseDto
             {
-                return Ok(new GraniteBlocksResponseDto
-                {
-                    Data = new List<GraniteStockBlockDto>(),
-                    TotalCount = 0,
-                    PageNumber = pageNumber,
-                    PageSize = pageSize,
-                    TotalPages = 0,
-                    HasNextPage = false,
-                    HasPreviousPage = false,
-                    BilledTotals = new GraniteTotalsDto(),
-                    UnbilledTotals = new GraniteTotalsDto(),
-                    GrandTotals = new GraniteTotalsDto()
-                });
-            }
-
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new
-            {
-                message = "An error occurred while processing your request",
-                error = ex.Message
+                Data = new List<GraniteStockBlockDto>(),
+                TotalCount = 0,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalPages = 0,
+                HasNextPage = false,
+                HasPreviousPage = false,
+                BilledTotals = new GraniteTotalsDto(),
+                UnbilledTotals = new GraniteTotalsDto(),
+                GrandTotals = new GraniteTotalsDto()
             });
         }
+
+        return Ok(result);
     }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new
+        {
+            message = "An error occurred while processing your request",
+            error = ex.Message
+        });
+    }
+}
+
+
+[HttpGet("getgranitesblockscategorybygatepassorblockno")]
+public async Task<ActionResult<object>> GetStockBYGatePassOrBlockNo( int? blockNo = null, string? gatePassNo = null)
+{
+    try
+    {
+            if (blockNo==null && gatePassNo==null)
+            {
+            return BadRequest(new { message = "BlockNo or GatePassNo is required" });
+        }
+        var stock = await _myService.GetBlocksByBlockNoAndGatePassNo(blockNo, gatePassNo);
+        return Ok(stock);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new
+        {
+            message = "An error occurred while fetching the stock",
+            error = ex.Message
+        });
+    }
+}
+
 
     [HttpPost("addgranitestocks")]
-    public async Task<ActionResult<GraniteStockBlock>> AddStocks([FromBody] GraniteStockBlock stock)
+public async Task<ActionResult<GraniteStockBlock>> AddStocks([FromBody] GraniteStockBlock stock)
+{
+    // Validate the model
+    if (!ModelState.IsValid)
     {
-        GraniteStockBlock invoiceResponse = await _myService.AddStock(stock);
-        return invoiceResponse;
+        return BadRequest(ModelState);
     }
 
+    try
+    {
+        GraniteStockBlock invoiceResponse = await _myService.AddStock(stock);
+        return Ok(invoiceResponse);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new
+        {
+            message = "An error occurred while adding the stock",
+            error = ex.Message
+        });
+    }
+}
+
+    [HttpPut("updateblockstatus")]
+public async Task<ActionResult<long>> updateblockstatus([FromBody] IdsandStatus idsandStatus)
+{
+    long updatedCount = await _myService.UpdateBlockStatusById(idsandStatus);
+    return Ok(updatedCount);
+}
 
     [HttpPost("invoice")]
     public async Task<ActionResult<Invoice>> CreateInvoice([FromBody] Invoice invoice)

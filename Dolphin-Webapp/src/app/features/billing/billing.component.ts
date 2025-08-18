@@ -80,6 +80,10 @@ export class BillingComponent implements OnInit {
       gpType: ['', Validators.required],
       placeOfDispatch: ['', Validators.required],
       graniteStocks: this.fb.array([]),
+      vehicleNo: ['', Validators.required],
+      driverName: ['', Validators.required],
+      driverContactNo: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      tansporterContactNo: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       notes: [''],
     });
   }

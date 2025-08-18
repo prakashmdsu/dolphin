@@ -44,6 +44,16 @@ namespace Dolphin.Services.Models
 
         [BsonElement("placeOfDispatch")]
         public string PlaceOfDispatch { get; set; }
+
+        [BsonElement("transportercontactNo")]
+        public string TansporterContactNo { get; set; }
+
+        [BsonElement("vehicleNo")]
+        public string VehicleNo { get; set; }
+        [BsonElement("driverName")]
+        public string DriverName { get; set; }
+                [BsonElement("driverContactNo")]
+        public string DriverContactNo { get; set; }
     }
 
     public class GraniteStock

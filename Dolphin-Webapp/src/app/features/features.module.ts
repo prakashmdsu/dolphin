@@ -20,15 +20,20 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTableModule } from '@angular/material/table';
 import { MatOptionModule } from '@angular/material/core'; // sometimes needed explicitly
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { StockgraniteblockComponent } from './stockgraniteblock/stockgraniteblock.component';
+import { StockgraniteblockComponent } from './addstockgraniteblock/stockgraniteblock.component';
 import { HttpService } from '../shared/http-serve.service';
-import { GranitestocksComponent } from './granitestocks/granitestocks.component';
+import { GranitestocksComponent } from './granitestockslist/granitestocks.component';
 import { AddclientComponent } from './addclient/addclient.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { NavbarComponent } from './navbar/navbar.component';
 import { BillingSummaryComponent } from './billing-summary/billing-summary.component';
 import { MatDialogModule } from '@angular/material/dialog';
+import { UpdategraniteBlockStatusComponent } from './updategranite-block-status/updategranite-block-status.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+
+
+// import { SelectionModel } from '@angular/cdk/collections';
 @NgModule({
   declarations: [
     LayoutComponent,
@@ -40,6 +45,7 @@ import { MatDialogModule } from '@angular/material/dialog';
     AddclientComponent,
     NavbarComponent,
     BillingSummaryComponent,
+    UpdategraniteBlockStatusComponent
   ],
   providers: [HttpService],
   imports: [
@@ -64,6 +70,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     MatTooltipModule,
     MatPaginatorModule,
     MatChipsModule,
+    MatCheckboxModule,
+    
   ],
 })
 export class FeaturesModule {}
