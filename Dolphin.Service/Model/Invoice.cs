@@ -52,8 +52,28 @@ namespace Dolphin.Services.Models
         public string VehicleNo { get; set; }
         [BsonElement("driverName")]
         public string DriverName { get; set; }
-                [BsonElement("driverContactNo")]
+        [BsonElement("driverContactNo")]
         public string DriverContactNo { get; set; }
+        [BsonElement("ewaybillno")]
+        public string EwayBillNo { get; set; }
+        [BsonElement("buyersordernumber")]
+        public string BuyersOrderNumber { get; set; }
+
+        [BsonElement("supplierref")]
+        public string SupplierRef { get; set; }
+        [BsonElement("otherreference")]
+        public string OtherReference { get; set; }
+           [BsonElement("dispatchedthrough")]
+        public string DispatchedThrough { get; set; }
+            [BsonElement("destination")]
+        public string Destination { get; set; }
+            [BsonElement("termsofpayment")]
+        public string TermsOfPayment { get; set; }
+           [BsonElement("otherrefence")]
+        public string otherrefence { get; set; }
+           [BsonElement("deliverynotedate")]
+        public string DeliveryNoteDate { get; set; }
+
     }
 
     public class GraniteStock

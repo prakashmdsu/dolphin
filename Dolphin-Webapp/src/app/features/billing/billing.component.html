@@ -71,11 +71,6 @@
             {{ getFieldErrorMessage("country") }}
           </mat-error>
         </mat-form-field>
-
-        <!-- <mat-form-field appearance="outline">
-          <mat-label>Ref #</mat-label>
-          <input matInput formControlName="refNo" />
-        </mat-form-field> -->
       </div>
 
       <div class="form-row">
@@ -127,11 +122,83 @@
         </mat-error>
       </mat-form-field>
     </div>
-  <!-- transporter Section -->
-     <div class="form-row">
+
+    <!-- Additional Fields Section -->
+    <div class="additional-fields-section">
+      <h3>Additional Information</h3>
+      
+      <div class="form-row">
         <mat-form-field appearance="outline">
-          <mat-label>Transporter phone</mat-label>
-          <input matInput formControlName="tansporterContactNo"  />
+          <mat-label>E-Way Bill No</mat-label>
+          <input matInput formControlName="ewayBillNo" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Buyer's Order Number</mat-label>
+          <input matInput formControlName="buyersOrderNumber" />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Supplier Ref</mat-label>
+          <input matInput formControlName="supplierRef" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Other Reference</mat-label>
+          <input matInput formControlName="otherReference" />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Dispatched Through</mat-label>
+          <input matInput formControlName="dispatchedThrough" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Destination</mat-label>
+          <input matInput formControlName="destination" />
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Terms of Payment</mat-label>
+          <mat-select formControlName="termsOfPayment">
+            <mat-option *ngFor="let option of termsOfPaymentOptions" [value]="option.value">
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Other Reference (Alt)</mat-label>
+          <input matInput formControlName="otherrefence" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Delivery Note Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="deliveryDatePicker"
+          formControlName="deliveryNoteDate"
+        />
+        <mat-datepicker-toggle matSuffix [for]="deliveryDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker #deliveryDatePicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+
+    <!-- Transporter Section -->
+    <div class="transporter-section">
+      <h3>Transporter Information</h3>
+      
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Transporter Phone</mat-label>
+          <input matInput formControlName="tansporterContactNo" />
           <mat-error *ngIf="isFieldInvalid('tansporterContactNo')">
             {{ getFieldErrorMessage("tansporterContactNo") }}
           </mat-error>
@@ -146,23 +213,25 @@
         </mat-form-field>
       </div>
 
-       <div class="form-row">
+      <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>Driver Name</mat-label>
-          <input matInput formControlName="driverName"  />
+          <input matInput formControlName="driverName" />
           <mat-error *ngIf="isFieldInvalid('driverName')">
             {{ getFieldErrorMessage("driverName") }}
           </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Phone No</mat-label>
+          <mat-label>Driver Contact No</mat-label>
           <input matInput formControlName="driverContactNo" />
           <mat-error *ngIf="isFieldInvalid('driverContactNo')">
             {{ getFieldErrorMessage("driverContactNo") }}
           </mat-error>
         </mat-form-field>
       </div>
+    </div>
+
     <!-- Items Section -->
     <div class="items-section">
       <div class="section-header">
@@ -187,7 +256,7 @@
       </div>
 
       <!-- Items table -->
-      <div class="items-table-container">
+        <div class="items-table-container">
         <table class="items-table">
           <thead>
             <tr>
@@ -400,3 +469,4 @@
     </div>
   </form>
 </div>
+            

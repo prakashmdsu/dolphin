@@ -19,6 +19,16 @@ export class BillingComponent implements OnInit {
   graniteBlocks: GraniteBlock[] = []; // available blocks to add
   selectedBlockNos: number[] = [];
   gatePassNo?: string;
+  
+  // Terms of payment options
+  termsOfPaymentOptions = [
+    { value: '100% advance payment', label: '100% advance payment' },
+    { value: 'Net 30', label: 'Net 30' },
+    { value: 'Net 60', label: 'Net 60' },
+    { value: 'COD', label: 'Cash on Delivery' },
+    { value: 'Letter of Credit', label: 'Letter of Credit' }
+  ];
+
   constructor(
     private fb: FormBuilder,
     private httpService: HttpService,
@@ -68,8 +78,6 @@ export class BillingComponent implements OnInit {
 
   createForm(): FormGroup {
     return this.fb.group({
-      // companyName: ['Dolphin International', Validators.required],
-      // address: ['AP Puttageri Tq : Kusngi, Dt Koppai', Validators.required],
       gatePassNo: ['GP-001', Validators.required],
       dispatchDate: ['', Validators.required],
       billTo: ['', Validators.required],
@@ -85,6 +93,16 @@ export class BillingComponent implements OnInit {
       driverContactNo: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       tansporterContactNo: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       notes: [''],
+      // New additional fields
+      ewayBillNo: [''],
+      buyersOrderNumber: [''],
+      supplierRef: [''],
+      otherReference: [''],
+      dispatchedThrough: [''],
+      destination: [''],
+      termsOfPaymentOptions: ['100% advance payment'], // Default value
+      otherrefence: [''], // Note: keeping the typo as per swagger
+      deliveryNoteDate: ['']
     });
   }
 
