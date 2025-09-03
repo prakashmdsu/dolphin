@@ -11,10 +11,11 @@ public class GraniteStockBlockDto
     public int BuyerBlockNo { get; set; }
     public string CategoryGrade { get; set; }
     public Measurement Measurement { get; set; }
-    public string? Status { get; set; }
+    public DispatchStatus? Status { get; set; }
     public DateTime? UpdatedDate { get; set; }
     public string? Note { get; set; }
     public string? EnteredBy { get; set; }
+   public bool IsBilled =>Status.HasValue;
 
     // Calculated fields
     public double QuarryCbm { get; set; }
@@ -27,6 +28,15 @@ public class GraniteTotalsDto
     public double TotalQuarryCbm { get; set; }
     public double TotalDmgTonnage { get; set; }
     public double TotalNetCbm { get; set; }
+}
+
+public class SearchCriteriaDto
+{
+    public bool AdvancedSearch { get; set; }
+    public int? MinLg { get; set; }
+    public int? MinWd { get; set; }
+    public int? MinHt { get; set; }
+    public string? BilledStatus { get; set; }
 }
 
 public class GraniteBlocksResponseDto
@@ -43,4 +53,7 @@ public class GraniteBlocksResponseDto
     public GraniteTotalsDto BilledTotals { get; set; }
     public GraniteTotalsDto UnbilledTotals { get; set; }
     public GraniteTotalsDto GrandTotals { get; set; }
+
+    // Search criteria information
+    public SearchCriteriaDto SearchCriteria { get; set; }
 }

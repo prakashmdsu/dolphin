@@ -60,185 +60,214 @@ public class MyService
         return await collection.Find(combinedFilter).ToListAsync();
     }
 
-// Service Method
-public async Task<GraniteBlocksResponseDto> GetGraniteBlocksFilteredWithCalculationsAsync(
-    List<DispatchStatus?> statuses,
-    int? blockNo,
-    DateTime startDate,
-    DateTime endDate,
-    int pageNumber,
-    int pageSize,
-    int? pitNo = null,
-    string? grade = null,
-    decimal? minCbm = null,
-    decimal? maxCbm = null,
-    string? sortBy = null,
-    string? sortDirection = "asc")
-{
-    var collection = _dolphinRepository.GetCollection("granitestockblock") as IMongoCollection<GraniteStockBlock>;
-
-    var filters = new List<FilterDefinition<GraniteStockBlock>>();
-
-    // Status filters
-    if (statuses != null && statuses.Any())
+    // Enhanced Service Method
+    public async Task<GraniteBlocksResponseDto> GetGraniteBlocksFilteredWithCalculationsAsync(
+        List<DispatchStatus?> statuses,
+        int? blockNo,
+        DateTime startDate,
+        DateTime endDate,
+        int pageNumber,
+        int pageSize,
+        int? pitNo = null,
+        string? grade = null,
+        decimal? minCbm = null,
+        decimal? maxCbm = null,
+        string? sortBy = null,
+        string? sortDirection = "asc",
+        bool advancedTick = false,
+        int? minLg = null,
+        int? minWd = null,
+        int? minHt = null,
+        string? billedStatus = null)
     {
-        var statusFilters = new List<FilterDefinition<GraniteStockBlock>>();
+        var collection = _dolphinRepository.GetCollection("granitestockblock") as IMongoCollection<GraniteStockBlock>;
+        var filters = new List<FilterDefinition<GraniteStockBlock>>();
 
-        // Handle null status (No Status/Unbilled)
-        if (statuses.Any(s => s == null))
+        // Status filters with enhanced billed/unbilled logic
+        if (statuses != null && statuses.Any())
         {
-            statusFilters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, null));
-        }
+            var statusFilters = new List<FilterDefinition<GraniteStockBlock>>();
 
-        // Handle non-null statuses (enum values)
-        var nonNullStatuses = statuses.Where(s => s.HasValue).Select(s => s.Value).ToList();
-        if (nonNullStatuses.Any())
-        {
-            // For nullable enum fields, we need to create individual equality filters
-            var enumStatusFilters = nonNullStatuses.Select(status =>
-                Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, status)).ToList();
-            
-            if (enumStatusFilters.Count == 1)
+            // Handle null status (No Status/Unbilled)
+            if (statuses.Any(s => s == null))
             {
-                statusFilters.Add(enumStatusFilters[0]);
+                statusFilters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, DispatchStatus.ReadyForDispatch));
             }
-            else
+
+            // Handle non-null statuses (enum values)
+            var nonNullStatuses = statuses.Where(s => s.HasValue).Select(s => s.Value).ToList();
+            if (nonNullStatuses.Any())
             {
-                statusFilters.Add(Builders<GraniteStockBlock>.Filter.Or(enumStatusFilters));
+                var enumStatusFilters = nonNullStatuses.Select(status =>
+                    Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, status)).ToList();
+
+                if (enumStatusFilters.Count == 1)
+                {
+                    statusFilters.Add(enumStatusFilters[0]);
+                }
+                else
+                {
+                    statusFilters.Add(Builders<GraniteStockBlock>.Filter.Or(enumStatusFilters));
+                }
+            }
+
+            if (statusFilters.Any())
+            {
+                filters.Add(statusFilters.Count == 1
+                    ? statusFilters[0]
+                    : Builders<GraniteStockBlock>.Filter.Or(statusFilters));
             }
         }
 
-        if (statusFilters.Any())
+        // BlockNo filter
+        if (blockNo.HasValue)
         {
-            filters.Add(statusFilters.Count == 1
-                ? statusFilters[0]
-                : Builders<GraniteStockBlock>.Filter.Or(statusFilters));
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, blockNo.Value));
         }
-    }
-    else
-    {
-        // Default: include ReadyForDispatch and null status (unbilled)
-        var defaultStatusFilter = Builders<GraniteStockBlock>.Filter.Or(
-            Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, DispatchStatus.ReadyForDispatch),
-            Builders<GraniteStockBlock>.Filter.Eq(s => s.Status, null)
-        );
-        filters.Add(defaultStatusFilter);
-    }
 
-    // BlockNo filter
-    if (blockNo.HasValue)
-    {
-        filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, blockNo.Value));
-    }
+        // Date filter
+        filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Date, startDate));
+        filters.Add(Builders<GraniteStockBlock>.Filter.Lte(s => s.Date, endDate));
 
-    // Date filter (based on Date field)
-    filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Date, startDate));
-    filters.Add(Builders<GraniteStockBlock>.Filter.Lte(s => s.Date, endDate));
-
-    // PitNo filter
-    if (pitNo.HasValue)
-    {
-        filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.PitNo, pitNo.Value));
-    }
-
-    // Grade filter (CategoryGrade)
-    if (!string.IsNullOrEmpty(grade))
-    {
-        filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.CategoryGrade, grade));
-    }
-
-    // Combine all filters
-    var combinedFilter = filters.Count switch
-    {
-        0 => Builders<GraniteStockBlock>.Filter.Empty,
-        1 => filters[0],
-        _ => Builders<GraniteStockBlock>.Filter.And(filters)
-    };
-
-    // First, get all data to calculate totals (without pagination)
-    var allDataQuery = collection.Find(combinedFilter);
-    var allData = await allDataQuery.ToListAsync();
-
-    // Calculate derived fields for all records using injected helper
-    var allCalculatedData = allData.Select(_metricHelper.CalculateDerivedFieldsForBlock).ToList();
-
-    // Apply CBM filters after calculation if needed
-    if (minCbm.HasValue || maxCbm.HasValue)
-    {
-        allCalculatedData = allCalculatedData.Where(item =>
+        // PitNo filter
+        if (pitNo.HasValue)
         {
-            if (minCbm.HasValue && item.QuarryCbm < (double)minCbm.Value) return false;
-            if (maxCbm.HasValue && item.QuarryCbm > (double)maxCbm.Value) return false;
-            return true;
-        }).ToList();
-    }
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.PitNo, pitNo.Value));
+        }
 
-    // Calculate totals for billed and unbilled using injected helper
-    var billedItems = allCalculatedData.Where(x => x.Status.HasValue).ToList(); // Items with any status
-    var unbilledItems = allCalculatedData.Where(x => !x.Status.HasValue).ToList(); // Items with null status
-
-    var billedTotals = _metricHelper.CalculateTotals(billedItems);
-    var unbilledTotals = _metricHelper.CalculateTotals(unbilledItems);
-    var grandTotals = _metricHelper.CalculateTotals(allCalculatedData);
-
-    // Apply sorting
-    if (!string.IsNullOrEmpty(sortBy))
-    {
-        var isAscending = string.IsNullOrEmpty(sortDirection) ||
-                         sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase);
-
-        allCalculatedData = sortBy.ToLower() switch
+        // Grade filter
+        if (!string.IsNullOrEmpty(grade))
         {
-            "quarrycbm" => isAscending
-                ? allCalculatedData.OrderBy(x => x.QuarryCbm).ToList()
-                : allCalculatedData.OrderByDescending(x => x.QuarryCbm).ToList(),
-            "dmgtonnage" => isAscending
-                ? allCalculatedData.OrderBy(x => x.DmgTonnage).ToList()
-                : allCalculatedData.OrderByDescending(x => x.DmgTonnage).ToList(),
-            "netcbm" => isAscending
-                ? allCalculatedData.OrderBy(x => x.NetCbm).ToList()
-                : allCalculatedData.OrderByDescending(x => x.NetCbm).ToList(),
-            "date" => isAscending
-                ? allCalculatedData.OrderBy(x => x.Date).ToList()
-                : allCalculatedData.OrderByDescending(x => x.Date).ToList(),
-            "blockno" => isAscending
-                ? allCalculatedData.OrderBy(x => x.BlockNo).ToList()
-                : allCalculatedData.OrderByDescending(x => x.BlockNo).ToList(),
-            _ => allCalculatedData.OrderByDescending(x => x.Date).ToList()
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.CategoryGrade, grade));
+        }
+
+        // Advanced measurement filters (only if advancedTick is true)
+        if (advancedTick)
+        {
+            if (minLg.HasValue)
+            {
+                filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Measurement.Lg, minLg.Value));
+            }
+
+            if (minWd.HasValue)
+            {
+                filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Measurement.Wd, minWd.Value));
+            }
+
+            if (minHt.HasValue)
+            {
+                filters.Add(Builders<GraniteStockBlock>.Filter.Gte(s => s.Measurement.Ht, minHt.Value));
+            }
+        }
+
+        // Combine all filters
+        var combinedFilter = filters.Count switch
+        {
+            0 => Builders<GraniteStockBlock>.Filter.Empty,
+            1 => filters[0],
+            _ => Builders<GraniteStockBlock>.Filter.And(filters)
+        };
+
+        // Get all data to calculate totals
+        var allDataQuery = collection.Find(combinedFilter);
+        var allData = await allDataQuery.ToListAsync();
+
+        // Calculate derived fields for all records
+        var allCalculatedData = allData.Select(_metricHelper.CalculateDerivedFieldsForBlock).ToList();
+
+        // Apply CBM filters after calculation
+        if (minCbm.HasValue || maxCbm.HasValue)
+        {
+            allCalculatedData = allCalculatedData.Where(item =>
+            {
+                if (minCbm.HasValue && item.QuarryCbm < (double)minCbm.Value) return false;
+                if (maxCbm.HasValue && item.QuarryCbm > (double)maxCbm.Value) return false;
+                return true;
+            }).ToList();
+        }
+
+        // Calculate totals for billed and unbilled
+        var billedItems = allCalculatedData.Where(x => x.Status.HasValue).ToList();
+        var unbilledItems = allCalculatedData.Where(x => !x.Status.HasValue).ToList();
+
+        var billedTotals = _metricHelper.CalculateTotals(billedItems);
+        var unbilledTotals = _metricHelper.CalculateTotals(unbilledItems);
+        var grandTotals = _metricHelper.CalculateTotals(allCalculatedData);
+
+        // Apply sorting
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            var isAscending = string.IsNullOrEmpty(sortDirection) ||
+                             sortDirection.Equals("asc", StringComparison.OrdinalIgnoreCase);
+
+            allCalculatedData = sortBy.ToLower() switch
+            {
+                "quarrycbm" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.QuarryCbm).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.QuarryCbm).ToList(),
+                "dmgtonnage" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.DmgTonnage).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.DmgTonnage).ToList(),
+                "netcbm" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.NetCbm).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.NetCbm).ToList(),
+                "date" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.Date).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.Date).ToList(),
+                "blockno" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.BlockNo).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.BlockNo).ToList(),
+                "lg" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.Measurement.Lg).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.Measurement.Lg).ToList(),
+                "wd" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.Measurement.Wd).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.Measurement.Wd).ToList(),
+                "ht" => isAscending
+                    ? allCalculatedData.OrderBy(x => x.Measurement.Ht).ToList()
+                    : allCalculatedData.OrderByDescending(x => x.Measurement.Ht).ToList(),
+                _ => allCalculatedData.OrderByDescending(x => x.Date).ToList()
+            };
+        }
+        else
+        {
+            allCalculatedData = allCalculatedData.OrderByDescending(x => x.Date).ToList();
+        }
+
+        // Apply pagination
+        var totalCount = allCalculatedData.Count;
+        var paginatedData = allCalculatedData
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        // Convert to DTOs
+        var dtoData = paginatedData.Select(_metricHelper.MapToDto).ToList();
+
+        return new GraniteBlocksResponseDto
+        {
+            Data = dtoData,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalPages = totalPages,
+            HasNextPage = pageNumber < totalPages,
+            HasPreviousPage = pageNumber > 1,
+            BilledTotals = billedTotals,
+            UnbilledTotals = unbilledTotals,
+            GrandTotals = grandTotals,
+            SearchCriteria = new SearchCriteriaDto
+            {
+                AdvancedSearch = advancedTick,
+                MinLg = minLg,
+                MinWd = minWd,
+                MinHt = minHt,
+                BilledStatus = billedStatus
+            }
         };
     }
-    else
-    {
-        // Default sort by Date descending (newest first)
-        allCalculatedData = allCalculatedData.OrderByDescending(x => x.Date).ToList();
-    }
-
-    // Apply pagination
-    var totalCount = allCalculatedData.Count;
-    var paginatedData = allCalculatedData
-        .Skip((pageNumber - 1) * pageSize)
-        .Take(pageSize)
-        .ToList();
-
-    var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-
-    // Convert to DTOs using injected helper
-    var dtoData = paginatedData.Select(_metricHelper.MapToDto).ToList();
-
-    return new GraniteBlocksResponseDto
-    {
-        Data = dtoData,
-        TotalCount = totalCount,
-        PageNumber = pageNumber,
-        PageSize = pageSize,
-        TotalPages = totalPages,
-        HasNextPage = pageNumber < totalPages,
-        HasPreviousPage = pageNumber > 1,
-        BilledTotals = billedTotals,
-        UnbilledTotals = unbilledTotals,
-        GrandTotals = grandTotals
-    };
-}
 
     // Enhanced Service Method
     private async Task<List<GraniteStockBlock>> GetGraniteBlocksByStatusesInternalAsync(List<DispatchStatus?> statuses)
@@ -403,7 +432,7 @@ public async Task<GraniteBlocksResponseDto> GetGraniteBlocksFilteredWithCalculat
     public async Task<GraniteStockBlock> AddStock(GraniteStockBlock stock)
     {
         var collection = (IMongoCollection<GraniteStockBlock>)_dolphinRepository.GetCollection("granitestockblock");
-
+ stock.Status = DispatchStatus.ReadyForDispatch;
         // Set the entry date to current UTC time if not provided
         if (stock.Date == default(DateTime))
         {
@@ -429,20 +458,20 @@ public async Task<GraniteBlocksResponseDto> GetGraniteBlocksFilteredWithCalculat
         return stock;
     }
 
-public async Task<long> UpdateBlockStatusById(IdsandStatus stock)
-{
-    var collection = (IMongoCollection<GraniteStockBlock>)_dolphinRepository.GetCollection("granitestockblock");
+    public async Task<long> UpdateBlockStatusById(IdsandStatus stock)
+    {
+        var collection = (IMongoCollection<GraniteStockBlock>)_dolphinRepository.GetCollection("granitestockblock");
 
-    var filter = Builders<GraniteStockBlock>.Filter.In(x => x.Id, stock.ids.Id);
+        var filter = Builders<GraniteStockBlock>.Filter.In(x => x.Id, stock.ids.Id);
 
-    var update = Builders<GraniteStockBlock>.Update
-        .Set(x => x.Status, stock.ids.Status)
-        .Set(x => x.UpdatedDate, DateTime.UtcNow);
+        var update = Builders<GraniteStockBlock>.Update
+            .Set(x => x.Status, stock.ids.Status)
+            .Set(x => x.UpdatedDate, DateTime.UtcNow);
 
-    var result = await collection.UpdateManyAsync(filter, update);
+        var result = await collection.UpdateManyAsync(filter, update);
 
-    return result.ModifiedCount;
-}
+        return result.ModifiedCount;
+    }
 
 
 
@@ -461,7 +490,7 @@ public async Task<long> UpdateBlockStatusById(IdsandStatus stock)
             {
                 var updateResult = await collectionStock.UpdateOneAsync(
                     Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, stock.BlockNo),
-                    Builders<GraniteStockBlock>.Update.Set(s => s.Status, DispatchStatus.ReadyForDispatch)
+                    Builders<GraniteStockBlock>.Update.Set(s => s.Status, DispatchStatus.LoadedOnTruck)
                                                       .Set(s => s.GatePassNo, invoice.GatePassNo)
 
 
@@ -498,41 +527,41 @@ public async Task<long> UpdateBlockStatusById(IdsandStatus stock)
 
         return invoice;
     }
-public async Task<IEnumerable<GraniteBlockStatusDto>> GetBlocksByBlockNoAndGatePassNo(int? blockNo, string? gatePassNo)
-{
-    var collection = _dolphinRepository.GetCollection("granitestockblock") 
-        as IMongoCollection<GraniteStockBlock>;
-
-    var filters = new List<FilterDefinition<GraniteStockBlock>>();
-
-    if (!string.IsNullOrEmpty(gatePassNo))
+    public async Task<IEnumerable<GraniteBlockStatusDto>> GetBlocksByBlockNoAndGatePassNo(int? blockNo, string? gatePassNo)
     {
-        filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.GatePassNo, gatePassNo));
+        var collection = _dolphinRepository.GetCollection("granitestockblock")
+            as IMongoCollection<GraniteStockBlock>;
+
+        var filters = new List<FilterDefinition<GraniteStockBlock>>();
+
+        if (!string.IsNullOrEmpty(gatePassNo))
+        {
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.GatePassNo, gatePassNo));
+        }
+
+        if (blockNo.HasValue)
+        {
+            filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, blockNo));
+        }
+
+        var combinedFilter = filters.Count switch
+        {
+            0 => Builders<GraniteStockBlock>.Filter.Empty,
+            1 => filters[0],
+            _ => Builders<GraniteStockBlock>.Filter.Or(filters)
+        };
+
+        var blocks = await collection.Find(combinedFilter).ToListAsync();
+
+        // Map entity to DTO
+        return blocks.Select(b => new GraniteBlockStatusDto
+        {
+            Id = b.Id.ToString(),
+            BlockNo = b.BlockNo,
+            Status = b.Status,
+            GatePassNo = b.GatePassNo
+        });
     }
-
-    if (blockNo.HasValue)
-    {
-        filters.Add(Builders<GraniteStockBlock>.Filter.Eq(s => s.BlockNo, blockNo));
-    }
-
-    var combinedFilter = filters.Count switch
-    {
-        0 => Builders<GraniteStockBlock>.Filter.Empty,
-        1 => filters[0],
-        _ => Builders<GraniteStockBlock>.Filter.Or(filters)
-    };
-
-    var blocks = await collection.Find(combinedFilter).ToListAsync();
-
-    // Map entity to DTO
-    return blocks.Select(b => new GraniteBlockStatusDto
-    {
-        Id = b.Id.ToString(),
-        BlockNo = b.BlockNo,
-        Status = b.Status,
-        GatePassNo = b.GatePassNo
-    });
-}
 
 
     public List<Invoice> GetAllInvoice()
@@ -682,42 +711,42 @@ public async Task<IEnumerable<GraniteBlockStatusDto>> GetBlocksByBlockNoAndGateP
 
         return emails;
     }
-     public async Task<List<GraniteStockBlock>> GetGraniteBlocksByStatusesAsync(List<string?> statusStrings)
-{
-    var statusEnums = new List<DispatchStatus?>();
-    
-    foreach (var statusString in statusStrings)
+    public async Task<List<GraniteStockBlock>> GetGraniteBlocksByStatusesAsync(List<string?> statusStrings)
     {
-        if (string.IsNullOrEmpty(statusString))
+        var statusEnums = new List<DispatchStatus?>();
+
+        foreach (var statusString in statusStrings)
         {
-            statusEnums.Add(null);
+            if (string.IsNullOrEmpty(statusString))
+            {
+                statusEnums.Add(null);
+            }
+            else if (Enum.TryParse<DispatchStatus>(statusString, true, out var parsedStatus))
+            {
+                statusEnums.Add(parsedStatus);
+            }
+            // Optionally handle legacy string values that don't match enum names
+            else
+            {
+                // Map legacy string values to enum if needed
+                statusEnums.Add(MapLegacyStringToEnum(statusString));
+            }
         }
-        else if (Enum.TryParse<DispatchStatus>(statusString, true, out var parsedStatus))
-        {
-            statusEnums.Add(parsedStatus);
-        }
-        // Optionally handle legacy string values that don't match enum names
-        else
-        {
-            // Map legacy string values to enum if needed
-            statusEnums.Add(MapLegacyStringToEnum(statusString));
-        }
+
+        return await GetGraniteBlocksByStatusesAsync(statusEnums);
     }
-    
-    return await GetGraniteBlocksByStatusesAsync(statusEnums);
-}
-private DispatchStatus? MapLegacyStringToEnum(string statusString)
-{
-    return statusString?.ToLower() switch
+    private DispatchStatus? MapLegacyStringToEnum(string statusString)
     {
-        "readyfordispatch" => DispatchStatus.ReadyForDispatch,
-        "loadedontruck" => DispatchStatus.LoadedOnTruck,
-        "atport" => DispatchStatus.AtPort,
-        "shipped" => DispatchStatus.Shipped,
-        "cancelled" => DispatchStatus.Cancelled,
-        "billed" => null, // If "Billed" was a legacy status that doesn't exist in enum
-        _ => null
-    };
-}
+        return statusString?.ToLower() switch
+        {
+            "readyfordispatch" => DispatchStatus.ReadyForDispatch,
+            "loadedontruck" => DispatchStatus.LoadedOnTruck,
+            "atport" => DispatchStatus.AtPort,
+            "shipped" => DispatchStatus.Shipped,
+            "cancelled" => DispatchStatus.Cancelled,
+            "billed" => null, // If "Billed" was a legacy status that doesn't exist in enum
+            _ => null
+        };
+    }
 
 }

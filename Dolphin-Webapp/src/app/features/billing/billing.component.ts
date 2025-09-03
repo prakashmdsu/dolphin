@@ -100,7 +100,7 @@ export class BillingComponent implements OnInit {
       otherReference: [''],
       dispatchedThrough: [''],
       destination: [''],
-      termsOfPaymentOptions: ['100% advance payment'], // Default value
+      termsOfPayment: ['100% advance payment'], // Default value
       otherrefence: [''], // Note: keeping the typo as per swagger
       deliveryNoteDate: ['']
     });

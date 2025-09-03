@@ -25,9 +25,7 @@ interface ApiResponse {
   styleUrls: ['./granitestocks.component.scss'],
 })
 export class GranitestocksComponent implements OnInit {
-
-
-   dispatchStatus = DispatchStatus;
+  dispatchStatus = DispatchStatus;
   dispatchStatusKeys: { key: number; label: string }[] = [];
   displayedColumns: string[] = [
     'date',
@@ -52,6 +50,7 @@ export class GranitestocksComponent implements OnInit {
 
   // Filter form with additional fields
   filterForm = new FormGroup({
+    // ... your existing form controls
     blockNo: new FormControl(''),
     status: new FormControl(''),
     startDate: new FormControl(''),
@@ -60,16 +59,23 @@ export class GranitestocksComponent implements OnInit {
     grade: new FormControl(''),
     minCbm: new FormControl(''),
     maxCbm: new FormControl(''),
+
+    // Add these new controls
+    advancedTick: new FormControl(false),
+    minLg: new FormControl(''),
+    minWd: new FormControl(''),
+    minHt: new FormControl(''),
   });
 
+  showMeasurementFilters = false;
   // Options for dropdowns
-statusOptions = [
-  { value: DispatchStatus.ReadyForDispatch, label: 'Ready For Dispatch' },
-  { value: DispatchStatus.LoadedOnTruck, label: 'Loaded On Truck' },
-  { value: DispatchStatus.AtPort, label: 'At Port' },
-  { value: DispatchStatus.Shipped, label: 'Shipped' },
-  { value: DispatchStatus.Cancelled, label: 'Cancelled' }
-];
+  statusOptions = [
+    { value: DispatchStatus.ReadyForDispatch, label: 'Ready For Dispatch' },
+    { value: DispatchStatus.LoadedOnTruck, label: 'Loaded On Truck' },
+    { value: DispatchStatus.AtPort, label: 'At Port' },
+    { value: DispatchStatus.Shipped, label: 'Shipped' },
+    { value: DispatchStatus.Cancelled, label: 'Cancelled' },
+  ];
   pitOptions = [1, 2, 3, 4, 5]; // Add your pit options
   gradeOptions = ['A', 'B', 'C', 'D']; // Add your grade options
 
@@ -80,17 +86,16 @@ statusOptions = [
   totals = { totalQuarryCbm: 0, totalDmgTonnage: 0, totalNetCbm: 0 };
 
   ngOnInit() {
-
     this.dispatchStatusKeys = Object.keys(this.dispatchStatus)
-      .filter(key => !isNaN(Number(key))) // Filters numeric keys from reverse mapping
-      .map(key => {
+      .filter((key) => !isNaN(Number(key))) // Filters numeric keys from reverse mapping
+      .map((key) => {
         const value = Number(key);
         return {
           key: value,
-          label: DispatchStatus[value]
+          label: DispatchStatus[value],
         };
       });
-  
+
     // Set default date range (last month)
     const endDate = new Date();
     const startDate = new Date();
@@ -103,6 +108,17 @@ statusOptions = [
 
     this.loadData();
     this.setupFilterSubscriptions();
+
+    this.filterForm.get('advancedTick')?.valueChanges.subscribe((value) => {
+      this.showMeasurementFilters = !!value;
+      if (!value) {
+        this.filterForm.patchValue({
+          minLg: '',
+          minWd: '',
+          minHt: '',
+        });
+      }
+    });
   }
 
   private setupFilterSubscriptions() {
@@ -124,7 +140,7 @@ statusOptions = [
       pageSize: this.pageSize,
     };
 
-    // Add all filter parameters
+    // Your existing filter parameters
     if (filters.blockNo) params.blockNo = filters.blockNo;
     if (filters.status !== '') params.status = filters.status;
     if (filters.startDate)
@@ -136,24 +152,21 @@ statusOptions = [
     if (filters.minCbm) params.minCbm = filters.minCbm;
     if (filters.maxCbm) params.maxCbm = filters.maxCbm;
 
+    // Add these new lines for measurement filters
+    if (filters.advancedTick) {
+      params.advancedTick = true;
+      if (filters.minLg) params.minLg = Number(filters.minLg);
+      if (filters.minWd) params.minWd = Number(filters.minWd);
+      if (filters.minHt) params.minHt = Number(filters.minHt);
+    }
+
+    // Rest of your existing loadData() method remains the same
     this.httpService
-      .getFilteroption<ApiResponse>('dolphin/getgranitesblockscategory', {
-        params,
-      })
+      .getFilteroption<any>('dolphin/getgranitesblockscategory', { params })
       .subscribe({
         next: (response) => {
-          const enhancedData = response.data.map((block) => {
-            const { quarryCbm, dmgTonnage, netCbm } =
-              this.calculateDerivedFields(block.measurement);
-            return {
-              ...block,
-              quarryCbm,
-              dmgTonnage,
-              netCbm,
-            };
-          });
-
-          this.dataSource.data = enhancedData;
+          // Your existing response handling
+          this.dataSource.data = response.data;
           this.totalItems = response.totalCount;
           this.totals = this.calculateTotals();
           this.isLoading = false;
@@ -164,7 +177,6 @@ statusOptions = [
         },
       });
   }
-
   // Pagination methods
   getTotalPages(): number {
     return Math.ceil(this.totalItems / this.pageSize);
@@ -264,19 +276,51 @@ statusOptions = [
     console.log('Export data functionality to be implemented');
   }
 
-  getStatusIcon(status: string): string {
-    switch (status?.toLowerCase()) {
-      case 'billing':
-        return 'receipt';
-      case 'sold':
-        return 'check_circle';
-      case 'reserved':
-        return 'bookmark';
-      default:
-        return 'help';
-    }
+// Update your getStatusIcon method to handle numeric status values
+getStatusIcon(status: number | string): string {
+  const statusNum = typeof status === 'string' ? parseInt(status) : status;
+  
+  switch (statusNum) {
+    case DispatchStatus.ReadyForDispatch: // 1
+      return 'inventory';
+    case DispatchStatus.LoadedOnTruck: // 2
+      return 'local_shipping';
+    case DispatchStatus.AtPort: // 3
+      return 'anchor';
+    case DispatchStatus.Shipped: // 4
+      return 'sailing';
+    case DispatchStatus.Cancelled: // 5
+      return 'cancel';
+    default:
+      return 'help';
   }
+}
 
+// Add a method to get status label from numeric value
+getStatusLabel(status: number | string): string {
+  const statusNum = typeof status === 'string' ? parseInt(status) : status;
+  return DispatchStatus[statusNum] || 'Unknown';
+}
+
+// Add a method to get status class for styling
+getStatusClass(status: number | string): string {
+  const statusNum = typeof status === 'string' ? parseInt(status) : status;
+  
+  switch (statusNum) {
+    case DispatchStatus.ReadyForDispatch:
+      return 'status-ready';
+    case DispatchStatus.LoadedOnTruck:
+      return 'status-loaded';
+    case DispatchStatus.AtPort:
+      return 'status-port';
+    case DispatchStatus.Shipped:
+      return 'status-shipped';
+    case DispatchStatus.Cancelled:
+      return 'status-cancelled';
+    default:
+      return 'status-unknown';
+  }
+}
   calculateTotals(): {
     totalQuarryCbm: number;
     totalDmgTonnage: number;
@@ -353,8 +397,7 @@ statusOptions = [
     });
   }
 
-
-   openUpadateBlockStockStatusDialog(): void {
+  openUpadateBlockStockStatusDialog(): void {
     const dialogRef = this.dialog.open(UpdategraniteBlockStatusComponent, {
       width: '1000px',
       maxWidth: '90vw',
