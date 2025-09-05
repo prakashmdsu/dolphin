@@ -53,6 +53,7 @@ export class StockgraniteblockComponent implements OnInit {
         lg: [null, [Validators.required, Validators.min(0)]],
         wd: [null, [Validators.required, Validators.min(0)]],
         ht: [null, [Validators.required, Validators.min(0)]],
+        netWeightMt: [null, [Validators.required, Validators.min(0)]],
       }),
       dispatchStatus: [false],
       updatedDate: [null],

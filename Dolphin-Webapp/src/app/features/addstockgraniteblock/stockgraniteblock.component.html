@@ -104,6 +104,15 @@
               Required
             </mat-error>
           </mat-form-field>
+               <mat-form-field appearance="outline">
+            <mat-label>Net weight in MT </mat-label>
+            <input matInput type="number" formControlName="netWeightMt" />
+            <mat-error
+              *ngIf="blockForm.get('measurement.ht')?.hasError('required')"
+            >
+              Required
+            </mat-error>
+          </mat-form-field>
         </div>
       </div>
 

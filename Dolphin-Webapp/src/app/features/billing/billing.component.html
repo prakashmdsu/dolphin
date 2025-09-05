@@ -258,22 +258,23 @@
       <!-- Items table -->
         <div class="items-table-container">
         <table class="items-table">
-          <thead>
-            <tr>
-              <th>SR No</th>
-              <th>Block No</th>
-              <th>Item Description</th>
-              <th>HSN/SAC</th>
-              <th>Category/Grade</th>
-              <th>Measurement</th>
-              <th>Quarry CBM</th>
-              <th>UOM</th>
-              <th>DMG Tonnage</th>
-              <th>Net CBM</th>
-              <th>Permit No</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+       <thead>
+  <tr>
+    <th>SR No</th>
+    <th>Block No</th>
+    <th>Item Description</th>
+    <th>HSN/SAC</th>
+    <th>Category/Grade</th>
+    <th>Measurement</th>
+    <th>Net Weight Mt</th>  <!-- NEW COLUMN -->
+    <th>Quarry CBM</th>
+    <th>UOM</th>
+    <th>DMG Tonnage</th>
+    <th>Net CBM</th>
+    <th>Permit No</th>
+    <th>Actions</th>
+  </tr>
+</thead>
           <tbody formArrayName="graniteStocks">
             <tr
               *ngFor="let item of items.controls; let i = index"
@@ -296,14 +297,19 @@
                   >
                 </mat-form-field>
               </td>
-              <td>
-                <mat-form-field appearance="outline">
-                  <input matInput formControlName="hsn" />
-                  <mat-error *ngIf="isItemFieldInvalid(i, 'hsn')"
-                    >Required</mat-error
-                  >
-                </mat-form-field>
-              </td>
+            <td>
+  <mat-form-field appearance="outline">
+    <mat-select formControlName="hsn">
+      <mat-option value="">Select HSN</mat-option>
+      <mat-option *ngFor="let hsn of hsnOptions" [value]="hsn.value">
+        {{ hsn.label }}
+      </mat-option>
+    </mat-select>
+    <mat-error *ngIf="isItemFieldInvalid(i, 'hsn')">
+      Required
+    </mat-error>
+  </mat-form-field>
+</td>
               <td>
                 <mat-form-field appearance="outline">
                   <input matInput formControlName="categoryGrade" />
@@ -343,6 +349,19 @@
                   </mat-form-field>
                 </div>
               </td>
+              <td formGroupName="measurement">
+  <mat-form-field appearance="outline" class="disabled-field">
+    <input
+      matInput
+      formControlName="netWeightMt"
+      type="number"
+      readonly
+    />
+    <mat-error *ngIf="isItemFieldInvalid(i, 'measurement.netWeightMt')">
+      Required
+    </mat-error>
+  </mat-form-field>
+</td>
               <td>
                 <mat-form-field appearance="outline" class="disabled-field">
                   <input
@@ -411,20 +430,23 @@
             </tr>
           </tbody>
           <tfoot>
-            <tr class="totals-row">
-              <td colspan="6" class="totals-label"><strong>TOTALS:</strong></td>
-              <td class="totals-value">
-                <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
-              </td>
-              <td></td>
-              <td class="totals-value">
-                <strong>{{ calculateTotals().totalDmgTonnage }}</strong>
-              </td>
-              <td class="totals-value">
-                <strong>{{ calculateTotals().totalNetCbm }}</strong>
-              </td>
-              <td colspan="2"></td>
-            </tr>
+          <tr class="totals-row">
+  <td colspan="6" class="totals-label"><strong>TOTALS:</strong></td>
+  <td class="totals-value">
+    <strong>{{ calculateTotals().totalNetWeightMt }}</strong>  <!-- NEW -->
+  </td>
+  <td class="totals-value">
+    <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
+  </td>
+  <td></td>
+  <td class="totals-value">
+    <strong>{{ calculateTotals().totalDmgTonnage }}</strong>
+  </td>
+  <td class="totals-value">
+    <strong>{{ calculateTotals().totalNetCbm }}</strong>
+  </td>
+  <td colspan="2"></td>
+</tr>
           </tfoot>
         </table>
       </div>

@@ -13,8 +13,115 @@
   margin-bottom: 16px;
 }
 
-.full-width {
+.form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.form-row .mat-form-field {
+  flex: 1 1 100%;
+  min-width: 400px;
   width: 100%;
+  box-sizing: border-box;
+}
+
+// Custom Toggle Switch Styling
+.client-type-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 100%;
+  min-width: 400px;
+  
+  .toggle-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  
+  .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .toggle-option {
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+      transition: all 0.3s ease;
+      
+      &.active {
+        color: #1976d2;
+        font-weight: 500;
+      }
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 24px;
+      background-color: #ccc;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      
+      &.indian {
+        background-color: #1976d2;
+      }
+      
+      .toggle-slider {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      
+      &.indian .toggle-slider {
+        transform: translateX(24px);
+      }
+    }
+  }
+}
+
+// Address textarea specific styling
+.address-field {
+  .mat-form-field-wrapper {
+    .mat-form-field-flex {
+      .mat-form-field-infix {
+        textarea {
+          resize: vertical;
+          min-height: 60px;
+          font-family: inherit;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+}
+
+// Animation for Indian fields
+.indian-fields {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .submit-section {
@@ -24,15 +131,28 @@
   margin-top: 16px;
 }
 
-.form-row {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
+// Responsive design
+@media (max-width: 768px) {
+  .form-row .mat-form-field,
+  .client-type-toggle {
+    min-width: 100%;
+  }
+  
+  .client-form-container {
+    margin: 16px;
+    padding: 16px;
+  }
+  
+  .toggle-container {
+    .toggle-option {
+      font-size: 13px;
+    }
+  }
 }
-.form-row .mat-form-field {
-  flex: 1 1 100%;
-  min-width: 400px;
-  width: 100%; /* force field to fill available space */
-  box-sizing: border-box;
+
+// Hover effects
+.toggle-switch:hover {
+  .toggle-slider {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
 }
