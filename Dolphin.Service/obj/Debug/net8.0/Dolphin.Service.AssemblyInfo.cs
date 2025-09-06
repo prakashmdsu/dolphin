@@ -13,11 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Dolphin.Service")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-<<<<<<< HEAD
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2624106a169cab17fbaf88d57ec2ab1e22f4cefa")]
-=======
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
->>>>>>> 27b398474496ca7caddefee5f2ed3cd921d7b8dc
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6bcb3a19c938488660b6b79b0cfb542585cc608c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Dolphin.Service")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Dolphin.Service")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

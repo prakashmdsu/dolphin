@@ -126,7 +126,40 @@
     <!-- Additional Fields Section -->
     <div class="additional-fields-section">
       <h3>Additional Information</h3>
-      
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>HSN/SAC</mat-label>
+          <mat-select formControlName="hsn">
+            <mat-option value="">Select HSN</mat-option>
+            <mat-option *ngFor="let hsn of hsnOptions" [value]="hsn.value">
+              {{ hsn.label }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="isFieldInvalid('hsn')">
+            {{ getFieldErrorMessage("hsn") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Permit No</mat-label>
+          <input matInput formControlName="permitNo" />
+          <mat-error *ngIf="isFieldInvalid('permitNo')">
+            {{ getFieldErrorMessage("permitNo") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>E-Way Bill No</mat-label>
+          <input matInput formControlName="ewayBillNo" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Buyer's Order Number</mat-label>
+          <input matInput formControlName="buyersOrderNumber" />
+        </mat-form-field>
+      </div>
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>E-Way Bill No</mat-label>
@@ -167,7 +200,10 @@
         <mat-form-field appearance="outline">
           <mat-label>Terms of Payment</mat-label>
           <mat-select formControlName="termsOfPayment">
-            <mat-option *ngFor="let option of termsOfPaymentOptions" [value]="option.value">
+            <mat-option
+              *ngFor="let option of termsOfPaymentOptions"
+              [value]="option.value"
+            >
               {{ option.label }}
             </mat-option>
           </mat-select>
@@ -186,7 +222,10 @@
           [matDatepicker]="deliveryDatePicker"
           formControlName="deliveryNoteDate"
         />
-        <mat-datepicker-toggle matSuffix [for]="deliveryDatePicker"></mat-datepicker-toggle>
+        <mat-datepicker-toggle
+          matSuffix
+          [for]="deliveryDatePicker"
+        ></mat-datepicker-toggle>
         <mat-datepicker #deliveryDatePicker></mat-datepicker>
       </mat-form-field>
     </div>
@@ -194,7 +233,7 @@
     <!-- Transporter Section -->
     <div class="transporter-section">
       <h3>Transporter Information</h3>
-      
+
       <div class="form-row">
         <mat-form-field appearance="outline">
           <mat-label>Transporter Phone</mat-label>
@@ -256,25 +295,23 @@
       </div>
 
       <!-- Items table -->
-        <div class="items-table-container">
+      <div class="items-table-container">
         <table class="items-table">
-       <thead>
-  <tr>
-    <th>SR No</th>
-    <th>Block No</th>
-    <th>Item Description</th>
-    <th>HSN/SAC</th>
-    <th>Category/Grade</th>
-    <th>Measurement</th>
-    <th>Net Weight Mt</th>  <!-- NEW COLUMN -->
-    <th>Quarry CBM</th>
-    <th>UOM</th>
-    <th>DMG Tonnage</th>
-    <th>Net CBM</th>
-    <th>Permit No</th>
-    <th>Actions</th>
-  </tr>
-</thead>
+          <thead>
+            <tr>
+              <th>SR No</th>
+              <th>Block No</th>
+              <th>Item Description</th>
+              <th>Category/Grade</th>
+              <th>Measurement</th>
+              <th>Net Weight Mt</th>
+              <th>Quarry CBM</th>
+              <th>UOM</th>
+              <th>DMG Tonnage</th>
+              <th>Net CBM</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
           <tbody formArrayName="graniteStocks">
             <tr
               *ngFor="let item of items.controls; let i = index"
@@ -297,19 +334,6 @@
                   >
                 </mat-form-field>
               </td>
-            <td>
-  <mat-form-field appearance="outline">
-    <mat-select formControlName="hsn">
-      <mat-option value="">Select HSN</mat-option>
-      <mat-option *ngFor="let hsn of hsnOptions" [value]="hsn.value">
-        {{ hsn.label }}
-      </mat-option>
-    </mat-select>
-    <mat-error *ngIf="isItemFieldInvalid(i, 'hsn')">
-      Required
-    </mat-error>
-  </mat-form-field>
-</td>
               <td>
                 <mat-form-field appearance="outline">
                   <input matInput formControlName="categoryGrade" />
@@ -318,6 +342,7 @@
                   >
                 </mat-form-field>
               </td>
+              <!-- Measurement cells remain the same -->
               <td formGroupName="measurement">
                 <div class="measurement-group">
                   <mat-form-field appearance="outline" class="disabled-field">
@@ -350,18 +375,20 @@
                 </div>
               </td>
               <td formGroupName="measurement">
-  <mat-form-field appearance="outline" class="disabled-field">
-    <input
-      matInput
-      formControlName="netWeightMt"
-      type="number"
-      readonly
-    />
-    <mat-error *ngIf="isItemFieldInvalid(i, 'measurement.netWeightMt')">
-      Required
-    </mat-error>
-  </mat-form-field>
-</td>
+                <mat-form-field appearance="outline" class="disabled-field">
+                  <input
+                    matInput
+                    formControlName="netWeightMt"
+                    type="number"
+                    readonly
+                  />
+                  <mat-error
+                    *ngIf="isItemFieldInvalid(i, 'measurement.netWeightMt')"
+                    >Required</mat-error
+                  >
+                </mat-form-field>
+              </td>
+              <!-- Continue with other cells, HSN and Permit No removed -->
               <td>
                 <mat-form-field appearance="outline" class="disabled-field">
                   <input
@@ -410,14 +437,6 @@
                 </mat-form-field>
               </td>
               <td>
-                <mat-form-field appearance="outline">
-                  <input matInput formControlName="permitNo" />
-                  <mat-error *ngIf="isItemFieldInvalid(i, 'permitNo')"
-                    >Required</mat-error
-                  >
-                </mat-form-field>
-              </td>
-              <td>
                 <button
                   mat-icon-button
                   color="warn"
@@ -430,23 +449,25 @@
             </tr>
           </tbody>
           <tfoot>
-          <tr class="totals-row">
-  <td colspan="6" class="totals-label"><strong>TOTALS:</strong></td>
-  <td class="totals-value">
-    <strong>{{ calculateTotals().totalNetWeightMt }}</strong>  <!-- NEW -->
-  </td>
-  <td class="totals-value">
-    <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
-  </td>
-  <td></td>
-  <td class="totals-value">
-    <strong>{{ calculateTotals().totalDmgTonnage }}</strong>
-  </td>
-  <td class="totals-value">
-    <strong>{{ calculateTotals().totalNetCbm }}</strong>
-  </td>
-  <td colspan="2"></td>
-</tr>
+            <tr class="totals-row">
+              <td colspan="5" class="totals-label"><strong>TOTALS:</strong></td>
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalNetWeightMt }}</strong>
+                <!-- NEW -->
+              </td>
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
+              </td>
+              <td></td>
+
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalDmgTonnage }}</strong>
+              </td>
+              <td class="totals-value">
+                <strong>{{ calculateTotals().totalNetCbm }}</strong>
+              </td>
+              <td></td>
+            </tr>
           </tfoot>
         </table>
       </div>
@@ -491,4 +512,3 @@
     </div>
   </form>
 </div>
-            

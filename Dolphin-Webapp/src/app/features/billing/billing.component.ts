@@ -20,13 +20,22 @@ export class BillingComponent implements OnInit {
   selectedBlockNos: number[] = [];
   gatePassNo?: string;
   hsnOptions = [
-    { value: '25171000', label: '25171000 - Granite (crude or roughly trimmed)' },
-    { value: '25172000', label: '25172000 - Granite (merely cut, by sawing or otherwise)' },
-    { value: '68029100', label: '68029100 - Granite tiles, cubes and similar articles' },
+    {
+      value: '25171000',
+      label: '25171000 - Granite (crude or roughly trimmed)',
+    },
+    {
+      value: '25172000',
+      label: '25172000 - Granite (merely cut, by sawing or otherwise)',
+    },
+    {
+      value: '68029100',
+      label: '68029100 - Granite tiles, cubes and similar articles',
+    },
     { value: '68029900', label: '68029900 - Other granite articles' },
     { value: '25169000', label: '25169000 - Other natural stone' },
     { value: '68022100', label: '68022100 - Granite slabs' },
-    { value: '68022900', label: '68022900 - Other granite products' }
+    { value: '68022900', label: '68022900 - Other granite products' },
   ];
   // Terms of payment options
   termsOfPaymentOptions = [
@@ -34,7 +43,7 @@ export class BillingComponent implements OnInit {
     { value: 'Net 30', label: 'Net 30' },
     { value: 'Net 60', label: 'Net 60' },
     { value: 'COD', label: 'Cash on Delivery' },
-    { value: 'Letter of Credit', label: 'Letter of Credit' }
+    { value: 'Letter of Credit', label: 'Letter of Credit' },
   ];
 
   constructor(
@@ -95,11 +104,19 @@ export class BillingComponent implements OnInit {
       phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       gpType: ['', Validators.required],
       placeOfDispatch: ['', Validators.required],
+      hsn: ['', Validators.required], // NEW - moved from table
+      permitNo: ['', Validators.required], // NEW - moved from table
       graniteStocks: this.fb.array([]),
       vehicleNo: ['', Validators.required],
       driverName: ['', Validators.required],
-      driverContactNo: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-      tansporterContactNo: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      driverContactNo: [
+        '',
+        [Validators.required, Validators.pattern(/^\d{10}$/)],
+      ],
+      tansporterContactNo: [
+        '',
+        [Validators.required, Validators.pattern(/^\d{10}$/)],
+      ],
       notes: [''],
       // New additional fields
       ewayBillNo: [''],
@@ -110,7 +127,7 @@ export class BillingComponent implements OnInit {
       destination: [''],
       termsOfPayment: ['100% advance payment'], // Default value
       otherrefence: [''], // Note: keeping the typo as per swagger
-      deliveryNoteDate: ['']
+      deliveryNoteDate: [''],
     });
   }
 
@@ -179,13 +196,16 @@ export class BillingComponent implements OnInit {
         block?.itemDescription || 'Granite Block',
         Validators.required,
       ],
-      hsn: [block?.hsn || '', Validators.required],
+      // hsn: [block?.hsn || '', Validators.required],
       categoryGrade: [block?.categoryGrade || '', Validators.required],
       measurement: this.fb.group({
         lg: [measurement.lg, [Validators.required, Validators.min(0.1)]],
         wd: [measurement.wd, [Validators.required, Validators.min(0.1)]],
         ht: [measurement.ht, [Validators.required, Validators.min(0.1)]],
-         netWeightMt: [measurement.netWeightMt || 0, [Validators.required, Validators.min(0.1)]]
+        netWeightMt: [
+          measurement.netWeightMt || 0,
+          [Validators.required, Validators.min(0.1)],
+        ],
       }),
       quarryCbm: [
         derived.quarryCbm,
@@ -197,7 +217,7 @@ export class BillingComponent implements OnInit {
       ],
       netCbm: [derived.netCbm, [(Validators.required, Validators.min(0.1))]],
       uom: [block?.uom || 'CBM', Validators.required],
-      permitNo: [block?.permitNo || '', Validators.required],
+      // permitNo: [block?.permitNo || '', Validators.required],
     });
   }
 
@@ -231,30 +251,30 @@ export class BillingComponent implements OnInit {
     this.items.removeAt(index);
   }
 
-onBlockNoChange(index: number, selectedBlockNo: number): void {
-  const selectedBlock = this.graniteBlocks.find(
-    (block) => block.blockNo === selectedBlockNo
-  );
-  if (selectedBlock) {
-    const itemForm = this.items.at(index) as FormGroup;
-    const derived = this.calculateDerivedFields(selectedBlock.measurement);
+  onBlockNoChange(index: number, selectedBlockNo: number): void {
+    const selectedBlock = this.graniteBlocks.find(
+      (block) => block.blockNo === selectedBlockNo
+    );
+    if (selectedBlock) {
+      const itemForm = this.items.at(index) as FormGroup;
+      const derived = this.calculateDerivedFields(selectedBlock.measurement);
 
-    itemForm.patchValue({
-      hsn: selectedBlock.hsn,
-      categoryGrade: selectedBlock.categoryGrade,
-      measurement: {
-        ...selectedBlock.measurement,
-        netWeightMt: selectedBlock.measurement.netWeightMt || 0  // NEW
-      },
-      quarryCbm: derived.quarryCbm,
-      dmgTonnage: derived.dmgTonnage,
-      netCbm: derived.netCbm,
-      itemDescription: selectedBlock.itemDescription,
-      permitNo: selectedBlock.permitNo,
-      uom: selectedBlock.uom,
-    });
+      itemForm.patchValue({
+        hsn: selectedBlock.hsn,
+        categoryGrade: selectedBlock.categoryGrade,
+        measurement: {
+          ...selectedBlock.measurement,
+          netWeightMt: selectedBlock.measurement.netWeightMt || 0, // NEW
+        },
+        quarryCbm: derived.quarryCbm,
+        dmgTonnage: derived.dmgTonnage,
+        netCbm: derived.netCbm,
+        itemDescription: selectedBlock.itemDescription,
+        permitNo: selectedBlock.permitNo,
+        uom: selectedBlock.uom,
+      });
+    }
   }
-}
 
   onMeasurementChange(itemIndex: number): void {
     const itemForm = this.items.at(itemIndex) as FormGroup;
@@ -268,31 +288,31 @@ onBlockNoChange(index: number, selectedBlockNo: number): void {
     });
   }
 
-calculateTotals(): {
-  totalQuarryCbm: number;
-  totalDmgTonnage: number;
-  totalNetCbm: number;
-  totalNetWeightMt: number;  // NEW
-} {
-  let totalQuarryCbm = 0;
-  let totalDmgTonnage = 0;
-  let totalNetCbm = 0;
-  let totalNetWeightMt = 0;  // NEW
+  calculateTotals(): {
+    totalQuarryCbm: number;
+    totalDmgTonnage: number;
+    totalNetCbm: number;
+    totalNetWeightMt: number; // NEW
+  } {
+    let totalQuarryCbm = 0;
+    let totalDmgTonnage = 0;
+    let totalNetCbm = 0;
+    let totalNetWeightMt = 0; // NEW
 
-  this.items.controls.forEach((item) => {
-    totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
-    totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
-    totalNetCbm += +(item.get('netCbm')?.value || 0);
-    totalNetWeightMt += +(item.get('measurement.netWeightMt')?.value || 0);  // NEW
-  });
+    this.items.controls.forEach((item) => {
+      totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
+      totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
+      totalNetCbm += +(item.get('netCbm')?.value || 0);
+      totalNetWeightMt += +(item.get('measurement.netWeightMt')?.value || 0); // NEW
+    });
 
-  return {
-    totalQuarryCbm: +totalQuarryCbm.toFixed(4),
-    totalDmgTonnage: +totalDmgTonnage.toFixed(4),
-    totalNetCbm: +totalNetCbm.toFixed(4),
-    totalNetWeightMt: +totalNetWeightMt.toFixed(4)  // NEW
-  };
-}
+    return {
+      totalQuarryCbm: +totalQuarryCbm.toFixed(4),
+      totalDmgTonnage: +totalDmgTonnage.toFixed(4),
+      totalNetCbm: +totalNetCbm.toFixed(4),
+      totalNetWeightMt: +totalNetWeightMt.toFixed(4), // NEW
+    };
+  }
 
   onSubmit(): void {
     if (this.gatePassForm.valid) {

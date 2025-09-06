@@ -63,16 +63,20 @@ namespace Dolphin.Services.Models
         public string SupplierRef { get; set; }
         [BsonElement("otherreference")]
         public string OtherReference { get; set; }
-           [BsonElement("dispatchedthrough")]
+        [BsonElement("dispatchedthrough")]
         public string DispatchedThrough { get; set; }
-            [BsonElement("destination")]
+        [BsonElement("destination")]
         public string Destination { get; set; }
-            [BsonElement("termsofpayment")]
+        [BsonElement("termsofpayment")]
         public string TermsOfPayment { get; set; }
-           [BsonElement("otherrefence")]
+        [BsonElement("otherrefence")]
         public string otherrefence { get; set; }
-           [BsonElement("deliverynotedate")]
+        [BsonElement("deliverynotedate")]
         public string DeliveryNoteDate { get; set; }
+        [BsonElement("hsn")]
+        public string HSN { get; set; }
+        [BsonElement("permitNo")]
+        public string PermitNo { get; set; }
 
     }
 
@@ -87,8 +91,7 @@ namespace Dolphin.Services.Models
         [BsonElement("dmgTonnage")]
         public double DmgTonnage { get; set; }
 
-        [BsonElement("hsn")]
-        public string HSN { get; set; }
+
 
         [BsonElement("itemDescription")]
         public string ItemDescription { get; set; }
@@ -99,14 +102,13 @@ namespace Dolphin.Services.Models
         [BsonElement("netCbm")]
         public double NetCBM { get; set; }
 
-        [BsonElement("permitNo")]
-        public string PermitNo { get; set; }
+
 
         [BsonElement("quarryCbm")]
         public double QuarryCBM { get; set; }
 
-               [BsonIgnore]
-          [BsonElement("netweightmt")]
+        [BsonIgnore]
+        [BsonElement("netweightmt")]
         public double NetWeightMt { get; set; }
 
         [BsonElement("uom")]
