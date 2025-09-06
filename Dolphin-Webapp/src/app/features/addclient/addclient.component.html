@@ -6,45 +6,89 @@
       <mat-form-field appearance="outline">
         <mat-label>Client Name</mat-label>
         <input matInput formControlName="clientName" />
-        <mat-error *ngIf="clientForm.get('clientName')?.hasError('required')"
-          >Required</mat-error
-        >
+        <mat-error *ngIf="clientForm.get('clientName')?.hasError('required')">
+          Required
+        </mat-error>
       </mat-form-field>
     </div>
 
     <div class="form-row">
-      <mat-form-field appearance="outline">
-        <mat-label>GSTIN</mat-label>
-        <input matInput formControlName="gstin" />
-        <mat-error *ngIf="clientForm.get('gstin')?.hasError('required')"
-          >Required</mat-error
-        >
-      </mat-form-field>
+      <div class="client-type-toggle">
+        <label class="toggle-label">Client Type</label>
+        <div class="toggle-container">
+          <span class="toggle-option" [class.active]="!isIndianClient">International</span>
+          <div class="toggle-switch" [class.indian]="isIndianClient" (click)="toggleClientType()">
+            <div class="toggle-slider"></div>
+          </div>
+          <span class="toggle-option" [class.active]="isIndianClient">Indian</span>
+        </div>
+      </div>
 
       <mat-form-field appearance="outline">
         <mat-label>Phone</mat-label>
         <input matInput formControlName="phone" />
-        <mat-error *ngIf="clientForm.get('phone')?.hasError('required')"
-          >Required</mat-error
-        >
+        <mat-error *ngIf="clientForm.get('phone')?.hasError('required')">
+          Required
+        </mat-error>
+      </mat-form-field>
+            <mat-form-field appearance="outline">
+        <mat-label>Country</mat-label>
+        <input matInput formControlName="country" />
+        <mat-error *ngIf="clientForm.get('country')?.hasError('required')">
+          Required
+        </mat-error>
       </mat-form-field>
     </div>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline">
-        <mat-label>Country</mat-label>
-        <input matInput formControlName="country" />
-        <mat-error *ngIf="clientForm.get('country')?.hasError('required')"
-          >Required</mat-error
-        >
-      </mat-form-field>
+    <!-- Indian-specific fields - Only show when Indian is selected -->
+    <ng-container *ngIf="isIndianClient">
+      <div class="form-row indian-fields">
+        <mat-form-field appearance="outline">
+          <mat-label>GSTIN</mat-label>
+          <input matInput formControlName="gstin" />
+          <mat-error *ngIf="clientForm.get('gstin')?.hasError('required')">
+            Required
+          </mat-error>
+        </mat-form-field>
 
-      <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline">
+          <mat-label>PAN Number</mat-label>
+          <input matInput formControlName="panNumber" />
+          <mat-error *ngIf="clientForm.get('panNumber')?.hasError('required')">
+            Required
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row indian-fields">
+        <mat-form-field appearance="outline">
+          <mat-label>State</mat-label>
+          <mat-select formControlName="state">
+            <mat-option *ngFor="let state of indianStates" [value]="state">
+              {{ state.name }} ({{ state.code }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="clientForm.get('state')?.hasError('required')">
+            Required
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </ng-container>
+
+    <div class="form-row">
+
+
+      <mat-form-field appearance="outline" class="address-field">
         <mat-label>Address</mat-label>
-        <input matInput formControlName="address" />
-        <mat-error *ngIf="clientForm.get('address')?.hasError('required')"
-          >Required</mat-error
-        >
+        <textarea 
+          matInput 
+          formControlName="address" 
+          rows="3" 
+          placeholder="Enter complete address...">
+        </textarea>
+        <mat-error *ngIf="clientForm.get('address')?.hasError('required')">
+          Required
+        </mat-error>
       </mat-form-field>
     </div>
 
@@ -53,16 +97,14 @@
         mat-raised-button
         color="primary"
         type="submit"
-        [disabled]="clientForm.invalid"
-      >
+        [disabled]="clientForm.invalid">
         Save Client
       </button>
       <button
         mat-stroked-button
         color="warn"
         type="button"
-        (click)="clientForm.reset()"
-      >
+        (click)="resetForm()">
         Reset
       </button>
     </div>

@@ -431,8 +431,6 @@ export class BillingSummaryComponent implements OnInit {
     doc.save(`delivery-challan-${this.invoice.gatePassNo}.pdf`);
   }
 
-  
-
   // Additional debugging method to test basic PDF generation
   testPDFGeneration(): void {
     try {
@@ -446,6 +444,8 @@ export class BillingSummaryComponent implements OnInit {
     }
   }
 
+
+// Updated main method - replace your existing exportPackingListPDF method
 exportPackingListPDF(): void {
   if (!this.invoice) return;
 
@@ -497,12 +497,9 @@ exportPackingListPDF(): void {
         "Invoice Number",
         "Date",
       ],
-      // FIXED: Remove the empty strings for rowSpan cells
       ["DI2526001", "3-Jul-2025"],
       ["Buyer's Order Number", "Date"],
       ["LWDF202501", "20-May-2025"],
-      //  ['Shipping Bill No', '3293257', 'Date', '4-Jul-2025'],
-
       [
         {
           content: "Shipping Bill No: 3293257",
@@ -515,8 +512,7 @@ exportPackingListPDF(): void {
           styles: { halign: "left" },
         },
       ],
-
-      ["Port Code", "INKRI1"], // FIXED: This will now display properly
+      ["Port Code", "INKRI1"],
       [
         {
           content: "Consignee & Buyer",
@@ -528,7 +524,6 @@ exportPackingListPDF(): void {
           rowSpan: 5,
           styles: { valign: "top" },
         },
-
         {
           content: "Exporter's Ref:" + "dsfdsfsdfsdafdas",
           colSpan: 2,
@@ -536,24 +531,19 @@ exportPackingListPDF(): void {
         },
         "",
       ],
-
       [
         `IEC No: - ${this.invoice.gatePassNo || "0798015888"}`,
         "Last Modified Date: - 17-Apr-2025",
       ],
       [
         {
-          content: `GSTIN: - ${
-            this.invoice.gstin || "29AABFD0471D1ZV"
-          }, STATE CODE: - 29`,
+          content: `GSTIN: - ${this.invoice.gstin || "29AABFD0471D1ZV"}, STATE CODE: - 29`,
           colSpan: 2,
           styles: { halign: "left" },
         },
         "",
       ],
-
       [`PAN NO: - ${this.invoice.gatePassNo || "AABFD0471D"}`, ""],
-
       [
         {
           content: "LUT ARN: -",
@@ -679,27 +669,21 @@ exportPackingListPDF(): void {
     const blocks = [];
     
     for (let i = 1; i <= count; i++) {
-      // Random measurements (L x W x H in cm)
-      const length = Math.floor(Math.random() * 300) + 100; // 100-400 cm
-      const width = Math.floor(Math.random() * 200) + 70;   // 70-270 cm  
-      const height = Math.floor(Math.random() * 150) + 50;  // 50-200 cm
+      const length = Math.floor(Math.random() * 300) + 100;
+      const width = Math.floor(Math.random() * 200) + 70;   
+      const height = Math.floor(Math.random() * 150) + 50;
       
-      // Calculate CBM (L x W x H in meters)
-      const cbm = (length * width * height) / 1000000; // Convert cm³ to m³
-      
-      // Calculate weight (assuming granite density ~2.7 tons/m³)
+      const cbm = (length * width * height) / 1000000;
       const weight = cbm * 2.7;
-      
-      // Create measurement string
       const measurement = `${length} X ${width} X ${height}`;
       
       blocks.push([
         "",
-        i.toString(),                    // SL.NO
-        (1300 + i).toString(),          // BLOCK NO (starting from 1301)
-        measurement,                     // MEASUREMENT
-        cbm.toFixed(3),                 // CBM
-        weight.toFixed(3)               // MT (Weight)
+        i.toString(),
+        (1300 + i).toString(),
+        measurement,
+        cbm.toFixed(3),
+        weight.toFixed(3)
       ]);
       
       totalCBM += cbm;
@@ -709,7 +693,6 @@ exportPackingListPDF(): void {
     return blocks;
   };
 
-  // Generate 32 blocks for the table (as shown in screenshot)
   const graniteBlocksData = generateGraniteBlocksData(32);
 
   autoTable(doc, {
@@ -730,30 +713,17 @@ exportPackingListPDF(): void {
       halign: "center",
     },
     columnStyles: {
-      0: { cellWidth: 25, halign: "center" },  // SL.NO
-      1: { cellWidth: 32, halign: "center" },  // BLOCK NO
-      2: { cellWidth: 50, halign: "center" },  // MEASUREMENT
-      3: { cellWidth: 25, halign: "center" },  // CBM
-      4: { cellWidth: 30, halign: "center" },  // MT
+      0: { cellWidth: 25, halign: "center" },
+      1: { cellWidth: 32, halign: "center" },
+      2: { cellWidth: 50, halign: "center" },
+      3: { cellWidth: 25, halign: "center" },
+      4: { cellWidth: 30, halign: "center" },
     },
     head: [
-      // [
-      //   {
-      //     content: "FAN / XMN",
-      //     colSpan: 5,
-      //     styles: { 
-      //       halign: "left", 
-      //       fontStyle: "bold",
-      //       fillColor: [255, 255, 255],
-      //       cellPadding: 2
-      //     }
-      //   }
-      // ],
       ["FAN/XMN","SL.NO", "BLOCK NO", "MEASUREMENT", "CBM", "MT"]
     ],
     body: graniteBlocksData,
     didDrawPage: (data) => {
-      // Add page break logic if needed
       if (data.pageNumber > 1) {
         // Add header for continuation pages if needed
       }
@@ -775,33 +745,53 @@ exportPackingListPDF(): void {
       fontStyle: "bold",
     },
     columnStyles: {
-      0: { cellWidth: 30 },  // FAN/XMN column
-      1: { cellWidth: 20 },  // SL.NO
-      2: { cellWidth: 25 },  // BLOCK NO
-      3: { cellWidth: 45 },  // MEASUREMENT
-      4: { cellWidth: 20, halign: "center" },  // CBM
-      5: { cellWidth: 22, halign: "center" },  // MT
+      0: { cellWidth: 30 },
+      1: { cellWidth:35 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 30 },
+      // 4: { cellWidth: 20, },
+      // 5: { cellWidth: 22, },
     },
     body: [
       [
-        "",
-        "",
-        "",
-        "TOTAL:",
+       {content:"",colSpan:2},
+   
+        // "",
+        // "",
+        "C/F:",
         totalCBM.toFixed(3),
         totalWeight.toFixed(3),
       ],
     ],
   });
 
-  /** ========== MAIN GOODS TABLE WITH PROPER PAGINATION ========== **/
-  currentY = (doc as any).lastAutoTable.finalY;
-
-  /** ========== TOTALS AND FOOTER ========== **/
-  currentY = (doc as any).lastAutoTable.finalY;
+  // Add footer immediately after totals - with smart positioning
+  this.addFooterToLastPage(doc, pageWidth, pageHeight);
 
   doc.save(`packing-list-${this.invoice.gatePassNo || "export"}.pdf`);
 }
+addPageNumbers(doc: any): void {
+  const totalPages = doc.internal.getNumberOfPages();
+  
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    
+    // Add page number at bottom center
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    // Page number text
+    const pageText = `Page ${i} of ${totalPages}`;
+    const textWidth = doc.getTextWidth(pageText);
+    const x = (pageWidth - textWidth) / 2; // Center horizontally
+    const y = pageHeight - 10; // 10mm from bottom
+    
+    doc.text(pageText, x, y);
+  }
+}
+
 exportTaxInvoiceToPDF(): void {
   if (!this.invoice) return;
 
@@ -845,20 +835,20 @@ exportTaxInvoiceToPDF(): void {
           rowSpan:4,
           styles: { valign: "top" },
         },
-        "ProformaInvoice Number:"+"12345",
-        "Date:"+new Date().toLocaleDateString("en-GB"),
+        `ProformaInvoice Number: ${this.invoice.invoiceNo }`,
+        `Date:`+new Date().toLocaleDateString("en-GB"),
       ],
       [  
-        "Delivery Note:"+"sdfgsdfsafasfasdfsafsadfsdafsdafsadfasdfasdfsafasdfasdfasdfsdasddsfa",
-        'Mode/Terms of Payment:'+"100% advance",
+        `Delivery Note: ${this.invoice.notes }`,
+        `Mode/Terms of Payment: ${this.invoice.termsOfPayment }`,
       ],
       [
-        { content: "Supplier Ref:" },
-        { content:  "Other Reference(s):"} 
+        { content: `Supplier Ref: ${this.invoice.supplierRef }` },
+        { content:  `Other Reference(s): ${this.invoice.otherReference }` }, 
       ],
       [
-        { content: "Buyer's Order Number" },
-        { content:  "Dated"} 
+        { content: `Buyer's Order Number:  ${this.invoice.buyersOrderNumber }` },
+        { content:  `Dated: ${this.invoice.dated }`},
       ],
       [
         {
@@ -871,23 +861,23 @@ exportTaxInvoiceToPDF(): void {
           styles: { halign: "left" },
         },
         {
-          content:  "Destination:" + "Truck",
+          content:  ` Destination: ${this.invoice.destination }`,
           styles: { halign: "left" },
         },
       ],
       [
         {
-          content: "Dispatch Document No:",
+          content: `Dispatch Document No: ${this.invoice.dispatchDocumentNo }`,
           styles: { halign: "left" },
         },
         {
-          content: "Delivery Note Date",
+          content: `Delivery Note Date : ${this.invoice.deliveryNoteDate }`,
           styles: { halign: "left" },
         },
       ],
       [
         {
-          content: "E way bill no.:",
+          content: `E way bill no.: ${this.invoice.ewayBillNo }`,
           styles: { halign: "left" },
         },
         {
@@ -897,7 +887,7 @@ exportTaxInvoiceToPDF(): void {
       ],
       [
         {
-          content: `Terms of Delivery: - ${this.invoice.gstin || "29AABFD0471D1ZV"}, STATE CODE: - 29`,
+          content: `Terms of Delivery: - ${this.invoice.termsOfDelivery }`,
           colSpan: 2,
           styles: { halign: "left" },
         },
@@ -1330,53 +1320,64 @@ autoTable(doc, {
 }
 
 
-  addFooterToLastPage(doc: any, pageWidth: number, pageHeight: number): void {
-    const finalPage = doc.getNumberOfPages();
-    doc.setPage(finalPage);
-
-    const currentY = (doc as any).lastAutoTable.finalY;
-
-    // IEC, GSTIN, PAN info at bottom left
-    doc.setFontSize(8).setFont("helvetica", "normal");
-    doc.text("IEC No: - 0798015888", 20, pageHeight - 40);
-    doc.text("GSTIN: - 29AABFD0471D1ZV, STATE CODE: - 29", 20, pageHeight - 35);
-    doc.text("PAN NO: - AABFD0471D", 20, pageHeight - 30);
-
-    // Signature area
-    doc.text("Signature & Date", pageWidth - 80, pageHeight - 40);
-    doc.text("for DOLPHIN INTERNATIONAL", pageWidth - 80, pageHeight - 35);
-    doc.text("AUTHORIZED SIGNATURE", pageWidth - 80, pageHeight - 25);
-
-    // Company footer
-    doc.setFontSize(7);
-    doc.text(
-      "NO 2/10, 4TH FLOOR, 80FT ROAD, OPPOSITE, RAMAIAH HOSPITAL RMV 2nd STAGE, BANGALORE 560 094, INDIA.",
-      pageWidth / 2,
-      pageHeight - 15,
-      { align: "center" }
-    );
-    doc.text(
-      'Illal Off: "Vasudev", Opp. S.V.M.College, ILKAL - 587 125, INDIA Off: 91-8351-270361 Fax: 270123',
-      pageWidth / 2,
-      pageHeight - 11,
-      { align: "center" }
-    );
-    doc.text(
-      "E-mail: di@dolphingranite.com Website: http://www.dolphingranite.com",
-      pageWidth / 2,
-      pageHeight - 7,
-      { align: "center" }
-    );
-
-    // Page numbers on all pages
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.text(`Page ${i}`, pageWidth - 25, pageHeight - 5);
-    }
+addFooterToLastPage(doc: any, pageWidth: number, pageHeight: number): void {
+  const currentY = (doc as any).lastAutoTable.finalY;
+  const footerHeight = 50; // Approximate height needed for footer content
+  const marginFromBottom = 10; // Margin from page bottom
+  
+  // Check if there's enough space for footer on current page
+  const availableSpace = pageHeight - currentY - marginFromBottom;
+  
+  if (availableSpace < footerHeight) {
+    // Not enough space, move to next page
+    doc.addPage();
+    const newFooterY = 30; // Start from top of new page with some margin
+    this.drawFooterContent(doc, pageWidth, pageHeight, newFooterY);
+  } else {
+    // Enough space, add footer on current page
+    const footerY = currentY + 10; // Small gap after totals table
+    this.drawFooterContent(doc, pageWidth, pageHeight, footerY);
   }
+  
+  // Add page numbers to all pages
+  this.addPageNumbers(doc);
+}
 
+drawFooterContent(doc: any, pageWidth: number, pageHeight: number, startY: number): void {
+  let currentY = startY;
+  
+  // IEC, GSTIN, PAN info at left side
+  doc.setFontSize(8).setFont("helvetica", "normal");
+  doc.text("IEC No: - 0798015888", 20, currentY);
+  doc.text("GSTIN: - 29AABFD0471D1ZV, STATE CODE: - 29", 20, currentY + 5);
+  doc.text("PAN NO: - AABFD0471D", 20, currentY + 10);
+
+  // Signature area at right side
+  doc.text("Signature & Date", pageWidth - 80, currentY);
+  doc.text("for DOLPHIN INTERNATIONAL", pageWidth - 80, currentY + 5);
+  doc.text("AUTHORIZED SIGNATURE", pageWidth - 80, currentY + 15);
+
+  // Company footer at bottom - always at page bottom regardless of where footer starts
+  doc.setFontSize(7);
+  doc.text(
+    "NO 2/10, 4TH FLOOR, 80FT ROAD, OPPOSITE, RAMAIAH HOSPITAL RMV 2nd STAGE, BANGALORE 560 094, INDIA.",
+    pageWidth / 2,
+    pageHeight - 15,
+    { align: "center" }
+  );
+  doc.text(
+    'Illal Off: "Vasudev", Opp. S.V.M.College, ILKAL - 587 125, INDIA Off: 91-8351-270361 Fax: 270123',
+    pageWidth / 2,
+    pageHeight - 11,
+    { align: "center" }
+  );
+  doc.text(
+    "E-mail: di@dolphingranite.com Website: http://www.dolphingranite.com",
+    pageWidth / 2,
+    pageHeight - 7,
+    { align: "center" }
+  );
+}
   generateRealisticGraniteBlocks(count: number) {
     const blocks = [];
     const prefixes = ["13", "14", "15", "16", "17"];

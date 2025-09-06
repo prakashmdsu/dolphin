@@ -19,7 +19,15 @@ export class BillingComponent implements OnInit {
   graniteBlocks: GraniteBlock[] = []; // available blocks to add
   selectedBlockNos: number[] = [];
   gatePassNo?: string;
-  
+  hsnOptions = [
+    { value: '25171000', label: '25171000 - Granite (crude or roughly trimmed)' },
+    { value: '25172000', label: '25172000 - Granite (merely cut, by sawing or otherwise)' },
+    { value: '68029100', label: '68029100 - Granite tiles, cubes and similar articles' },
+    { value: '68029900', label: '68029900 - Other granite articles' },
+    { value: '25169000', label: '25169000 - Other natural stone' },
+    { value: '68022100', label: '68022100 - Granite slabs' },
+    { value: '68022900', label: '68022900 - Other granite products' }
+  ];
   // Terms of payment options
   termsOfPaymentOptions = [
     { value: '100% advance payment', label: '100% advance payment' },
@@ -177,6 +185,7 @@ export class BillingComponent implements OnInit {
         lg: [measurement.lg, [Validators.required, Validators.min(0.1)]],
         wd: [measurement.wd, [Validators.required, Validators.min(0.1)]],
         ht: [measurement.ht, [Validators.required, Validators.min(0.1)]],
+         netWeightMt: [measurement.netWeightMt || 0, [Validators.required, Validators.min(0.1)]]
       }),
       quarryCbm: [
         derived.quarryCbm,
@@ -222,27 +231,30 @@ export class BillingComponent implements OnInit {
     this.items.removeAt(index);
   }
 
-  onBlockNoChange(index: number, selectedBlockNo: number): void {
-    const selectedBlock = this.graniteBlocks.find(
-      (block) => block.blockNo === selectedBlockNo
-    );
-    if (selectedBlock) {
-      const itemForm = this.items.at(index) as FormGroup;
-      const derived = this.calculateDerivedFields(selectedBlock.measurement);
+onBlockNoChange(index: number, selectedBlockNo: number): void {
+  const selectedBlock = this.graniteBlocks.find(
+    (block) => block.blockNo === selectedBlockNo
+  );
+  if (selectedBlock) {
+    const itemForm = this.items.at(index) as FormGroup;
+    const derived = this.calculateDerivedFields(selectedBlock.measurement);
 
-      itemForm.patchValue({
-        hsn: selectedBlock.hsn,
-        categoryGrade: selectedBlock.categoryGrade,
-        measurement: selectedBlock.measurement,
-        quarryCbm: derived.quarryCbm,
-        dmgTonnage: derived.dmgTonnage,
-        netCbm: derived.netCbm,
-        itemDescription: selectedBlock.itemDescription,
-        permitNo: selectedBlock.permitNo,
-        uom: selectedBlock.uom,
-      });
-    }
+    itemForm.patchValue({
+      hsn: selectedBlock.hsn,
+      categoryGrade: selectedBlock.categoryGrade,
+      measurement: {
+        ...selectedBlock.measurement,
+        netWeightMt: selectedBlock.measurement.netWeightMt || 0  // NEW
+      },
+      quarryCbm: derived.quarryCbm,
+      dmgTonnage: derived.dmgTonnage,
+      netCbm: derived.netCbm,
+      itemDescription: selectedBlock.itemDescription,
+      permitNo: selectedBlock.permitNo,
+      uom: selectedBlock.uom,
+    });
   }
+}
 
   onMeasurementChange(itemIndex: number): void {
     const itemForm = this.items.at(itemIndex) as FormGroup;
@@ -256,27 +268,31 @@ export class BillingComponent implements OnInit {
     });
   }
 
-  calculateTotals(): {
-    totalQuarryCbm: number;
-    totalDmgTonnage: number;
-    totalNetCbm: number;
-  } {
-    let totalQuarryCbm = 0;
-    let totalDmgTonnage = 0;
-    let totalNetCbm = 0;
+calculateTotals(): {
+  totalQuarryCbm: number;
+  totalDmgTonnage: number;
+  totalNetCbm: number;
+  totalNetWeightMt: number;  // NEW
+} {
+  let totalQuarryCbm = 0;
+  let totalDmgTonnage = 0;
+  let totalNetCbm = 0;
+  let totalNetWeightMt = 0;  // NEW
 
-    this.items.controls.forEach((item) => {
-      totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
-      totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
-      totalNetCbm += +(item.get('netCbm')?.value || 0);
-    });
+  this.items.controls.forEach((item) => {
+    totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
+    totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
+    totalNetCbm += +(item.get('netCbm')?.value || 0);
+    totalNetWeightMt += +(item.get('measurement.netWeightMt')?.value || 0);  // NEW
+  });
 
-    return {
-      totalQuarryCbm: +totalQuarryCbm.toFixed(4),
-      totalDmgTonnage: +totalDmgTonnage.toFixed(4),
-      totalNetCbm: +totalNetCbm.toFixed(4),
-    };
-  }
+  return {
+    totalQuarryCbm: +totalQuarryCbm.toFixed(4),
+    totalDmgTonnage: +totalDmgTonnage.toFixed(4),
+    totalNetCbm: +totalNetCbm.toFixed(4),
+    totalNetWeightMt: +totalNetWeightMt.toFixed(4)  // NEW
+  };
+}
 
   onSubmit(): void {
     if (this.gatePassForm.valid) {

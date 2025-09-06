@@ -10,9 +10,9 @@ namespace Dolphin.Services.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-         [BsonElement("dateOfEntry")]
-    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)] // Ensure UTC storage
-    public DateTime Date { get; set; }
+        [BsonElement("dateOfEntry")]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)] // Ensure UTC storage
+        public DateTime Date { get; set; }
 
         [BsonElement("pitNo")]
         public int PitNo { get; set; }
@@ -20,7 +20,7 @@ namespace Dolphin.Services.Models
         [BsonElement("blockNo")]
         public int BlockNo { get; set; }
 
-         [BsonElement("gatePassNo")]
+        [BsonElement("gatePassNo")]
         public string? GatePassNo { get; set; }
 
         [BsonElement("buyerBlockNo")]
@@ -49,14 +49,17 @@ namespace Dolphin.Services.Models
         public string? EnteredBy { get; set; }
 
         // Calculated properties (not stored in DB)
-        [BsonIgnore]
+        // [BsonIgnore]
         public double QuarryCbm { get; set; }
 
-        [BsonIgnore]
+        // [BsonIgnore]
         public double DmgTonnage { get; set; }
 
-        [BsonIgnore]
+        // [BsonIgnore]
         public double NetCbm { get; set; }
+        // [BsonIgnore]
+        
+
     }
 
     public class Measurement
@@ -69,5 +72,7 @@ namespace Dolphin.Services.Models
 
         [BsonElement("ht")]
         public int Ht { get; set; }
+          [BsonElement("netweightmt")]
+        public double NetWeightMt { get; set; }
     }
 }
