@@ -7,6 +7,14 @@ import { ActivatedRoute } from '@angular/router';
 import { TaxInvoice } from '../shared/InvoiceBillingLocalClient';
 import { logostring } from '../shared/logobase64';
 
+interface Product {
+  description: string;
+  hsnSac: string;
+  quantity: string;
+  rate: string;
+  per: string;
+  amount: string;
+}
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
   interface jsPDF {
@@ -23,12 +31,16 @@ declare module 'jspdf' {
 export class BillingSummaryComponent implements OnInit {
   invoice: Invoice | null = null;
 
+  products: Product[] = [
+    
+  ];
   public invoiceBilling: TaxInvoice | null = null;
   public currentDate: Date = new Date();
   totals = {
     totalQuarryCbm: 0,
     totalDmgTonnage: 0,
     totalNetCbm: 0,
+    totalNetWeightInMt: 0,
   };
   loading = true;
   error: string | null = null;
@@ -68,33 +80,45 @@ export class BillingSummaryComponent implements OnInit {
     }
   }
   // Updated method for Packing List
-  drawFirstPageLayout(doc: any, pageWidth: number, pagefor: string): void {
-    // Move logo higher up - change from 10 to 5
-    const nextY = this.addLogoToPDF(doc, pageWidth, 5);
+drawFirstPageLayout(doc: any, pageWidth: number, pagefor: string): void {
+  // Move logo higher up - change from 10 to 5
+  const nextY = this.addLogoToPDF(doc, pageWidth, 5);
 
-    // Main title - adjust spacing
-    doc.setFont('helvetica', 'bold').setFontSize(16);
-    doc.text(
-      pagefor == 'taxinvoice' ? 'TAX INVOICE' : 'PACKING LIST',
-      pageWidth / 2,
-      nextY + 5,
-      { align: 'center' }
-    );
-
-    // GSTIN - adjust spacing
-
-    doc.setFontSize(10).setFont('helvetica', 'normal');
-    if (pagefor != 'taxinvoice') {
-      doc.text(
-        'GSTIN: 29AABFD0471D1ZV, STATE CODE:29',
-        pageWidth / 2,
-        nextY + 10,
-        {
-          align: 'center',
-        }
-      );
-    }
+  // Main title - adjust spacing
+  doc.setFont('helvetica', 'bold').setFontSize(16);
+  
+  // Updated title condition to handle three document types
+  let documentTitle: string;
+  if (pagefor === 'taxinvoice') {
+    documentTitle = 'TAX INVOICE';
+  } else if (pagefor === 'deliverychallan') {
+    documentTitle = 'DELIVERY CHALLAN';
+  } else {
+    documentTitle = 'PACKING LIST';
   }
+  
+  doc.text(
+    documentTitle,
+    pageWidth / 2,
+    nextY + 5,
+    { align: 'center' }
+  );
+
+  // GSTIN - adjust spacing
+  doc.setFontSize(10).setFont('helvetica', 'normal');
+  
+  // Show GSTIN for packing list and delivery challan, but not for tax invoice
+  if (pagefor !== 'taxinvoice' && pagefor !== 'deliverychallan') {
+    doc.text(
+      'GSTIN: 29AABFD0471D1ZV, STATE CODE:29',
+      pageWidth / 2,
+      nextY + 10,
+      {
+        align: 'center',
+      }
+    );
+  }
+}
 
   // Updated method for Continuation Pages
   drawContinuationPageLayout(
@@ -137,6 +161,17 @@ export class BillingSummaryComponent implements OnInit {
       next: (res) => {
         this.invoice = res;
         this.calculateTotals();
+        let prod: Product = {
+          description: `${this.invoice.gpType}\n  ${this.invoice.graniteStocks.length} nos`,
+          hsnSac: res.hsn,
+          // quantity: '25.300 M.T',
+          quantity: `${this.totals.totalNetWeightInMt} M.T`,
+          rate: '1469.92',
+          per: 'M.T',
+          // amount: '37189.00',
+          amount: `${this.totals.totalNetWeightInMt * 1469.92}`,
+        };
+        this.products.push(prod);
         this.loading = false;
       },
       error: (err) => {
@@ -166,273 +201,471 @@ export class BillingSummaryComponent implements OnInit {
     let totalQuarryCbm = 0;
     let totalDmgTonnage = 0;
     let totalNetCbm = 0;
-
+    let totalNetWeightInMt = 0;
     this.invoice.graniteStocks.forEach((block) => {
       const derived = this.calculateDerivedFields(block.measurement);
       totalQuarryCbm += derived.quarryCbm;
       totalDmgTonnage += derived.dmgTonnage;
       totalNetCbm += derived.netCbm;
+      totalNetWeightInMt += block.netWeightMt || 0;
     });
 
     this.totals = {
       totalQuarryCbm: Number(totalQuarryCbm.toFixed(4)),
       totalDmgTonnage: Number(totalDmgTonnage.toFixed(4)),
       totalNetCbm: Number(totalNetCbm.toFixed(4)),
+      totalNetWeightInMt: Number(totalNetWeightInMt.toFixed(4)),
     };
   }
 
-  exportDeliveryChallanToPDF(): void {
-    if (!this.invoice) return;
+ 
+    exportDeliveryChallanToPDF(): void {
+  if (!this.invoice) return;
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
 
-    // Add logo at the top
-    let yPos = this.addLogoToPDF(doc, pageWidth, 10);
+  // Generate 1000 realistic granite blocks
+  const blocksToProcess = this.generateRealisticGraniteBlocks(1000);
+  let totalCBM = 0;
+  let totalWeight = 0;
 
-    // Calculate total metric tonne
-    const totalMetricTonne = this.invoice.graniteStocks.reduce(
-      (total, block) => {
-        const derived = this.calculateDerivedFields(block.measurement);
-        return total + derived.dmgTonnage;
+  /** ========== FIRST PAGE LAYOUT ========== **/
+  this.drawFirstPageLayout(doc, pageWidth, 'deliverychallan');
+
+  /** ========== MAIN INFO TABLE - FIXED ========== **/
+/** ========== MAIN INFO TABLE - DELIVERY CHALLAN FORMAT ========== **/
+autoTable(doc, {
+  startY: 35,
+  theme: 'grid',
+  styles: {
+    fontSize: 8,
+    cellPadding: 1,
+    lineColor: [0, 0, 0],
+    lineWidth: 0.12,
+    valign: 'top',
+    halign: 'left',
+  },
+  columnStyles: {
+    0: { cellWidth: 80 }, // Left column - Exporter details
+    1: { cellWidth: 55 }, // Middle column 
+    2: { cellWidth: 47 }, // Right column
+  },
+  body: [
+    // Row 1
+    [
+      {
+        content: `Exporter\nDOLPHIN INTERNATIONAL\n2/10, 4th Floor, 80ft Road,\nOpp. Ramaiah Hospital\nRMV 2nd Stage, Bangalore - 560094\nGSTIN/UIN: 29AABFD0471D1ZV\nState Name : Karnataka, Code : 29`,
+        rowSpan: 4,
+        styles: { valign: 'top' },
       },
-      0
-    );
+      'Delivery Challan No',
+      'Dated',
+    ],
+    // Row 2  
+    [
+      '0048',
+      '28-06-2025',
+    ],
+    // Row 3
+    [
+      '',
+      '',
+    ],
+    // Row 4
+    [
+      'Export to Country',
+      '',
+    ],
+    // Row 5
+    [
+      {
+        content: `Place of Loading :\nPURTHAGERI VILLEGE\nKOPPAL DIST - 583281`,
+        rowSpan: 7,
+        styles: { valign: 'top' },
+      },
+      'CHINA',
+      '',
+    ],
+    // Row 6
+    [
+      '',
+      '',
+    ],
+    // Row 7
+    [
+      'Country of Origin of Goods',
+      'Place of Receipt',
+    ],
+    // Row 8
+    [
+      'INDIA',
+      'Krishnapatnam Port',
+    ],
+    // Row 9
+    [
+      'Pre-Carriage by',
+      'Port of Loading',
+    ],
+    // Row 10
+    [
+      'ROAD',
+      'Krishnapatnam Port',
+    ],
+    // Row 11
+    [
+      'Despatched through',
+      'Motor Vehicle No.',
+    ],
+    // Row 12
+    [
+      {
+        content: `Consignee :\nXiamen Jingtaiquan Industrial Co.Ltd, CHINA\nUnloading Destination :\nGSTN-37AADCO1422E1ZW\nOmshree Maa Mangala Logistics Pvt Ltd\nStock Yard KRISHNAPATNAM PORT.\nNellore- 524344 Andra Pradesh\nPic : Mr. Ranjan\nMob: 77997 91904`,
+        rowSpan: 3,
+        styles: { valign: 'top' },
+      },
+      'Truck',
+      'AP39UL7888',
+    ],
+    // Row 13
+    [
+      'E Way Bill No.',
+      '',
+    ],
+    // Row 14
+    [
+      '1221-4737-9439',
+      '',
+    ],
+    // Row 15
+    [
+      'Terms of Delivery',
+      '',
+      '',
+    ],
+  ],
+  didParseCell: function (data) {
+    // Apply borders to all cells
+    data.cell.styles.lineWidth = 0.12;
+    data.cell.styles.lineColor = [0, 0, 0];
+  },
+});
+  // Get the final Y position from the first table
+  const firstTableFinalY = (doc as any).lastAutoTable.finalY || 100;
 
-    // Header with logo spacing
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DELIVERY CHALLAN', pageWidth / 2, yPos, { align: 'center' });
-    yPos += 15;
-
-    // Company Info
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DOLPHIN INTERNATIONAL', 20, yPos);
-    yPos += 6;
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('2/10, 4th Floor, 80ft Road,', 20, yPos);
-    yPos += 4;
-    doc.text('Opp. Ramaliah Hospital', 20, yPos);
-    yPos += 4;
-    doc.text('RMV 2nd Stage, Bangalore - 560094', 20, yPos);
-    yPos += 4;
-    doc.text('GSTIN/UIN: 29AABFD047ID1ZW', 20, yPos);
-    yPos += 4;
-    doc.text('State Name : Karnataka, Code : 29', 20, yPos);
-    yPos += 4;
-    doc.text('E-Mail : dee@dolphingranite.com', 20, yPos);
-    yPos += 15;
-
-    // Two Column Section - Left Side
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Place of Loading:', 20, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('PURTHAGERI VILLAGE', 80, yPos);
-    yPos += 8;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Export to Country:', 20, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.invoice.country, 80, yPos);
-    yPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Country of Origin:', 20, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('INDIA', 80, yPos);
-    yPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Pre-Carriage by:', 20, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('ROAD', 80, yPos);
-    yPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Despatched through:', 20, yPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Truck', 80, yPos);
-
-    // Two Column Section - Right Side
-    let rightYPos = yPos - 32; // Reset to top of left column
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Delivery Challan No:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.invoice.gatePassNo, 170, rightYPos);
-    rightYPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dated:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.formatDate(this.invoice.dispatchDate), 170, rightYPos);
-    rightYPos += 10;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Place of Receipt:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Krishnapatnam Port', 170, rightYPos);
-    rightYPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Port of Loading:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Krishnapatnam Port', 170, rightYPos);
-    rightYPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Mode of Transport:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Road', 170, rightYPos);
-    rightYPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Truck:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('AP38JL7688', 170, rightYPos);
-    rightYPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('E Way Bill No:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('1221-4737-9439', 170, rightYPos);
-    rightYPos += 6;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('Terms of Delivery:', 120, rightYPos);
-    doc.setFont('helvetica', 'normal');
-    doc.text('FOB', 170, rightYPos);
-
-    yPos += 20;
-
-    // Consignee Section
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Consignee:', 20, yPos);
-    yPos += 6;
-
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.invoice.billTo, 20, yPos);
-    yPos += 5;
-    doc.text(this.invoice.billToAddress, 20, yPos);
-    yPos += 5;
-    doc.text(`GSTN: ${this.invoice.gstin}`, 20, yPos);
-    yPos += 15;
-
-    // Prepare description with all block details
-    const blockDetails = this.invoice.graniteStocks
-      .map(
-        (block, index) =>
-          `${block.blockNo}-${block.measurement.lg}-${block.measurement.wd}-${block.measurement.ht}`
-      )
-      .join('-');
-
-    // Table Data
-    const tableData = [
-      [
-        '1',
-        `Dimensional Granite Blocks\n\nNo.of Blocks : ${
-          this.invoice.graniteStocks?.length || 0
-        } Block\n${blockDetails}\n\nShipping Mark : FAN / XMN`,
-        '25161100',
-        `${totalMetricTonne.toFixed(2)}`,
-        `${totalMetricTonne.toFixed(2)} M.T`,
-        '247589.00',
-      ],
+  // Function to convert number to words
+  const numberToWords = (num: number): string => {
+    const ones = [
+      '',
+      'One',
+      'Two',
+      'Three',
+      'Four',
+      'Five',
+      'Six',
+      'Seven',
+      'Eight',
+      'Nine',
+    ];
+    const tens = [
+      '',
+      '',
+      'Twenty',
+      'Thirty',
+      'Forty',
+      'Fifty',
+      'Sixty',
+      'Seventy',
+      'Eighty',
+      'Ninety',
+    ];
+    const teens = [
+      'Ten',
+      'Eleven',
+      'Twelve',
+      'Thirteen',
+      'Fourteen',
+      'Fifteen',
+      'Sixteen',
+      'Seventeen',
+      'Eighteen',
+      'Nineteen',
     ];
 
-    // Totals row
-    tableData.push([
-      '',
-      '',
-      'Total',
-      `${totalMetricTonne.toFixed(2)}`,
-      '',
-      '₹247589.00',
-    ]);
+    const convertHundreds = (n: number): string => {
+      let result = '';
+      if (n >= 100) {
+        result += ones[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
+      }
+      if (n >= 20) {
+        result += tens[Math.floor(n / 10)] + ' ';
+        n %= 10;
+      } else if (n >= 10) {
+        result += teens[n - 10] + ' ';
+        return result;
+      }
+      if (n > 0) {
+        result += ones[n] + ' ';
+      }
+      return result;
+    };
 
-    autoTable(doc, {
-      startY: yPos,
-      head: [
-        [
-          'Sl No.',
-          'Description of Goods',
-          'HSN/SAC',
-          'Quantity\nMetric Tonne',
-          'Rate per',
-          'Amount',
-        ],
-      ],
-      body: tableData,
-      theme: 'striped',
-      headStyles: {
-        fillColor: [240, 240, 240],
-        textColor: [0, 0, 0],
-        fontStyle: 'bold',
-      },
-      styles: {
-        fontSize: 8,
-        cellPadding: 3,
-        valign: 'middle',
-      },
-      columnStyles: {
-        0: { cellWidth: 15, halign: 'center' },
-        1: { cellWidth: 80, halign: 'left' },
-        2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 25, halign: 'center' },
-        4: { cellWidth: 20, halign: 'center' },
-        5: { cellWidth: 25, halign: 'right' },
-      },
-      didParseCell: function (data) {
-        // Make total row bold
-        if (data.row.index === tableData.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [249, 249, 249];
-        }
-        // Center align total text
-        if (
-          data.row.index === tableData.length - 1 &&
-          data.column.index === 2
-        ) {
-          data.cell.styles.halign = 'right';
-          data.cell.styles.fontStyle = 'bold';
-        }
-      },
-    });
+    if (num === 0) return 'Zero';
 
-    // Get final Y position after table
-    const finalY = (doc as any).lastAutoTable?.finalY || yPos + 80;
+    let result = '';
+    const crore = Math.floor(num / 10000000);
+    const lakh = Math.floor((num % 10000000) / 100000);
+    const thousand = Math.floor((num % 100000) / 1000);
+    const remainder = num % 1000;
 
-    // Remarks Section
-    if (this.invoice.notes) {
-      doc.setFont('helvetica', 'bold');
-      doc.text('Remarks:', 20, finalY + 10);
-      doc.setFont('helvetica', 'normal');
-      const noteLines = doc.splitTextToSize(this.invoice.notes, 170);
-      doc.text(noteLines, 20, finalY + 18);
+    if (crore > 0) {
+      result += convertHundreds(crore) + 'Crore ';
+    }
+    if (lakh > 0) {
+      result += convertHundreds(lakh) + 'Lakh ';
+    }
+    if (thousand > 0) {
+      result += convertHundreds(thousand) + 'Thousand ';
+    }
+    if (remainder > 0) {
+      result += convertHundreds(remainder);
     }
 
-    // Footer
-    doc.setFont('helvetica', 'normal');
-    doc.text("Company's PAN: AABFD0471D", 20, pageHeight - 30);
+    return result.trim();
+  };
 
-    doc.setFont('helvetica', 'normal');
-    doc.text('for DOLPHIN INTERNATIONAL', pageWidth - 80, pageHeight - 40);
+  // Calculate totals
+  let totalBaseAmount = 0;
+  this.products.forEach((product) => {
+    totalBaseAmount += parseFloat(product.amount);
+  });
 
-    // Signature line (simple line)
-    doc.line(pageWidth - 80, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+  const cgstRate = 2.5;
+  const sgstRate = 2.5;
+  const cgstAmount = (totalBaseAmount * cgstRate) / 100;
+  const sgstAmount = (totalBaseAmount * sgstRate) / 100;
+  const roundingOff = 0.54;
+  const totalAmount = totalBaseAmount + cgstAmount + sgstAmount + roundingOff;
 
-    doc.setFont('helvetica', 'normal');
-    doc.text('Authorised Signatory', pageWidth - 80, pageHeight - 15);
+  // Convert total amount to words
+  const amountInWords =
+    numberToWords(Math.floor(totalAmount)) + ' Rupees Only';
 
-    // Save
-    doc.save(`delivery-challan-${this.invoice.gatePassNo}.pdf`);
+  // Calculate total quantity (assuming all in M.T)
+  const totalQuantity = this.products.reduce((sum, product) => {
+    const qty = parseFloat(product.quantity.split(' ')[0]);
+    return sum + qty;
+  }, 0);
+
+// Replace "//Add additional table" with this code:
+
+/** ========== GOODS DETAILS TABLE ========== **/
+// Build table body for goods details
+const goodsTableBody: any[] = [];
+
+// Add product rows with detailed information
+this.products.forEach((product, index) => {
+  // Main product row
+  goodsTableBody.push([
+    {
+      content: (index + 1).toString(),
+      rowSpan: 3,
+      styles: { valign: 'middle', halign: 'center' }
+    },
+    'Dimensional Granite Blocks',
+    product.hsnSac || '25161100',
+    `${parseFloat(product.quantity.split(' ')[0]).toFixed(3)}`,
+    parseFloat(product.rate).toFixed(2),
+    product.per || 'M.T',
+    parseFloat(product.amount).toFixed(2),
+  ]);
+  
+  // Block details row
+  goodsTableBody.push([
+    // First cell is merged from above (rowSpan)
+    `No.of Blocks : ${product.hsnSac || '07'} Block\n${product.hsnSac || '1433-1488-1492-1495-1499-1502-1505'}`,
+    '', '', '', '', ''
+  ]);
+  
+  // Shipping mark row
+  goodsTableBody.push([
+    // First cell is merged from above (rowSpan)
+    `Shipping Mark : ${product.hsnSac  || 'FAN / XMN'}`,
+    '', '', '', '', ''
+  ]);
+});
+
+// Add total row
+goodsTableBody.push([
+  '', 
+  {
+    content: 'Total',
+    styles: { fontStyle: 'bold', halign: 'right' }
+  },
+  '', 
+  {
+    content: `${totalQuantity.toFixed(3)}`,
+    styles: { fontStyle: 'bold', halign: 'center' }
+  },
+  '', 
+  '',
+  {
+    content: `₹${totalBaseAmount.toFixed(2)}`,
+    styles: { fontStyle: 'bold', halign: 'right' }
   }
+]);
+
+autoTable(doc, {
+  startY: firstTableFinalY + 0.5,
+  theme: 'grid',
+  styles: {
+    fontSize: 8,
+    cellPadding: 2,
+    lineColor: [0, 0, 0],
+    lineWidth: 0.12,
+    valign: 'top',
+    halign: 'left',
+  },
+  headStyles: {
+    fillColor: [255, 255, 255],
+    textColor: [0, 0, 0],
+    fontStyle: 'bold',
+    halign: 'center',
+    valign: 'middle',
+  },
+  columnStyles: {
+    0: { cellWidth: 15, halign: 'center' }, // Sl No.
+    1: { cellWidth: 80, halign: 'left' }, // Description
+    2: { cellWidth: 20, halign: 'center' }, // HSN/SAC
+    3: { cellWidth: 20, halign: 'center' }, // Quantity
+    4: { cellWidth: 15, halign: 'right' }, // Rate
+    5: { cellWidth: 12, halign: 'center' }, // per
+    6: { cellWidth: 20, halign: 'right' }, // Amount
+  },
+  head: [
+    [
+      'Sl\nNo.',
+      'Description of Goods',
+      'HSN/SAC',
+      'Quantity\nMetric Tonne',
+      'Rate',
+      'per',
+      'Amount',
+    ],
+  ],
+  body: goodsTableBody,
+  didParseCell: function (data) {
+    const totalRowIndex = data.table.body.length - 1; // Last row is total
+    
+    // Special styling for total row
+    if (data.row.index === totalRowIndex) {
+      data.cell.styles.fontStyle = 'bold';
+      data.cell.styles.lineWidth = 0.12;
+      data.cell.styles.lineColor = [0, 0, 0];
+    }
+    // Regular rows
+    else {
+      data.cell.styles.lineWidth = 0.12;
+      data.cell.styles.lineColor = [0, 0, 0];
+    }
+    
+    // Handle merged cells for block details and shipping mark rows
+    const productCount = 0; // Will be calculated based on your products
+    for (let i = 0; i < data.table.body.length - 1; i += 3) {
+      // Block details row (second row of each product group)
+      if (data.row.index === i + 1 && data.column.index > 1) {
+        data.cell.styles.fillColor = [250, 250, 250];
+      }
+      // Shipping mark row (third row of each product group)
+      if (data.row.index === i + 2 && data.column.index > 1) {
+        data.cell.styles.fillColor = [250, 250, 250];
+      }
+    }
+  },
+});
+
+// Get the final Y position from the goods table
+const goodsTableFinalY = (doc as any).lastAutoTable.finalY || firstTableFinalY + 100;
+
+  
+  // Get the final Y position from the tax table
+  // const taxTableFinalY = (doc as any).lastAutoTable.finalY || firstTableFinalY + 50;
+
+  /** ========== THIRD TABLE - FOOTER/DECLARATION ========== **/
+  autoTable(doc, {
+    startY: goodsTableFinalY,
+    theme: 'grid',
+    styles: {
+      fontSize: 7,
+      cellPadding: 1,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.12,
+      valign: 'top',
+      halign: 'left',
+    },
+    columnStyles: {
+      0: { cellWidth: 95, halign: 'left' as const }, // Left column (Remarks, PAN, Declaration)
+      1: { cellWidth: 87, halign: 'right' as const }, // Right column (Company signature)
+    },
+    body: [
+      // First row - Remarks and Company header
+      [
+        {
+          content: 'Remarks:',
+          styles: { fontStyle: 'bold' as const, halign: 'left' as const },
+        },
+        {
+          content: 'for DOLPHIN INTERNATIONAL',
+          styles: { fontStyle: 'bold' as const, halign: 'right' as const },
+        },
+      ],
+      // Second row - DMG Charges and signature space
+      [
+        {
+          content: 'Total DMG Charges - 11689.00',
+          styles: { halign: 'left' as const, minCellHeight: 20 },
+        },
+        {
+          content: '\n\nAuthorised Signatory',
+          styles: {
+            halign: 'right' as const,
+            valign: 'bottom' as const,
+            minCellHeight: 20,
+          },
+        },
+      ],
+      // Third row - PAN information
+      [
+        {
+          content: "Company's PAN :        AABFD0471D",
+          styles: { halign: 'left' as const },
+        },
+        '',
+      ],
+    
+    ],
+    didParseCell: function (data) {
+      // Apply borders to all cells
+      data.cell.styles.lineWidth = 0.12;
+      data.cell.styles.lineColor = [0, 0, 0];
+
+      // Special handling for signature cell (row 1, column 1)
+      if (data.row.index === 1 && data.column.index === 1) {
+        data.cell.styles.minCellHeight = 20;
+        data.cell.styles.valign = 'bottom' as const;
+      }
+    },
+  });
+  
+  doc.save(`packing-list-${this.invoice.gatePassNo || 'export'}.pdf`);
+}
+
 
   // Additional debugging method to test basic PDF generation
   testPDFGeneration(): void {
@@ -794,587 +1027,668 @@ export class BillingSummaryComponent implements OnInit {
     }
   }
 
-  exportTaxInvoiceToPDF(): void {
-    if (!this.invoice) return;
+exportTaxInvoiceToPDF(): void {
+  if (!this.invoice) return;
 
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+  const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
 
-    // Generate 1000 realistic granite blocks
-    const blocksToProcess = this.generateRealisticGraniteBlocks(1000);
-    let totalCBM = 0;
-    let totalWeight = 0;
+  // Generate 1000 realistic granite blocks
+  const blocksToProcess = this.generateRealisticGraniteBlocks(1000);
+  let totalCBM = 0;
+  let totalWeight = 0;
 
-    /** ========== FIRST PAGE LAYOUT ========== **/
-    this.drawFirstPageLayout(doc, pageWidth, 'taxinvoice');
+  /** ========== FIRST PAGE LAYOUT ========== **/
+  this.drawFirstPageLayout(doc, pageWidth, 'taxinvoice');
 
-    /** ========== MAIN INFO TABLE - FIXED ========== **/
-    autoTable(doc, {
-      startY: 35,
-      theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 1,
-        lineColor: [0, 0, 0],
-        lineWidth: 0.12,
-        valign: 'top',
-      },
-      columnStyles: {
-        // 0: { cellWidth: 30, fontStyle: "bold" },
-        1: { cellWidth: 60 },
-        2: { cellWidth: 60 },
-        3: { cellWidth: 59 },
-      },
-      body: [
-        [
-          {
-            content: `DOLPHIN INTERNATIONAL\nNO 2/10, 4TH FLOOR\n80FT ROAD, OPPOSITE\nRAMAIAH HOSPITAL RMV 2ND STAGE\nBANGALORE 560 094\nKARNATAKA, INDIA`,
-            rowSpan: 4,
-            styles: { valign: 'top' },
-          },
-          `ProformaInvoice Number: ${this.invoice.invoiceNo}`,
-          `Date:` + new Date().toLocaleDateString('en-GB'),
-        ],
-        [
-          `Delivery Note: ${this.invoice.notes}`,
-          `Mode/Terms of Payment: ${this.invoice.termsOfPayment}`,
-        ],
-        [
-          { content: `Supplier Ref: ${this.invoice.supplierRef}` },
-          { content: `Other Reference(s): ${this.invoice.otherReference}` },
-        ],
-        [
-          {
-            content: `Buyer's Order Number:  ${this.invoice.buyersOrderNumber}`,
-          },
-          { content: `Dated: ${this.invoice.dated}` },
-        ],
-        [
-          {
-            content: `XIAMEN JINGTAIQUAN INDUSTRIAL CO.,LTD\n\nADD: - UNIT 1506,NO 21, NORTH SHUANGSHI\nROAD, XIAMEN AREA OF CHINA(FUJIAN)\nPILOT FREE, TRADE ZONE.`,
-            rowSpan: 5,
-            styles: { valign: 'top' },
-          },
-          {
-            content: 'Dispatch through:' + 'Truck',
-            styles: { halign: 'left' },
-          },
-          {
-            content: ` Destination: ${this.invoice.destination}`,
-            styles: { halign: 'left' },
-          },
-        ],
-        [
-          {
-            content: `Dispatch Document No: ${this.invoice.dispatchDocumentNo}`,
-            styles: { halign: 'left' },
-          },
-          {
-            content: `Delivery Note Date : ${this.invoice.deliveryNoteDate}`,
-            styles: { halign: 'left' },
-          },
-        ],
-        [
-          {
-            content: `E way bill no.: ${this.invoice.ewayBillNo}`,
-            styles: { halign: 'left' },
-          },
-          {
-            content: `Motor vehicle no.: ${this.invoice.ewayBillNo}`,
-            styles: { halign: 'left' },
-          },
-        ],
-        [
-          {
-            content: `Terms of Delivery: - ${this.invoice.termsOfDelivery}`,
-            colSpan: 2,
-            styles: { halign: 'left' },
-          },
-          '',
-        ],
+  /** ========== MAIN INFO TABLE - FIXED ========== **/
+  autoTable(doc, {
+    startY: 35,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 1,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.12,
+      valign: 'top',
+    },
+    columnStyles: {
+      // 0: { cellWidth: 30, fontStyle: "bold" },
+      1: { cellWidth: 60 },
+      2: { cellWidth: 60 },
+      3: { cellWidth: 59 },
+    },
+    body: [
+      [
+        {
+          content: `DOLPHIN INTERNATIONAL\nNO 2/10, 4TH FLOOR\n80FT ROAD, OPPOSITE\nRAMAIAH HOSPITAL RMV 2ND STAGE\nBANGALORE 560 094\nKARNATAKA, INDIA`,
+          rowSpan: 4,
+          styles: { valign: 'top' },
+        },
+        `ProformaInvoice Number: ${this.invoice.invoiceNo}`,
+        `Date:` + new Date().toLocaleDateString('en-GB'),
       ],
-    });
+      [
+        `Delivery Note: ${this.invoice.notes}`,
+        `Mode/Terms of Payment: ${this.invoice.termsOfPayment}`,
+      ],
+      [
+        { content: `Supplier Ref: ${this.invoice.supplierRef}` },
+        { content: `Other Reference(s): ${this.invoice.otherReference}` },
+      ],
+      [
+        {
+          content: `Buyer's Order Number:  ${this.invoice.buyersOrderNumber}`,
+        },
+        { content: `Dated: ${this.invoice.dated}` },
+      ],
+      [
+        {
+          content: `XIAMEN JINGTAIQUAN INDUSTRIAL CO.,LTD\n\nADD: - UNIT 1506,NO 21, NORTH SHUANGSHI\nROAD, XIAMEN AREA OF CHINA(FUJIAN)\nPILOT FREE, TRADE ZONE.`,
+          rowSpan: 5,
+          styles: { valign: 'top' },
+        },
+        {
+          content: 'Dispatch through:' + 'Truck',
+          styles: { halign: 'left' },
+        },
+        {
+          content: ` Destination: ${this.invoice.destination}`,
+          styles: { halign: 'left' },
+        },
+      ],
+      [
+        {
+          content: `Dispatch Document No: ${this.invoice.dispatchDocumentNo}`,
+          styles: { halign: 'left' },
+        },
+        {
+          content: `Delivery Note Date : ${this.invoice.deliveryNoteDate}`,
+          styles: { halign: 'left' },
+        },
+      ],
+      [
+        {
+          content: `E way bill no.: ${this.invoice.ewayBillNo}`,
+          styles: { halign: 'left' },
+        },
+        {
+          content: `Motor vehicle no.: ${this.invoice.ewayBillNo}`,
+          styles: { halign: 'left' },
+        },
+      ],
+      [
+        {
+          content: `Terms of Delivery: - ${this.invoice.termsOfDelivery}`,
+          colSpan: 2,
+          styles: { halign: 'left' },
+        },
+        '',
+      ],
+    ],
+  });
 
-    // Get the final Y position from the first table
-    const firstTableFinalY = (doc as any).lastAutoTable.finalY || 100;
+  // Get the final Y position from the first table
+  const firstTableFinalY = (doc as any).lastAutoTable.finalY || 100;
 
-    // Define your products array (replace with your actual data source)
-    // You can get this from your service/component data:
-    // const products = this.invoice.products || [];
-    // Or map from your existing data structure if needed
-    const products = [
-      {
-        description: 'Granite - Crude\n02 nos',
-        hsnSac: '25161100',
-        quantity: '25.300 M.T',
-        rate: '1469.92',
-        per: 'M.T',
-        amount: '37189.00',
-      },
-      {
-        description: 'Marble - Polished\n05 nos',
-        hsnSac: '25151200',
-        quantity: '15.500 M.T',
-        rate: '2200.00',
-        per: 'M.T',
-        amount: '34100.00',
-      },
-      // Add more products dynamically from your data source
+  // Function to convert number to words
+  const numberToWords = (num: number): string => {
+    const ones = [
+      '',
+      'One',
+      'Two',
+      'Three',
+      'Four',
+      'Five',
+      'Six',
+      'Seven',
+      'Eight',
+      'Nine',
+    ];
+    const tens = [
+      '',
+      '',
+      'Twenty',
+      'Thirty',
+      'Forty',
+      'Fifty',
+      'Sixty',
+      'Seventy',
+      'Eighty',
+      'Ninety',
+    ];
+    const teens = [
+      'Ten',
+      'Eleven',
+      'Twelve',
+      'Thirteen',
+      'Fourteen',
+      'Fifteen',
+      'Sixteen',
+      'Seventeen',
+      'Eighteen',
+      'Nineteen',
     ];
 
-    // Function to convert number to words
-    const numberToWords = (num: number): string => {
-      const ones = [
-        '',
-        'One',
-        'Two',
-        'Three',
-        'Four',
-        'Five',
-        'Six',
-        'Seven',
-        'Eight',
-        'Nine',
-      ];
-      const tens = [
-        '',
-        '',
-        'Twenty',
-        'Thirty',
-        'Forty',
-        'Fifty',
-        'Sixty',
-        'Seventy',
-        'Eighty',
-        'Ninety',
-      ];
-      const teens = [
-        'Ten',
-        'Eleven',
-        'Twelve',
-        'Thirteen',
-        'Fourteen',
-        'Fifteen',
-        'Sixteen',
-        'Seventeen',
-        'Eighteen',
-        'Nineteen',
-      ];
-
-      const convertHundreds = (n: number): string => {
-        let result = '';
-        if (n >= 100) {
-          result += ones[Math.floor(n / 100)] + ' Hundred ';
-          n %= 100;
-        }
-        if (n >= 20) {
-          result += tens[Math.floor(n / 10)] + ' ';
-          n %= 10;
-        } else if (n >= 10) {
-          result += teens[n - 10] + ' ';
-          return result;
-        }
-        if (n > 0) {
-          result += ones[n] + ' ';
-        }
-        return result;
-      };
-
-      if (num === 0) return 'Zero';
-
+    const convertHundreds = (n: number): string => {
       let result = '';
-      const crore = Math.floor(num / 10000000);
-      const lakh = Math.floor((num % 10000000) / 100000);
-      const thousand = Math.floor((num % 100000) / 1000);
-      const remainder = num % 1000;
-
-      if (crore > 0) {
-        result += convertHundreds(crore) + 'Crore ';
+      if (n >= 100) {
+        result += ones[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
       }
-      if (lakh > 0) {
-        result += convertHundreds(lakh) + 'Lakh ';
+      if (n >= 20) {
+        result += tens[Math.floor(n / 10)] + ' ';
+        n %= 10;
+      } else if (n >= 10) {
+        result += teens[n - 10] + ' ';
+        return result;
       }
-      if (thousand > 0) {
-        result += convertHundreds(thousand) + 'Thousand ';
+      if (n > 0) {
+        result += ones[n] + ' ';
       }
-      if (remainder > 0) {
-        result += convertHundreds(remainder);
-      }
-
-      return result.trim();
+      return result;
     };
 
-    // Calculate totals
-    let totalBaseAmount = 0;
-    products.forEach((product) => {
-      totalBaseAmount += parseFloat(product.amount);
-    });
+    if (num === 0) return 'Zero';
 
-    const cgstRate = 2.5;
-    const sgstRate = 2.5;
-    const cgstAmount = (totalBaseAmount * cgstRate) / 100;
-    const sgstAmount = (totalBaseAmount * sgstRate) / 100;
-    const roundingOff = 0.54;
-    const totalAmount = totalBaseAmount + cgstAmount + sgstAmount + roundingOff;
+    let result = '';
+    const crore = Math.floor(num / 10000000);
+    const lakh = Math.floor((num % 10000000) / 100000);
+    const thousand = Math.floor((num % 100000) / 1000);
+    const remainder = num % 1000;
 
-    // Convert total amount to words
-    const amountInWords =
-      numberToWords(Math.floor(totalAmount)) + ' Rupees Only';
-
-    // Calculate total quantity (assuming all in M.T)
-    const totalQuantity = products.reduce((sum, product) => {
-      const qty = parseFloat(product.quantity.split(' ')[0]);
-      return sum + qty;
-    }, 0);
-
-    // Build table body dynamically
-    const tableBody: any[] = [];
-
-    // Add product rows
-    products.forEach((product, index) => {
-      tableBody.push([
-        (index + 1).toString(),
-        product.description,
-        product.hsnSac,
-        product.quantity,
-        product.rate,
-        product.per,
-        product.amount,
-      ]);
-    });
-
-    // Calculate minimum number of empty rows needed (at least 6 for spacing)
-    const minEmptyRows = 6;
-    const currentRows = products.length;
-    const emptyRowsNeeded = Math.max(minEmptyRows, 10 - currentRows); // Ensure at least 15 total rows before tax
-
-    // Add empty rows for spacing
-    for (let i = 0; i < emptyRowsNeeded; i++) {
-      tableBody.push(['', '', '', '', '', '', '']);
+    if (crore > 0) {
+      result += convertHundreds(crore) + 'Crore ';
+    }
+    if (lakh > 0) {
+      result += convertHundreds(lakh) + 'Lakh ';
+    }
+    if (thousand > 0) {
+      result += convertHundreds(thousand) + 'Thousand ';
+    }
+    if (remainder > 0) {
+      result += convertHundreds(remainder);
     }
 
-    // Add tax rows
+    return result.trim();
+  };
+
+  // Calculate totals
+  let totalBaseAmount = 0;
+  this.products.forEach((product) => {
+    totalBaseAmount += parseFloat(product.amount);
+  });
+
+  const cgstRate = 2.5;
+  const sgstRate = 2.5;
+  const cgstAmount = (totalBaseAmount * cgstRate) / 100;
+  const sgstAmount = (totalBaseAmount * sgstRate) / 100;
+  const roundingOff = 0.54;
+  const totalAmount = totalBaseAmount + cgstAmount + sgstAmount + roundingOff;
+
+  // Convert total amount to words
+  const amountInWords =
+    numberToWords(Math.floor(totalAmount)) + ' Rupees Only';
+
+  // Calculate total quantity (assuming all in M.T)
+  const totalQuantity = this.products.reduce((sum, product) => {
+    const qty = parseFloat(product.quantity.split(' ')[0]);
+    return sum + qty;
+  }, 0);
+
+  // Build table body dynamically
+  const tableBody: any[] = [];
+
+  // Add product rows
+  this.products.forEach((product, index) => {
     tableBody.push([
-      '',
-      '',
-      '',
-      {
-        content: 'CGST',
-        styles: { halign: 'right' as const, fontStyle: 'bold' as const },
-      },
-      {
-        content: '2.50 %',
-        styles: { halign: 'right' as const },
-      },
-      '',
-      {
-        content: cgstAmount.toFixed(2),
-        styles: { halign: 'right' as const },
-      },
+      (index + 1).toString(),
+      product.description,
+      product.hsnSac,
+      product.quantity,
+      product.rate,
+      product.per,
+      product.amount,
     ]);
+  });
 
-    tableBody.push([
-      '',
-      '',
-      '',
-      {
-        content: 'SGST',
-        styles: { halign: 'right' as const, fontStyle: 'bold' as const },
-      },
-      {
-        content: '2.50 %',
-        styles: { halign: 'right' as const },
-      },
-      '',
-      {
-        content: sgstAmount.toFixed(2),
-        styles: { halign: 'right' as const },
-      },
-    ]);
+  // Calculate minimum number of empty rows needed (at least 6 for spacing)
+  const minEmptyRows = 5;
+  const currentRows = this.products.length;
+  const emptyRowsNeeded = Math.max(minEmptyRows, 8 - currentRows); // Ensure at least 15 total rows before tax
 
-    tableBody.push([
-      '',
-      '',
-      '',
-      {
-        content: 'Rounded Off',
-        styles: { halign: 'right' as const, fontStyle: 'bold' as const },
-      },
-      '',
-      '',
-      {
-        content: roundingOff.toFixed(2),
-        styles: { halign: 'right' as const },
-      },
-    ]);
+  // Add empty rows for spacing
+  for (let i = 0; i < emptyRowsNeeded; i++) {
+    tableBody.push(['', '', '', '', '', '', '']);
+  }
 
-    // Add total row
-    tableBody.push([
-      '',
-      '',
-      '',
-      {
-        content: 'Total',
-        styles: {
-          halign: 'right' as const,
-          fontStyle: 'bold' as const,
-          fillColor: [240, 240, 240],
-        },
-      },
-      {
-        content: `${totalQuantity.toFixed(3)} M.T`,
-        styles: {
-          halign: 'center' as const,
-          fontStyle: 'bold' as const,
-          fillColor: [240, 240, 240],
-        },
-      },
-      '',
-      {
-        content: `₹${totalAmount.toFixed(2)}`,
-        styles: {
-          halign: 'right' as const,
-          fontStyle: 'bold' as const,
-          fillColor: [240, 240, 240],
-        },
-      },
-    ]);
+  // Add tax rows
+  tableBody.push([
+    '',
+   {
+      content: 'CGST',
+      styles: { halign: 'right' as const, fontStyle: 'bold' as const },
+    },
+    '',
+    '',
+    {
+      content: '2.50 %',
+      styles: { halign: 'right' as const },
+    },
+    '',
+    {
+      content: cgstAmount.toFixed(2),
+      styles: { halign: 'right' as const },
+    },
+  ]);
 
-    // Add amount in words row
-    tableBody.push([
-      {
-        content: 'Amount Chargeable (in words)',
-        colSpan: 5,
-        styles: { halign: 'left' as const, fontStyle: 'bold' as const },
-      },
-      // "", // These empty strings are needed for colSpan to work properly
-      // "",
-      // "",
+  tableBody.push([
+    '',
+   {
+      content: 'SGST',
+      styles: { halign: 'right' as const, fontStyle: 'bold' as const },
+    },
+    '',
+   '',
+    {
+      content: '2.50 %',
+      styles: { halign: 'right' as const },
+    },
+    '',
+    {
+      content: sgstAmount.toFixed(2),
+      styles: { halign: 'right' as const },
+    },
+  ]);
 
-      {
-        content: 'E. & O.E',
-        colSpan: 2,
-        styles: { halign: 'right' as const, fontStyle: 'bold' as const },
-      },
-    ]);
+  tableBody.push([
+    '',
+   {
+      content: 'Rounded Off',
+      styles: { halign: 'right' as const, fontStyle: 'bold' as const },
+    },
+    '',
+   '',
+    '',
+    '',
+    {
+      content: roundingOff.toFixed(2),
+      styles: { halign: 'right' as const },
+    },
+  ]);
 
-    // Add the words row
-    tableBody.push([
-      {
-        content: amountInWords,
-        colSpan: 7,
-        styles: { halign: 'left' as const, fontStyle: 'bold' as const },
-      },
-      '', // These empty strings are needed for colSpan to work properly
-      '',
-      '',
-      '',
-      '',
-      '',
-    ]);
-
-    /** ========== SECOND TABLE - GOODS DETAILS ========== **/
-    autoTable(doc, {
-      startY: firstTableFinalY + 0.5,
-      theme: 'grid',
+  // Add total row
+  tableBody.push([
+    '',
+    {
+      content: 'Total',
       styles: {
-        fontSize: 8,
-        cellPadding: 2,
-        lineColor: [0, 0, 0],
-        lineWidth: 0.12,
-        valign: 'middle',
-        halign: 'center',
+        halign: 'right' as const,
+        fontStyle: 'bold' as const,
+        fillColor: [240, 240, 240],
       },
-      headStyles: {
-        fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
-        fontStyle: 'bold',
-        halign: 'center',
-      },
-      columnStyles: {
-        0: { cellWidth: 12, halign: 'center' as const }, // Sl No.
-        1: { cellWidth: 68, halign: 'left' as const }, // Description
-        2: { cellWidth: 20, halign: 'center' as const }, // HSN/SAC
-        3: { cellWidth: 25, halign: 'center' as const }, // Quantity
-        4: { cellWidth: 20, halign: 'right' as const }, // Rate
-        5: { cellWidth: 12, halign: 'center' as const }, // per
-        6: { cellWidth: 25, halign: 'right' as const }, // Amount
-      },
-      head: [
-        [
-          'Sl\nNo.',
-          'Description of Goods',
-          'HSN/SAC',
-          'Quantity',
-          'Rate',
-          'per',
-          'Amount',
-        ],
-      ],
-      body: tableBody, // Use the dynamically built body
-      didParseCell: function (data) {
-        const productRowCount = products.length;
-        const emptyRowStart = productRowCount;
-        const emptyRowEnd = emptyRowStart + emptyRowsNeeded - 1;
-        const totalRowIndex = data.table.body.length - 3; // Total row is 3rd from last
-        const amountWordsHeaderIndex = data.table.body.length - 2; // Amount header is 2nd from last
-        const amountWordsRowIndex = data.table.body.length - 1; // Words row is last
-
-        // Special styling for total row
-        if (data.row.index === totalRowIndex) {
-          data.cell.styles.fillColor = [240, 240, 240];
-          data.cell.styles.fontStyle = 'bold' as const;
-          data.cell.styles.lineWidth = 0.12;
-          data.cell.styles.lineColor = [0, 0, 0];
-        }
-        // Special styling for amount chargeable header row
-        else if (data.row.index === amountWordsHeaderIndex) {
-          data.cell.styles.lineWidth = 0.12;
-          data.cell.styles.lineColor = [0, 0, 0];
-          data.cell.styles.fontStyle = 'bold' as const;
-        }
-        // Special styling for amount in words row
-        else if (data.row.index === amountWordsRowIndex) {
-          data.cell.styles.lineWidth = 0.12;
-          data.cell.styles.lineColor = [0, 0, 0];
-          data.cell.styles.fontStyle = 'bold' as const;
-        }
-        // Remove internal horizontal lines from empty rows to create clean spacing
-        else if (
-          data.row.index >= emptyRowStart &&
-          data.row.index <= emptyRowEnd
-        ) {
-          if (data.cell.text[0] === '') {
-            data.cell.styles.lineWidth = {
-              top: data.row.index === emptyRowStart ? 0 : 0,
-              right: 0.12,
-              bottom: data.row.index === emptyRowEnd ? 0.12 : 0,
-              left: 0.12,
-            };
-          }
-        }
-        // All other cells (product rows and tax rows)
-        else {
-          data.cell.styles.lineWidth = 0.12;
-          data.cell.styles.lineColor = [0, 0, 0];
-        }
-      },
-    });
-
-    // Add this code after your second table in the exportTaxInvoiceToPDF function
-
-    // Add this code after your second table in the exportTaxInvoiceToPDF function
-
-    // Get the final Y position from the second table
-    const secondTableFinalY = (doc as any).lastAutoTable.finalY || 200;
-
-    /** ========== THIRD TABLE - FOOTER/DECLARATION ========== **/
-    autoTable(doc, {
-      startY: secondTableFinalY + 0.5,
-      theme: 'grid',
+    },
+    '',
+      {
+      content: `${totalQuantity.toFixed(3)} M.T`,
       styles: {
-        fontSize: 7,
-        cellPadding: 1,
-        lineColor: [0, 0, 0],
-        lineWidth: 0.12,
-        valign: 'top',
-        halign: 'left',
+        halign: 'center' as const,
+        fontStyle: 'bold' as const,
+        fillColor: [240, 240, 240],
       },
-      columnStyles: {
-        0: { cellWidth: 95, halign: 'left' as const }, // Left column (Remarks, PAN, Declaration)
-        1: { cellWidth: 87, halign: 'right' as const }, // Right column (Company signature)
+    },
+  '',
+    '',
+    {
+      content: `₹${totalAmount.toFixed(2)}`,
+      styles: {
+        halign: 'right' as const,
+        fontStyle: 'bold' as const,
+        fillColor: [240, 240, 240],
       },
-      body: [
-        // First row - Remarks and Company header
-        [
-          {
-            content: 'Remarks:',
-            styles: { fontStyle: 'bold' as const, halign: 'left' as const },
-          },
-          {
-            content: 'for DOLPHIN INTERNATIONAL',
-            styles: { fontStyle: 'bold' as const, halign: 'right' as const },
-          },
-        ],
-        // Second row - DMG Charges and signature space
-        [
-          {
-            content: 'Total DMG Charges - 11689.00',
-            styles: { halign: 'left' as const, minCellHeight: 20 },
-          },
-          {
-            content: '\n\nAuthorised Signatory',
-            styles: {
-              halign: 'right' as const,
-              valign: 'bottom' as const,
-              minCellHeight: 20,
-            },
-          },
-        ],
-        // Third row - PAN information
-        [
-          {
-            content: "Company's PAN :        AABFD0471D",
-            styles: { halign: 'left' as const },
-          },
-          '',
-        ],
-        // Fourth row - Declaration
-        [
-          {
-            content: 'Declaration',
-            styles: { fontStyle: 'bold' as const, halign: 'left' as const },
-          },
-          '',
-        ],
-        // Fifth row - Declaration text (spanning full width)
-        [
-          {
-            content:
-              'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.',
-            colSpan: 2,
-            styles: { halign: 'center' as const, fontStyle: 'bold' as const },
-          },
-          '',
-        ],
-        // Sixth row - Jurisdiction
-        [
-          {
-            content: 'SUBJECT TO BANGALORE JURISDICTION',
-            colSpan: 2,
-            styles: { halign: 'center' as const, fontStyle: 'bold' as const },
-          },
-          '',
-        ],
-        // Seventh row - Computer generated
-        [
-          {
-            content: 'This is a Computer Generated Invoice',
-            colSpan: 2,
-            styles: { halign: 'center' as const, fontStyle: 'bold' as const },
-          },
-          '',
-        ],
+    },
+  ]);
+
+  // Add amount in words row
+  tableBody.push([
+    {
+      content: 'Amount Chargeable (in words): ' +amountInWords,
+      colSpan: 5,
+      styles: { 
+        fontSize: 7, halign: 'left' as const, fontStyle: 'bold' as const },
+    },
+    {
+      content: 'E. & O.E',
+      colSpan: 2,
+      styles: { halign: 'right' as const, fontStyle: 'bold' as const },
+    },
+  ]);
+
+  
+
+  /** ========== SECOND TABLE - GOODS DETAILS ========== **/
+  autoTable(doc, {
+    startY: firstTableFinalY + 0.5,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.12,
+      valign: 'middle',
+      halign: 'center',
+    },
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { cellWidth: 12, halign: 'center' as const }, // Sl No.
+      1: { cellWidth: 68, halign: 'left' as const }, // Description
+      2: { cellWidth: 20, halign: 'center' as const }, // HSN/SAC
+      3: { cellWidth: 25, halign: 'center' as const }, // Quantity
+      4: { cellWidth: 20, halign: 'right' as const }, // Rate
+      5: { cellWidth: 12, halign: 'center' as const }, // per
+      6: { cellWidth: 25, halign: 'right' as const }, // Amount
+    },
+    head: [
+      [
+        'Sl\nNo.',
+        'Description of Goods',
+        'HSN/SAC',
+        'Quantity',
+        'Rate',
+        'per',
+        'Amount',
       ],
-      didParseCell: function (data) {
-        // Apply borders to all cells
+    ],
+    body: tableBody, // Use the dynamically built body
+    didParseCell: function (data) {
+      const productRowCount = 0;
+      const emptyRowStart = productRowCount;
+      const emptyRowEnd = emptyRowStart + emptyRowsNeeded - 1;
+      const totalRowIndex = data.table.body.length - 3; // Total row is 3rd from last
+      const amountWordsHeaderIndex = data.table.body.length - 2; // Amount header is 2nd from last
+      const amountWordsRowIndex = data.table.body.length - 1; // Words row is last
+
+      // Special styling for total row
+      if (data.row.index === totalRowIndex) {
+        data.cell.styles.fillColor = [240, 240, 240];
+        data.cell.styles.fontStyle = 'bold' as const;
         data.cell.styles.lineWidth = 0.12;
         data.cell.styles.lineColor = [0, 0, 0];
-
-        // Special handling for signature cell (row 1, column 1)
-        if (data.row.index === 1 && data.column.index === 1) {
-          data.cell.styles.minCellHeight = 20;
-          data.cell.styles.valign = 'bottom' as const;
+      }
+      // Special styling for amount chargeable header row
+      else if (data.row.index === amountWordsHeaderIndex) {
+        data.cell.styles.lineWidth = 0.12;
+        data.cell.styles.lineColor = [0, 0, 0];
+        data.cell.styles.fontStyle = 'bold' as const;
+      }
+      // Special styling for amount in words row
+      else if (data.row.index === amountWordsRowIndex) {
+        data.cell.styles.lineWidth = 0.12;
+        data.cell.styles.lineColor = [0, 0, 0];
+        data.cell.styles.fontStyle = 'bold' as const;
+      }
+      // Remove internal horizontal lines from empty rows to create clean spacing
+      else if (
+        data.row.index >= emptyRowStart &&
+        data.row.index <= emptyRowEnd
+      ) {
+        if (data.cell.text[0] === '') {
+          data.cell.styles.lineWidth = {
+            top: data.row.index === emptyRowStart ? 0 : 0,
+            right: 0.12,
+            bottom: data.row.index === emptyRowEnd ? 0.12 : 0,
+            left: 0.12,
+          };
         }
-      },
-    });
-    doc.save(`packing-list-${this.invoice.gatePassNo || 'export'}.pdf`);
-  }
+      }
+      // All other cells (product rows and tax rows)
+      else {
+        data.cell.styles.lineWidth = 0.12;
+        data.cell.styles.lineColor = [0, 0, 0];
+      }
+    },
+  });
+
+  // Get the final Y position from the second table
+  const secondTableFinalY = (doc as any).lastAutoTable.finalY || 200;
+
+  /** ========== TAX CALCULATION TABLE ========== **/
+  autoTable(doc, {
+    startY: secondTableFinalY + 0.5,
+    theme: 'grid',
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.12,
+      valign: 'middle',
+      halign: 'center',
+    },
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      halign: 'center',
+    },
+    columnStyles: {
+      0: { cellWidth: 30, halign: 'center' }, // HSN/SAC
+      1: { cellWidth: 30, halign: 'right' }, // Taxable Value
+      2: { cellWidth: 20, halign: 'center' }, // Central Tax Rate
+      3: { cellWidth: 25, halign: 'right' }, // Central Tax Amount
+      4: { cellWidth: 20, halign: 'center' }, // State Tax Rate
+      5: { cellWidth: 25, halign: 'right' }, // State Tax Amount
+      6: { cellWidth: 32, halign: 'right' }, // Total Tax Amount
+    },
+    head: [
+      [
+        'HSN/SAC',
+        'Taxable\nValue',
+        'Central Tax\nRate',
+        'Central Tax\nAmount',
+        'State Tax\nRate',
+        'State Tax\nAmount',
+        'Total\nTax Amount',
+      ],
+    ],
+    body: [
+      [
+        this.invoice.hsn , // HSN/SAC code
+        `${totalBaseAmount.toFixed(2)}`, // Taxable Value
+        '2.50%', // Central Tax Rate
+        `${cgstAmount.toFixed(2)}`, // Central Tax Amount
+        '2.50%', // State Tax Rate
+        `${sgstAmount.toFixed(2)}`, // State Tax Amount
+        `${(cgstAmount + sgstAmount).toFixed(2)}`, // Total Tax Amount
+      ],
+      // Total row
+      [
+        {
+          content: 'Total',
+          styles: { 
+            fontStyle: 'bold',
+            fillColor: [240, 240, 240],
+            halign: 'center'
+          },
+        },
+        {
+          content: `${totalBaseAmount.toFixed(2)}`,
+          styles: { 
+            fontStyle: 'bold',
+            fillColor: [240, 240, 240],
+            halign: 'right'
+          },
+        },
+        '', // Empty cell for rate column
+        {
+          content: `${cgstAmount.toFixed(2)}`,
+          styles: { 
+            fontStyle: 'bold',
+            fillColor: [240, 240, 240],
+            halign: 'right'
+          },
+        },
+        '', // Empty cell for rate column
+        {
+          content: `${sgstAmount.toFixed(2)}`,
+          styles: { 
+            fontStyle: 'bold',
+            fillColor: [240, 240, 240],
+            halign: 'right'
+          },
+        },
+        {
+          content: `${(cgstAmount + sgstAmount).toFixed(2)}`,
+          styles: { 
+            fontStyle: 'bold',
+            fillColor: [240, 240, 240],
+            halign: 'right'
+          },
+        },
+      ],
+      // Tax Amount in words row
+      [
+        {
+          content: 'Tax Amount (in words) :' + `Rupees ${numberToWords(Math.floor(cgstAmount + sgstAmount))} and ${Math.round(((cgstAmount + sgstAmount) % 1) * 100)} Paise Only`,
+          colSpan: 7,
+          styles: { 
+            fontSize:7,
+            halign: 'left',
+            fontStyle: 'bold'
+          },
+        },
+        '', '', '', '', '', '', // Empty cells for colSpan
+      ],
+    
+    ],
+    didParseCell: function (data) {
+      // Style the total row (second row - index 1)
+      if (data.row.index === 1) {
+        data.cell.styles.fillColor = [240, 240, 240];
+        data.cell.styles.fontStyle = 'bold';
+      }
+      
+      // Ensure all cells have borders
+      data.cell.styles.lineWidth = 0.12;
+      data.cell.styles.lineColor = [0, 0, 0];
+    },
+  });
+
+  // Get the final Y position from the tax table
+  const taxTableFinalY = (doc as any).lastAutoTable.finalY || secondTableFinalY + 50;
+
+  /** ========== THIRD TABLE - FOOTER/DECLARATION ========== **/
+  autoTable(doc, {
+    startY: taxTableFinalY + 0.5,
+    theme: 'grid',
+    styles: {
+      fontSize: 7,
+      cellPadding: 1,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.12,
+      valign: 'top',
+      halign: 'left',
+    },
+    columnStyles: {
+      0: { cellWidth: 95, halign: 'left' as const }, // Left column (Remarks, PAN, Declaration)
+      1: { cellWidth: 87, halign: 'right' as const }, // Right column (Company signature)
+    },
+    body: [
+      // First row - Remarks and Company header
+      [
+        {
+          content: 'Remarks:',
+          styles: { fontStyle: 'bold' as const, halign: 'left' as const },
+        },
+        {
+          content: 'for DOLPHIN INTERNATIONAL',
+          styles: { fontStyle: 'bold' as const, halign: 'right' as const },
+        },
+      ],
+      // Second row - DMG Charges and signature space
+      [
+        {
+          content: 'Total DMG Charges - 11689.00',
+          styles: { halign: 'left' as const, minCellHeight: 20 },
+        },
+        {
+          content: '\n\nAuthorised Signatory',
+          styles: {
+            halign: 'right' as const,
+            valign: 'bottom' as const,
+            minCellHeight: 20,
+          },
+        },
+      ],
+      // Third row - PAN information
+      [
+        {
+          content: "Company's PAN :        AABFD0471D",
+          styles: { halign: 'left' as const },
+        },
+        '',
+      ],
+      // Fourth row - Declaration
+      [
+        {
+          content: 'Declaration',
+          styles: { fontStyle: 'bold' as const, halign: 'left' as const },
+        },
+        '',
+      ],
+      // Fifth row - Declaration text (spanning full width)
+      [
+        {
+          content:
+            'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.',
+          colSpan: 2,
+          styles: { halign: 'center' as const, fontStyle: 'bold' as const },
+        },
+        '',
+      ],
+      // Sixth row - Jurisdiction
+      [
+        {
+          content: 'SUBJECT TO BANGALORE JURISDICTION',
+          colSpan: 2,
+          styles: { halign: 'center' as const, fontStyle: 'bold' as const },
+        },
+        '',
+      ],
+      // Seventh row - Computer generated
+      [
+        {
+          content: 'This is a Computer Generated Invoice',
+          colSpan: 2,
+          styles: { halign: 'center' as const, fontStyle: 'bold' as const },
+        },
+        '',
+      ],
+    ],
+    didParseCell: function (data) {
+      // Apply borders to all cells
+      data.cell.styles.lineWidth = 0.12;
+      data.cell.styles.lineColor = [0, 0, 0];
+
+      // Special handling for signature cell (row 1, column 1)
+      if (data.row.index === 1 && data.column.index === 1) {
+        data.cell.styles.minCellHeight = 20;
+        data.cell.styles.valign = 'bottom' as const;
+      }
+    },
+  });
+  
+  doc.save(`packing-list-${this.invoice.gatePassNo || 'export'}.pdf`);
+}
 
   addFooterToLastPage(doc: any, pageWidth: number, pageHeight: number): void {
     const currentY = (doc as any).lastAutoTable.finalY;

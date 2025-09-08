@@ -57,7 +57,8 @@ namespace Dolphin.Services.Models
 
         // [BsonIgnore]
         public double NetCbm { get; set; }
-        // [BsonIgnore]
+        [BsonElement("netweightmt")]
+        public double NetWeightMt { get; set; }
         
 
     }
@@ -72,7 +73,6 @@ namespace Dolphin.Services.Models
 
         [BsonElement("ht")]
         public int Ht { get; set; }
-          [BsonElement("netweightmt")]
-        public double NetWeightMt { get; set; }
+        
     }
 }

@@ -107,7 +107,6 @@ namespace Dolphin.Services.Models
         [BsonElement("quarryCbm")]
         public double QuarryCBM { get; set; }
 
-        [BsonIgnore]
         [BsonElement("netweightmt")]
         public double NetWeightMt { get; set; }
 

@@ -160,17 +160,6 @@
           <input matInput formControlName="buyersOrderNumber" />
         </mat-form-field>
       </div>
-      <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>E-Way Bill No</mat-label>
-          <input matInput formControlName="ewayBillNo" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Buyer's Order Number</mat-label>
-          <input matInput formControlName="buyersOrderNumber" />
-        </mat-form-field>
-      </div>
 
       <div class="form-row">
         <mat-form-field appearance="outline">
@@ -374,7 +363,7 @@
                   </mat-form-field>
                 </div>
               </td>
-              <td formGroupName="measurement">
+              <td >
                 <mat-form-field appearance="outline" class="disabled-field">
                   <input
                     matInput
@@ -383,7 +372,7 @@
                     readonly
                   />
                   <mat-error
-                    *ngIf="isItemFieldInvalid(i, 'measurement.netWeightMt')"
+                    *ngIf="isItemFieldInvalid(i, 'netWeightMt')"
                     >Required</mat-error
                   >
                 </mat-form-field>

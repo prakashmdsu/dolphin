@@ -1,6 +1,5 @@
 import { GraniteBlock } from './GraniteBlock';
 
-
 export interface Invoice {
   id: string;
   invoiceNo: string;
@@ -31,6 +30,6 @@ export interface Invoice {
   termsOfDelivery: string;
   dispatchDocumentNo: string;
   dated: string;
+  hsn: string;
+  permitNo: string;
 }
-
-

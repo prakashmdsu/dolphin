@@ -8,7 +8,6 @@ export interface GraniteBlock {
     lg: number;
     wd: number;
     ht: number;
-    netWeightMt?: number;
   };
   categoryGrade: string;
   status?: string | null;
@@ -19,4 +18,5 @@ export interface GraniteBlock {
   permitNo?: string;
   uom?: string;
   note?: string;
+  netWeightMt?: number;
 }

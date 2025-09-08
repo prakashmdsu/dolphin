@@ -202,11 +202,11 @@ export class BillingComponent implements OnInit {
         lg: [measurement.lg, [Validators.required, Validators.min(0.1)]],
         wd: [measurement.wd, [Validators.required, Validators.min(0.1)]],
         ht: [measurement.ht, [Validators.required, Validators.min(0.1)]],
-        netWeightMt: [
-          measurement.netWeightMt || 0,
-          [Validators.required, Validators.min(0.1)],
-        ],
       }),
+      netWeightMt: [
+        block?.netWeightMt || 0,
+        [Validators.required, Validators.min(0.1)],
+      ],
       quarryCbm: [
         derived.quarryCbm,
         [Validators.required, Validators.min(0.1)],
@@ -262,10 +262,10 @@ export class BillingComponent implements OnInit {
       itemForm.patchValue({
         hsn: selectedBlock.hsn,
         categoryGrade: selectedBlock.categoryGrade,
-        measurement: {
-          ...selectedBlock.measurement,
-          netWeightMt: selectedBlock.measurement.netWeightMt || 0, // NEW
-        },
+        // measurement: {
+        //   ...selectedBlock.measurement,
+        //   netWeightMt: selectedBlock.measurement.netWeightMt || 0, // NEW
+        // },
         quarryCbm: derived.quarryCbm,
         dmgTonnage: derived.dmgTonnage,
         netCbm: derived.netCbm,
@@ -303,7 +303,7 @@ export class BillingComponent implements OnInit {
       totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
       totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
       totalNetCbm += +(item.get('netCbm')?.value || 0);
-      totalNetWeightMt += +(item.get('measurement.netWeightMt')?.value || 0); // NEW
+      totalNetWeightMt += +(item.get('netWeightMt')?.value || 0); // NEW
     });
 
     return {
