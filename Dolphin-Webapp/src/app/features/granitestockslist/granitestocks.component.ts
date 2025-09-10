@@ -425,7 +425,7 @@ getStatusClass(status: number | string): string {
       data: {
         mode: 'edit',
         block: block,
-      } as DialogData,
+      } as unknown as DialogData,
     });
 
     dialogRef.afterClosed().subscribe((result) => {

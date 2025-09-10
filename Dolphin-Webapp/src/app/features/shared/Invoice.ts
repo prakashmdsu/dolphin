@@ -32,4 +32,5 @@ export interface Invoice {
   dated: string;
   hsn: string;
   permitNo: string;
+
 }

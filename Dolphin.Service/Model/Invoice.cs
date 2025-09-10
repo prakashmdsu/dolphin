@@ -58,6 +58,8 @@ namespace Dolphin.Services.Models
         public string EwayBillNo { get; set; }
         [BsonElement("buyersordernumber")]
         public string BuyersOrderNumber { get; set; }
+        [BsonElement("buyersorderdate")]
+        public string BuyersOrderDate { get; set; }
 
         [BsonElement("supplierref")]
         public string SupplierRef { get; set; }
@@ -77,6 +79,22 @@ namespace Dolphin.Services.Models
         public string HSN { get; set; }
         [BsonElement("permitNo")]
         public string PermitNo { get; set; }
+        [BsonElement("vesselorflightno")]
+        public string vesselorflightno { get; set; }
+        [BsonElement("portofdischarge")]
+        public string PortofDischarge { get; set; }
+        [BsonElement("portofloading")]
+        public string PortofLoading { get; set; }
+
+               [BsonElement("PreCarrierBy")]
+        public string PreCarrierBy { get; set; }
+        [BsonElement("placereceiptbycarrier")]
+        public string PlaceReceiptbyCarrier { get; set; }
+        [BsonElement("shippingbillno")]
+        public string ShippingBillno { get; set; }
+        [BsonElement("shippingbilldate")]
+        public string ShippingBillDate { get; set; }
+        
 
     }
 
@@ -91,8 +109,6 @@ namespace Dolphin.Services.Models
         [BsonElement("dmgTonnage")]
         public double DmgTonnage { get; set; }
 
-
-
         [BsonElement("itemDescription")]
         public string ItemDescription { get; set; }
 
@@ -101,8 +117,6 @@ namespace Dolphin.Services.Models
 
         [BsonElement("netCbm")]
         public double NetCBM { get; set; }
-
-
 
         [BsonElement("quarryCbm")]
         public double QuarryCBM { get; set; }
@@ -113,8 +127,5 @@ namespace Dolphin.Services.Models
         [BsonElement("uom")]
         public string UOM { get; set; }
     }
-
-
-
 }
 

@@ -124,7 +124,7 @@
               <td class="metric">
                 {{ calculateDerivedFields(block.measurement).netCbm }}
               </td>
-              <td>{{ block.hsn || "-" }}</td>
+              <td>{{ invoice.hsn || "-" }}</td>
               <td>
                 <span class="status-badge" [class.active]="block.status">
                   {{ block.status || "Active" }}
