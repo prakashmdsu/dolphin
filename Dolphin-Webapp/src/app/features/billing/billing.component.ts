@@ -1,3 +1,4 @@
+// Updated TypeScript Component
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { GraniteBlock } from '../shared/GraniteBlock';
@@ -16,9 +17,11 @@ export class BillingComponent implements OnInit {
   gatePassForm: FormGroup;
   gpTypes: any[] = [];
   clients: Client[] = [];
-  graniteBlocks: GraniteBlock[] = []; // available blocks to add
+  graniteBlocks: GraniteBlock[] = [];
   selectedBlockNos: number[] = [];
   gatePassNo?: string;
+  isInternationalClient: boolean = false; // New property to track client type
+  
   hsnOptions = [
     {
       value: '25171000',
@@ -37,7 +40,7 @@ export class BillingComponent implements OnInit {
     { value: '68022100', label: '68022100 - Granite slabs' },
     { value: '68022900', label: '68022900 - Other granite products' },
   ];
-  // Terms of payment options
+
   termsOfPaymentOptions = [
     { value: '100% advance payment', label: '100% advance payment' },
     { value: 'Net 30', label: 'Net 30' },
@@ -54,7 +57,6 @@ export class BillingComponent implements OnInit {
     this.gatePassForm = this.createForm();
   }
 
-  /** in your component */
   allBlocksSnapshot: GraniteBlock[] = [];
 
   ngOnInit(): void {
@@ -68,7 +70,6 @@ export class BillingComponent implements OnInit {
           JSON.stringify(res.graniteStockBlocks)
         );
 
-        // Auto-generate next gate pass number
         this.gatePassNo = this.getNextGatePassNo(res?.gatePass ?? 'GP-001');
         this.gatePassForm.patchValue({ gatePassNo: this.gatePassNo });
       });
@@ -84,12 +85,10 @@ export class BillingComponent implements OnInit {
       }
     });
 
-    // Remove selected blocks from graniteBlocks list
     this.graniteBlocks = this.graniteBlocks.filter(
       (block) => !blocksToAdd.includes(block.blockNo)
     );
 
-    // Clear selection after adding
     this.selectedBlockNos = [];
   }
 
@@ -104,8 +103,8 @@ export class BillingComponent implements OnInit {
       phone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       gpType: ['', Validators.required],
       placeOfDispatch: ['', Validators.required],
-      hsn: ['', Validators.required], // NEW - moved from table
-      permitNo: ['', Validators.required], // NEW - moved from table
+      hsn: ['', Validators.required],
+      permitNo: ['', Validators.required],
       graniteStocks: this.fb.array([]),
       vehicleNo: ['', Validators.required],
       driverName: ['', Validators.required],
@@ -118,16 +117,26 @@ export class BillingComponent implements OnInit {
         [Validators.required, Validators.pattern(/^\d{10}$/)],
       ],
       notes: [''],
-      // New additional fields
       ewayBillNo: [''],
       buyersOrderNumber: [''],
       supplierRef: [''],
       otherReference: [''],
       dispatchedThrough: [''],
       destination: [''],
-      termsOfPayment: ['100% advance payment'], // Default value
-      otherrefence: [''], // Note: keeping the typo as per swagger
+      termsOfPayment: ['100% advance payment'],
       deliveryNoteDate: [''],
+      otherrefence: [''],
+      
+      // International fields - conditionally validated
+      BuyersOrderDate: [''],
+      PlaceReceiptbyCarrier: [''],
+      PortofDischarge: [''],
+      PortofLoading: [''],
+      PreCarrierBy: [''],
+      ShippingBillDate: [''],
+      ShippingBillno: [''],
+      vesselorflightno: [''],
+      portCode:['']
     });
   }
 
@@ -139,32 +148,94 @@ export class BillingComponent implements OnInit {
     const selectedClient = this.clients.find(
       (client) => client.clientName === clientId
     );
+    
     if (selectedClient) {
+      // Check if client is international
+      this.isInternationalClient = selectedClient.clientType === 'INTERNATIONAL';
+      
       this.gatePassForm.patchValue({
         gstin: selectedClient.gstin,
         phone: selectedClient.phone,
         billToAddress: selectedClient.address,
         country: selectedClient.country,
       });
+
+      // Update validators for international fields
+      this.updateInternationalFieldValidators();
     } else {
+      this.isInternationalClient = false;
       this.gatePassForm.patchValue({
         gstin: '',
         phone: '',
         billToAddress: '',
         country: '',
       });
+
+      // Clear international fields and remove validators
+      this.clearInternationalFields();
     }
+  }
+
+  private updateInternationalFieldValidators(): void {
+    const internationalFields = [
+      'BuyersOrderDate',
+      'PlaceReceiptbyCarrier', 
+      'PortofDischarge',
+      'PortofLoading',
+      'PreCarrierBy',
+      'ShippingBillDate',
+      'ShippingBillno',
+      'vesselorflightno',
+      'portCode'
+    ];
+
+    internationalFields.forEach(fieldName => {
+      const control = this.gatePassForm.get(fieldName);
+      if (control) {
+        if (this.isInternationalClient) {
+          control.setValidators([Validators.required]);
+        } else {
+          control.clearValidators();
+          control.setValue(''); // Clear the value
+        }
+        control.updateValueAndValidity();
+      }
+    });
+  }
+
+  private clearInternationalFields(): void {
+    const internationalFields = [
+      'BuyersOrderDate',
+      'PlaceReceiptbyCarrier',
+      'PortofDischarge', 
+      'PortofLoading',
+      'PreCarrierBy',
+      'ShippingBillDate',
+      'ShippingBillno',
+      'vesselorflightno',
+       'portCode'
+    ];
+
+    const patchObject: any = {};
+    internationalFields.forEach(fieldName => {
+      patchObject[fieldName] = '';
+      const control = this.gatePassForm.get(fieldName);
+      if (control) {
+        control.clearValidators();
+        control.updateValueAndValidity();
+      }
+    });
+
+    this.gatePassForm.patchValue(patchObject);
   }
 
   private getNextGatePassNo(currentGatePassNo: string): string {
     const match = currentGatePassNo.match(/^([A-Za-z\-]*)(\d+)$/);
-    if (!match) return 'GP-001'; // fallback
+    if (!match) return 'GP-001';
 
-    const prefix = match[1]; // 'GP-'
-    const number = parseInt(match[2], 10); // e.g., 1 from '001'
+    const prefix = match[1];
+    const number = parseInt(match[2], 10);
     const nextNumber = number + 1;
-
-    // Pad with leading zeros to maintain length (e.g., '002')
     const padded = nextNumber.toString().padStart(match[2].length, '0');
 
     return `${prefix}${padded}`;
@@ -179,9 +250,9 @@ export class BillingComponent implements OnInit {
     const wd = +measurement.wd || 0;
     const ht = +measurement.ht || 0;
 
-    const quarryCbm = +((lg * wd * ht) / 1000000).toFixed(4); // m³
-    const dmgTonnage = +(quarryCbm * 2.85).toFixed(4); // example factor
-    const netCbm = +(dmgTonnage / 6.5).toFixed(4); // example factor
+    const quarryCbm = +((lg * wd * ht) / 1000000).toFixed(4);
+    const dmgTonnage = +(quarryCbm * 2.85).toFixed(4);
+    const netCbm = +(dmgTonnage / 6.5).toFixed(4);
 
     return { quarryCbm, dmgTonnage, netCbm };
   }
@@ -196,7 +267,6 @@ export class BillingComponent implements OnInit {
         block?.itemDescription || 'Granite Block',
         Validators.required,
       ],
-      // hsn: [block?.hsn || '', Validators.required],
       categoryGrade: [block?.categoryGrade || '', Validators.required],
       measurement: this.fb.group({
         lg: [measurement.lg, [Validators.required, Validators.min(0.1)]],
@@ -217,7 +287,6 @@ export class BillingComponent implements OnInit {
       ],
       netCbm: [derived.netCbm, [(Validators.required, Validators.min(0.1))]],
       uom: [block?.uom || 'CBM', Validators.required],
-      // permitNo: [block?.permitNo || '', Validators.required],
     });
   }
 
@@ -229,7 +298,6 @@ export class BillingComponent implements OnInit {
       const itemForm = this.createItemFormGroup(selectedBlock);
       this.items.push(itemForm);
 
-      // remove block from available list
       this.graniteBlocks = this.graniteBlocks.filter(
         (block) => block.blockNo !== selectedBlockNo
       );
@@ -237,17 +305,13 @@ export class BillingComponent implements OnInit {
   }
 
   removeItem(index: number): void {
-    // 1) grab the raw values (including disabled controls)
     const raw = (this.items.at(index) as FormGroup).getRawValue();
-    const blockNo = raw.blockNo; // now defined
-    // 2) find the original block object by blockNo
+    const blockNo = raw.blockNo;
     const original = this.allBlocksSnapshot.find((b) => b.blockNo === blockNo);
     if (original) {
       this.graniteBlocks.push({ ...original });
-      // optional: keep the dropdown sorted by blockNo
       this.graniteBlocks.sort((a, b) => a.blockNo - b.blockNo);
     }
-    // 3) remove the form‑array row
     this.items.removeAt(index);
   }
 
@@ -262,10 +326,6 @@ export class BillingComponent implements OnInit {
       itemForm.patchValue({
         hsn: selectedBlock.hsn,
         categoryGrade: selectedBlock.categoryGrade,
-        // measurement: {
-        //   ...selectedBlock.measurement,
-        //   netWeightMt: selectedBlock.measurement.netWeightMt || 0, // NEW
-        // },
         quarryCbm: derived.quarryCbm,
         dmgTonnage: derived.dmgTonnage,
         netCbm: derived.netCbm,
@@ -292,25 +352,25 @@ export class BillingComponent implements OnInit {
     totalQuarryCbm: number;
     totalDmgTonnage: number;
     totalNetCbm: number;
-    totalNetWeightMt: number; // NEW
+    totalNetWeightMt: number;
   } {
     let totalQuarryCbm = 0;
     let totalDmgTonnage = 0;
     let totalNetCbm = 0;
-    let totalNetWeightMt = 0; // NEW
+    let totalNetWeightMt = 0;
 
     this.items.controls.forEach((item) => {
       totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
       totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
       totalNetCbm += +(item.get('netCbm')?.value || 0);
-      totalNetWeightMt += +(item.get('netWeightMt')?.value || 0); // NEW
+      totalNetWeightMt += +(item.get('netWeightMt')?.value || 0);
     });
 
     return {
       totalQuarryCbm: +totalQuarryCbm.toFixed(4),
       totalDmgTonnage: +totalDmgTonnage.toFixed(4),
       totalNetCbm: +totalNetCbm.toFixed(4),
-      totalNetWeightMt: +totalNetWeightMt.toFixed(4), // NEW
+      totalNetWeightMt: +totalNetWeightMt.toFixed(4),
     };
   }
 
@@ -322,7 +382,6 @@ export class BillingComponent implements OnInit {
         .post<any>('dolphin/invoice', this.gatePassForm.value)
         .subscribe({
           next: (res) => {
-            // Assuming the response contains the newly created invoice ID
             if (res && res.id) {
               this.router.navigate(['/features/summary'], {
                 queryParams: { id: res.id },

@@ -3,21 +3,8 @@
     <!-- Header Section -->
     <div class="header-section">
       <div class="logo-section">
-        <!-- <div class="logo">LOGO</div> -->
         <h2 class="gate-pass-title">GATE PASS</h2>
       </div>
-
-      <!-- <div class="company-info">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Company Name</mat-label>
-          <label>Dolphin International</label>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Address</mat-label>
-          <label>AP Puttageri Tq : Kusngi, Dt Koppai</label>
-        </mat-form-field>
-      </div> -->
     </div>
 
     <!-- Gate Pass Info Section -->
@@ -217,6 +204,107 @@
         ></mat-datepicker-toggle>
         <mat-datepicker #deliveryDatePicker></mat-datepicker>
       </mat-form-field>
+    </div>
+
+    <!-- International Export Fields Section - Only shown for international clients -->
+    <div class="international-fields-section" *ngIf="isInternationalClient">
+      <h3>Export Information</h3>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Buyer's Order Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="buyersOrderDatePicker"
+            formControlName="BuyersOrderDate"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="buyersOrderDatePicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #buyersOrderDatePicker></mat-datepicker>
+          <mat-error *ngIf="isFieldInvalid('BuyersOrderDate')">
+            {{ getFieldErrorMessage("BuyersOrderDate") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Place Receipt by Carrier</mat-label>
+          <input matInput formControlName="PlaceReceiptbyCarrier" />
+          <mat-error *ngIf="isFieldInvalid('PlaceReceiptbyCarrier')">
+            {{ getFieldErrorMessage("PlaceReceiptbyCarrier") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Port of Discharge</mat-label>
+          <input matInput formControlName="PortofDischarge" />
+          <mat-error *ngIf="isFieldInvalid('PortofDischarge')">
+            {{ getFieldErrorMessage("PortofDischarge") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Port of Loading</mat-label>
+          <input matInput formControlName="PortofLoading" />
+          <mat-error *ngIf="isFieldInvalid('PortofLoading')">
+            {{ getFieldErrorMessage("PortofLoading") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Pre Carrier By</mat-label>
+          <input matInput formControlName="PreCarrierBy" />
+          <mat-error *ngIf="isFieldInvalid('PreCarrierBy')">
+            {{ getFieldErrorMessage("PreCarrierBy") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Shipping Bill Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="shippingBillDatePicker"
+            formControlName="ShippingBillDate"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="shippingBillDatePicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #shippingBillDatePicker></mat-datepicker>
+          <mat-error *ngIf="isFieldInvalid('ShippingBillDate')">
+            {{ getFieldErrorMessage("ShippingBillDate") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Shipping Bill No</mat-label>
+          <input matInput formControlName="ShippingBillno" />
+          <mat-error *ngIf="isFieldInvalid('ShippingBillno')">
+            {{ getFieldErrorMessage("ShippingBillno") }}
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Vessel or Flight No</mat-label>
+          <input matInput formControlName="vesselorflightno" />
+          <mat-error *ngIf="isFieldInvalid('vesselorflightno')">
+            {{ getFieldErrorMessage("vesselorflightno") }}
+          </mat-error>
+        </mat-form-field>
+          <mat-form-field appearance="outline">
+          <mat-label>Port Code</mat-label>
+          <input matInput formControlName="portCode" />
+          <mat-error *ngIf="isFieldInvalid('portCode')">
+            {{ getFieldErrorMessage("portCode") }}
+          </mat-error>
+        </mat-form-field>
+      </div>
     </div>
 
     <!-- Transporter Section -->
@@ -442,13 +530,11 @@
               <td colspan="5" class="totals-label"><strong>TOTALS:</strong></td>
               <td class="totals-value">
                 <strong>{{ calculateTotals().totalNetWeightMt }}</strong>
-                <!-- NEW -->
               </td>
               <td class="totals-value">
                 <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
               </td>
               <td></td>
-
               <td class="totals-value">
                 <strong>{{ calculateTotals().totalDmgTonnage }}</strong>
               </td>

@@ -71,8 +71,7 @@ namespace Dolphin.Services.Models
         public string Destination { get; set; }
         [BsonElement("termsofpayment")]
         public string TermsOfPayment { get; set; }
-        [BsonElement("otherrefence")]
-        public string otherrefence { get; set; }
+
         [BsonElement("deliverynotedate")]
         public string DeliveryNoteDate { get; set; }
         [BsonElement("hsn")]
@@ -86,7 +85,7 @@ namespace Dolphin.Services.Models
         [BsonElement("portofloading")]
         public string PortofLoading { get; set; }
 
-               [BsonElement("PreCarrierBy")]
+        [BsonElement("PreCarrierBy")]
         public string PreCarrierBy { get; set; }
         [BsonElement("placereceiptbycarrier")]
         public string PlaceReceiptbyCarrier { get; set; }
@@ -94,6 +93,9 @@ namespace Dolphin.Services.Models
         public string ShippingBillno { get; set; }
         [BsonElement("shippingbilldate")]
         public string ShippingBillDate { get; set; }
+        
+        [BsonElement("portcode")]
+        public string PortCode { get; set; }
         
 
     }
