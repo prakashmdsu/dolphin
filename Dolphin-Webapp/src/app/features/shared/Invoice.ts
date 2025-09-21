@@ -32,5 +32,12 @@ export interface Invoice {
   dated: string;
   hsn: string;
   permitNo: string;
-
+portCode:string;
+shippingBillDate:string;
+shippingBillno:string;
+placeReceiptbyCarrier:string;
+preCarrierBy:string;
+portofLoading:string;
+portofDischarge:string;
+vesselorflightno:string|null;
 }

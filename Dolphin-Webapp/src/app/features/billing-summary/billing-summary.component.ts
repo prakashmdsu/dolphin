@@ -279,12 +279,12 @@ blocksids:string|null=null;
           "Invoice Number",
           "Date",
         ],
-        ["DI2526001", "3-Jul-2025"],
+        [this.invoice.invoiceNo, "3-Jul-2025"],
         ["Buyer's Order Number", "Date"],
-        ["LWDF202501", "20-May-2025"],
+        [this.invoice.buyersOrderNumber, "20-May-2025"],
         [
           {
-            content: "Shipping Bill No: 3293257",
+            content:  `Shipping Bill No: ${this.invoice.shippingBillno  }` ,
             colSpan: 1,
             styles: { halign: "left" },
           },
@@ -294,7 +294,7 @@ blocksids:string|null=null;
             styles: { halign: "left" },
           },
         ],
-        ["Port Code", "INKRI1"],
+        ["Port Code", this.invoice.portCode],
         [
           {
             content: "Consignee & Buyer",
@@ -365,7 +365,7 @@ blocksids:string|null=null;
           "Country of Origin of Goods",
           "Country of final Destination",
         ],
-        ["ROAD", "KRISHNAPATNAM PORT, INDIA", "INDIA", "CHINA"],
+        [this.invoice.preCarrierBy, `${this.invoice.placeReceiptbyCarrier }, INDIA`, "INDIA",this.invoice.billToAddress],
         [
           "Vessel/Flight No.",
           "Port of Loading",
@@ -377,8 +377,9 @@ blocksids:string|null=null;
           "",
         ],
         [
-          "MV SEA LEO VOY NO MU2518",
-          "KRISHNAPATNAM PORT, INDIA",
+          this.invoice.vesselorflightno,
+          `${this.invoice.portofLoading }, INDIA`,
+       
           {
             content: "F.O.B. KRISHNAPATNAM PORT, INDIA",
             colSpan: 2,
@@ -388,7 +389,7 @@ blocksids:string|null=null;
         ],
         ["Port of Discharge", "Final Destination", "", ""],
         [
-          "KRISHNAPATNAM PORT,\nINDIA",
+          `${this.invoice.portofDischarge }, INDIA`,
           "CHINA",
           {
             content: "PAYMENT TT AFTER EMAIL COPY OF ORIGINAL BILL OF LADING.",
