@@ -432,7 +432,7 @@ public class MyService
     public async Task<GraniteStockBlock> AddStock(GraniteStockBlock stock)
     {
         var collection = (IMongoCollection<GraniteStockBlock>)_dolphinRepository.GetCollection("granitestockblock");
- stock.Status = DispatchStatus.ReadyForDispatch;
+        stock.Status = DispatchStatus.ReadyForDispatch;
         // Set the entry date to current UTC time if not provided
         if (stock.Date == default(DateTime))
         {
@@ -705,7 +705,7 @@ public class MyService
 
         // Query for users with the role "admin" and project only the Email field
         var emails = await collection
-            .Find(u => u.Role == "Admin")
+            .Find(u => u.Role == "admin")
             .Project(u => u.Email)
             .ToListAsync();
 

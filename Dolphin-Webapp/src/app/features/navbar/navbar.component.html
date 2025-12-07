@@ -1,13 +1,51 @@
-<div
+<!-- Side Navbar -->
+<nav
   class="navbar"
-  [class.expanded]="isExpanded && !isMobile"
-  (mouseover)="toggleNavbar(true)"
+  [class.expanded]="isExpanded"
+  (mouseenter)="toggleNavbar(true)"
   (mouseleave)="toggleNavbar(false)"
 >
-  <div class="nav-item" *ngFor="let item of navItems">
-    <a [routerLink]="item.route" routerLinkActive="active" class="nav-link">
-      <i [class]="item.icon"></i>
-      <span class="nav-text">{{ item.label }}</span>
-    </a>
+  <!-- Logo -->
+  <div class="nav-logo">
+    <mat-icon>waves</mat-icon>
+    <span class="nav-text">Dolphin</span>
   </div>
-</div>
+
+  <!-- Navigation Items -->
+  <div class="nav-items">
+    <ng-container *ngFor="let item of navItems">
+      <div class="nav-item" *ngIf="!item.adminOnly || isAdmin()">
+        <a [routerLink]="item.route" routerLinkActive="active">
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span class="nav-text">{{ item.label }}</span>
+        </a>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Spacer -->
+  <div class="nav-spacer"></div>
+
+  <!-- User Info & Logout (Bottom) -->
+  <div class="nav-footer">
+    <!-- User Info -->
+    <div class="nav-item user-item">
+      <mat-icon>account_circle</mat-icon>
+      <div class="nav-text user-details">
+        <span class="user-name">{{ userName }}</span>
+        <span class="user-role">{{ userRole }}</span>
+      </div>
+    </div>
+
+    <!-- Logout -->
+    <div class="nav-item logout-item" (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span class="nav-text">Logout</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content Wrapper (optional - add to your layout) -->
+<!-- <div class="main-content" [class.expanded]="isExpanded">
+  <router-outlet></router-outlet>
+</div> -->

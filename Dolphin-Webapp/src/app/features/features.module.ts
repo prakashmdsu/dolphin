@@ -32,7 +32,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { UpdategraniteBlockStatusComponent } from './updategranite-block-status/updategranite-block-status.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 
-
 // import { SelectionModel } from '@angular/cdk/collections';
 @NgModule({
   declarations: [
@@ -45,9 +44,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     AddclientComponent,
     NavbarComponent,
     BillingSummaryComponent,
-    UpdategraniteBlockStatusComponent
+    UpdategraniteBlockStatusComponent,
   ],
-  providers: [HttpService],
+  // providers: [HttpService],
   imports: [
     CommonModule,
     FeaturesRoutingModule,
@@ -71,7 +70,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatPaginatorModule,
     MatChipsModule,
     MatCheckboxModule,
-    
+    MatInputModule,
   ],
 })
 export class FeaturesModule {}

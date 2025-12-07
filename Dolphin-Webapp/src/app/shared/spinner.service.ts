@@ -6,13 +6,23 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class SpinnerService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
+  private requestCount = 0;
+
   loading$ = this.loadingSubject.asObservable();
 
-  show() {
+  show(): void {
+    this.requestCount++;
+    console.log('SpinnerService - show, count:', this.requestCount);
     this.loadingSubject.next(true);
   }
 
-  hide() {
-    this.loadingSubject.next(false);
+  hide(): void {
+    this.requestCount--;
+    console.log('SpinnerService - hide, count:', this.requestCount);
+
+    if (this.requestCount <= 0) {
+      this.requestCount = 0;
+      this.loadingSubject.next(false);
+    }
   }
 }

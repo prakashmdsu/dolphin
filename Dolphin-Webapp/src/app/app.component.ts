@@ -1,25 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { SpinnerComponent } from "./shared/spinner/spinner.component";
-import { SpinnerService } from './shared/spinner.service';
-import { CommonModule } from '@angular/common';
-
+import { SpinnerComponent } from './shared/spinner/spinner.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SpinnerComponent,CommonModule],
-  standalone:true,
-
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  standalone: true,
+  imports: [RouterOutlet, SpinnerComponent],
+  template: `
+    <app-spinner></app-spinner>
+    <router-outlet></router-outlet>
+  `,
 })
-export class AppComponent {
-  isLoading=false;
-  currentDate = new Date();
-  constructor(private spinnerService: SpinnerService) {
-   this.spinnerService.loading$.subscribe(res=>{
-    this.isLoading=res
-   })
-  }
-
-}
+export class AppComponent {}

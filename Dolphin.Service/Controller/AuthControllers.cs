@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 [ApiController]
@@ -31,7 +32,7 @@ public class AuthController : ControllerBase
         {
             return Conflict("A user with this email already exists.");
         }
-        
+
         return Ok(new { Message = "User registered successfully", UserId = userid });
     }
 
@@ -58,11 +59,13 @@ public class AuthController : ControllerBase
         }
 
         var token = _jwtTokenGenerator.GenerateToken(user);
-        
+
         // Return user info along with token (excluding sensitive data)
-        return Ok(new { 
+        return Ok(new
+        {
             Token = token,
-            User = new {
+            User = new
+            {
                 user.Email,
                 user.Role,
                 UserName = user.UserName
@@ -70,17 +73,30 @@ public class AuthController : ControllerBase
         });
     }
 
-    [HttpPost("logout")]
-    [Authorize] // Require authentication for logout
-    public async Task<IActionResult> Logout()
+    // Add a service to track invalidated tokens
+    public interface ITokenBlacklistService
     {
-        // In a stateless JWT system, logout is typically handled client-side
-        // You could implement token blacklisting here if needed
-        return Ok(new { Message = "Logged out successfully" });
+        Task BlacklistTokenAsync(string jti, DateTime expiry);
+        Task<bool> IsBlacklistedAsync(string jti);
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout([FromServices] ITokenBlacklistService blacklistService)
+    {
+        var jti = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        var exp = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+
+        if (!string.IsNullOrEmpty(jti) && !string.IsNullOrEmpty(exp))
+        {
+            var expiry = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp)).UtcDateTime;
+            await blacklistService.BlacklistTokenAsync(jti, expiry);
+        }
+
+        return Ok(new { Message = "Logged out successfully" });
+    }
     [HttpGet("getalluser")]
-    [Authorize(Roles = "Admin")] // Only admins should see all users
+    [Authorize(Roles = "admin")]// Only admins should see all users
     public async Task<IActionResult> GetAllUser()
     {
         try
@@ -134,7 +150,7 @@ public class AuthController : ControllerBase
                 // unless they are an admin
                 var currentUserEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? User.FindFirst("email")?.Value;
                 var userRole = User.FindFirst("role")?.Value;
-                
+
                 if (email != currentUserEmail && userRole != "Admin")
                 {
                     return Forbid("You can only access your own profile.");
@@ -224,7 +240,7 @@ public class AuthController : ControllerBase
 
             var loginPassword = await _myService.UpadatePassword("UserCollections", userProfile);
             await _emailService.SendPasswordEmailAsync(loginPassword, userProfile);
-            
+
             return Ok(new { Message = "If the email exists, a password reset link has been sent." });
         }
         catch (Exception ex)
@@ -254,7 +270,7 @@ public class AuthController : ControllerBase
 
             // Update user profile logic here
             // var updatedUser = await _myService.UpdateUserProfile("UserCollections", email, request);
-            
+
             return Ok(new { Message = "Profile updated successfully" });
         }
         catch (Exception ex)

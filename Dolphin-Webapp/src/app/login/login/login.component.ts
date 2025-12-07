@@ -18,50 +18,73 @@ export class LoginComponent {
 
   isForgotPassword: boolean = false;
   constructor(private services: HttpService, private router: Router) {}
+  // login.component.ts
   onSubmit() {
     if (!this.isForgotPassword) {
       const loginData = { Email: this.username, Password: this.password };
-      this.services.post('auth/login', loginData).subscribe(
-        (response: any) => {
+
+      this.services.post('auth/login', loginData).subscribe({
+        next: (response: any) => {
           console.log('Login successful:', response);
+
+          // Step 1: Save token FIRST
+          const initialUserData = {
+            email: this.username,
+            authToken: response.token,
+            profile: null,
+          };
+          localStorage.setItem('userData', JSON.stringify(initialUserData));
+
+          // Step 2: Now fetch profile (token will be attached by interceptor)
           this.services
             .get<any>('Auth/profile?email=' + this.username)
-            .subscribe((profileResponse) => {
-              var userDataandToken = {
-                email: this.username,
-                authToken: response.token,
-                profile: profileResponse,
-              };
-              // Store the user data in localStorage
-              localStorage.setItem(
-                'userData',
-                JSON.stringify(userDataandToken)
-              );
-              if (profileResponse.role == 'admin')
-                this.router.navigate(['/features/dashboard']);
-              else this.router.navigate(['/user/dashboard']);
+            .subscribe({
+              next: (profileResponse) => {
+                // Step 3: Update localStorage with profile data
+                const fullUserData = {
+                  email: this.username,
+                  authToken: response.token,
+                  profile: profileResponse,
+                };
+                localStorage.setItem('userData', JSON.stringify(fullUserData));
+
+                // Step 4: Navigate based on role
+                if (profileResponse.role === 'admin') {
+                  this.router.navigate(['/features/dashboard']);
+                } else {
+                  this.router.navigate(['/user/dashboard']);
+                }
+              },
+              error: (err) => {
+                console.error('Profile fetch failed:', err);
+                // Still navigate since login was successful
+                if (response.user?.role === 'admin') {
+                  this.router.navigate(['/features/dashboard']);
+                } else {
+                  this.router.navigate(['/user/dashboard']);
+                }
+              },
             });
-          // Store the JWT token in localStorage
-          // Navigate to the dashboard or protected route
         },
-        (error) => {
+        error: (error) => {
+          console.error('Login failed:', error);
           alert('Login failed');
-        }
-      );
+        },
+      });
     } else {
+      // Forgot password - should be POST, not GET
       this.services
-        .get('Auth/passwordrequest?email=' + this.username)
-        .subscribe(
-          (res) => {
-            alert('Your password has been send to your registered email');
+        .post('Auth/passwordrequest', { email: this.username })
+        .subscribe({
+          next: (res) => {
+            alert('Your password has been sent to your registered email');
           },
-          (err) => {
-            alert('Email address does not exist please contact admin');
-          }
-        );
+          error: (err) => {
+            alert('Email address does not exist, please contact admin');
+          },
+        });
     }
   }
-
   toggleForgotPassword() {
     this.isForgotPassword = !this.isForgotPassword;
     this.password = ''; // Clear the password field when toggling

@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/durgamma/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj": {}
+    "/home/gahan/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj": {}
   },
   "projects": {
-    "/home/durgamma/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj": {
+    "/home/gahan/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/durgamma/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
+        "projectUniqueName": "/home/gahan/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
         "projectName": "Dolphin.Service",
-        "projectPath": "/home/durgamma/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
-        "packagesPath": "/home/durgamma/.nuget/packages/",
-        "outputPath": "/home/durgamma/Documents/dolphin/Dolphin.Service/obj/",
+        "projectPath": "/home/gahan/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
+        "packagesPath": "/home/gahan/.nuget/packages/",
+        "outputPath": "/home/gahan/Documents/dolphin/Dolphin.Service/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/durgamma/.nuget/NuGet/NuGet.Config"
+          "/home/gahan/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -82,7 +82,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.118/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.121/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

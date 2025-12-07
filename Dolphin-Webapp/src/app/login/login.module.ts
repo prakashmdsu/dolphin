@@ -1,13 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { LoginRoutingModule } from './login-routing.module';
 import { LoginComponent } from './login/login.component';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-// import { HttpServeService } from '../Shared/http-service.service';
 import { RouterModule } from '@angular/router';
-import { HttpService } from '../shared/http-serve.service';
+// REMOVE: import { HttpClientModule } from '@angular/common/http';
+// REMOVE: import { HttpService } from '../shared/http-serve.service';
 
 @NgModule({
   declarations: [LoginComponent],
@@ -16,8 +14,8 @@ import { HttpService } from '../shared/http-serve.service';
     RouterModule,
     LoginRoutingModule,
     FormsModule,
-    HttpClientModule,
+    // REMOVE HttpClientModule from here!
   ],
-  providers: [HttpService],
+  // REMOVE providers array - HttpService already has providedIn: 'root'
 })
 export class LoginModule {}

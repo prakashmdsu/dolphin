@@ -8,6 +8,7 @@ import { StockgraniteblockComponent } from './addstockgraniteblock/stockgraniteb
 import { GranitestocksComponent } from './granitestockslist/granitestocks.component';
 import { AddclientComponent } from './addclient/addclient.component';
 import { BillingSummaryComponent } from './billing-summary/billing-summary.component';
+import { AuthGuard } from '../shared/auth.guard';
 
 const routes: Routes = [
   {
@@ -40,6 +41,7 @@ const routes: Routes = [
         component: BillingSummaryComponent,
       },
     ],
+    canActivate: [AuthGuard],
   },
 ];
 

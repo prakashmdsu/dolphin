@@ -1,14 +1,8 @@
-<!-- <div class="modal" id="loadingModal">
-  <div class="loader"></div>
-</div> -->
-<div class="modal">
+<div class="modal" *ngIf="isLoading$ | async">
   <div class="loader">
     <div class="logo-container">
       <div class="btc">Dolphin</div>
-      <div class="company-name">
-        <!-- <div class="boston">Dolphin</div> -->
-        <!-- <div class="technology">technology</div> -->
-      </div>
+      <div class="company-name"></div>
     </div>
     <div class="loading-dots">
       <div class="dot"></div>

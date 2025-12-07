@@ -4,25 +4,14 @@ import { SpinnerService } from '../spinner.service';
 
 @Component({
   selector: 'app-spinner',
-  imports: [CommonModule],
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './spinner.component.html',
   styleUrls: ['./spinner.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpinnerComponent {
-  isLoading: boolean = false;
-constructor(private spinnerService: SpinnerService) 
-{
-  spinnerService.loading$.subscribe(res=>{
-    this.isLoading=res
-  })
-}
-  show() {
-    this.isLoading = true;
-  }
+  isLoading$ = this.spinnerService.loading$;
 
-  hide() {
-    this.isLoading = true;
-  }
+  constructor(private spinnerService: SpinnerService) {}
 }

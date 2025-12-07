@@ -17,7 +17,7 @@ public class JwtTokenGenerator
         var key = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured");
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer is not configured");
         var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience is not configured");
-        
+
         // Ensure key is at least 32 bytes (256 bits)
         if (Encoding.UTF8.GetBytes(key).Length < 32)
         {
@@ -30,7 +30,7 @@ public class JwtTokenGenerator
         // Use UTC time consistently
         var now = DateTime.UtcNow;
         var expiry = now.AddMinutes(Convert.ToInt32(_configuration["Jwt:ExpirationMinutes"] ?? "30"));
-        
+
         Console.WriteLine($"Token created at UTC: {now}");
         Console.WriteLine($"Token expires at UTC: {expiry}");
 
@@ -43,7 +43,7 @@ public class JwtTokenGenerator
             new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUnixTimeSeconds().ToString()),
             
             // Custom claims
-            new Claim("role", user.Role)
+           new Claim(ClaimTypes.Role, user.Role)
         };
 
         // Add optional claims if properties exist

@@ -184,8 +184,6 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-
-
       </div>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -294,7 +292,7 @@
             {{ getFieldErrorMessage("vesselorflightno") }}
           </mat-error>
         </mat-form-field>
-          <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline">
           <mat-label>Port Code</mat-label>
           <input matInput formControlName="portCode" />
           <mat-error *ngIf="isFieldInvalid('portCode')">
@@ -448,7 +446,7 @@
                   </mat-form-field>
                 </div>
               </td>
-              <td >
+              <td>
                 <mat-form-field appearance="outline" class="disabled-field">
                   <input
                     matInput
@@ -456,8 +454,7 @@
                     type="number"
                     readonly
                   />
-                  <mat-error
-                    *ngIf="isItemFieldInvalid(i, 'netWeightMt')"
+                  <mat-error *ngIf="isItemFieldInvalid(i, 'netWeightMt')"
                     >Required</mat-error
                   >
                 </mat-form-field>
@@ -565,12 +562,7 @@
 
     <!-- Submit Buttons -->
     <div class="submit-section">
-      <button
-        mat-raised-button
-        color="primary"
-        type="submit"
-        [disabled]="gatePassForm.invalid"
-      >
+      <button color="primary" type="submit" [disabled]="gatePassForm.invalid">
         Submit Gate Pass
       </button>
       <button

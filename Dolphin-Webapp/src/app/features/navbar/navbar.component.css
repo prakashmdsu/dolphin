@@ -1,63 +1,219 @@
-/* Navbar styles */
+/* Navbar Container */
 .navbar {
-  position: fixed; /* Ensures it's fixed on the left */
+  position: fixed;
   top: 0;
   left: 0;
-  height: 100%;
-  width: 60px;
-  background-color: #2c3e50;
-  z-index: 10; /* Lower than the logo's z-index */
+  height: 100vh;
+  width: 65px;
+  background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+  z-index: 1000;
   transition: width 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
 .navbar.expanded {
-  width: 200px;
+  width: 220px;
 }
 
-/* Navbar item styles */
+/* Logo Section */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  padding: 20px 18px;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 10px;
+}
+
+.nav-logo mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+
+.nav-logo .nav-text {
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar.expanded .nav-logo .nav-text {
+  opacity: 1;
+}
+
+/* Navigation Items Container */
+.nav-items {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+}
+
+/* Individual Nav Item */
 .nav-item {
   display: flex;
   align-items: center;
-  padding: 15px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-/* Icon styles */
-.nav-item i {
-  font-size: 20px;
-  margin-right: 15px;
+.nav-item a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
 }
 
-/* Text visibility */
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item a:hover {
+  color: white;
+}
+
+.nav-item a.active {
+  color: #4fc3f7;
+  background-color: rgba(79, 195, 247, 0.15);
+  border-left: 3px solid #4fc3f7;
+}
+
+.nav-item mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+
 .nav-item .nav-text {
+  margin-left: 15px;
+  font-size: 14px;
   opacity: 0;
-  white-space: nowrap;
   transition: opacity 0.3s ease;
+  white-space: nowrap;
 }
 
 .navbar.expanded .nav-item .nav-text {
   opacity: 1;
 }
 
-/* Hover effect on nav item */
-.nav-item:hover {
-  background-color: #34495e;
+/* Spacer */
+.nav-spacer {
+  flex: 1 1 auto;
 }
 
-/* Prevent anchor tag styles from affecting colors */
-.nav-item a {
-  text-decoration: none; /* Remove underline */
-  color: white; /* Set the default color to white */
-  display: flex; /* To align the icon and text properly */
+/* Footer Section (User & Logout) */
+.nav-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 0;
+}
+
+/* User Item */
+.user-item {
+  padding: 14px 18px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.user-item mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  margin-left: 15px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+}
+
+.user-role {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: capitalize;
+}
+
+/* Logout Item */
+.logout-item {
+  display: flex;
   align-items: center;
+  padding: 14px 18px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
 }
 
-/* On hover of the nav item, change the anchor text color */
-.nav-item a:hover {
-  color: #ecf0f1; /* Change text color on hover */
+.logout-item:hover {
+  background-color: rgba(244, 67, 54, 0.2);
+  color: #ff5252;
 }
 
-/* Active link color */
-.nav-item a.router-link-active {
-  color: #1abc9c; /* Active link color */
+.logout-item mat-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+
+.logout-item .nav-text {
+  margin-left: 15px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.navbar.expanded .logout-item .nav-text {
+  opacity: 1;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .navbar {
+    width: 100%;
+    height: 60px;
+    flex-direction: row;
+    bottom: 0;
+    top: auto;
+  }
+
+  .navbar.expanded {
+    width: 100%;
+    height: auto;
+    flex-direction: column;
+    bottom: 0;
+  }
+
+  .nav-logo {
+    display: none;
+  }
+
+  .nav-items {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    padding: 0;
+  }
+
+  .nav-item .nav-text {
+    display: none;
+  }
+
+  .nav-footer {
+    display: none;
+  }
 }
