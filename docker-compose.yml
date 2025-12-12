@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  dolphin-api:
+    build:
+      context: ./Dolphin.service
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      MongoDbSettings__Host: mongodb
+      MongoDbSettings__Port: "27017"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    build:
+      context: ./Dolphin-webapp
+      dockerfile: Dockerfile
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /home/gahan/Documents:/home/gahan/Documents:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - dolphin-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-container
+    volumes:
+      - /home/gahan/Documents/mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    restart: always
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
