@@ -59,7 +59,8 @@ namespace Dolphin.Services.Models
         public double NetCbm { get; set; }
         [BsonElement("netweightmt")]
         public double NetWeightMt { get; set; }
-        
+        [BsonElement("preallowance")]
+        public Double PreAllownace { get; set; }
 
     }
 
@@ -73,6 +74,6 @@ namespace Dolphin.Services.Models
 
         [BsonElement("ht")]
         public int Ht { get; set; }
-        
+
     }
 }

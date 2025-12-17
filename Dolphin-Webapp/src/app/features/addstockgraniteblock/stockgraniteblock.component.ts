@@ -21,6 +21,7 @@ export class StockgraniteblockComponent implements OnInit {
   calculatedDmgTonnage: number = 0;
   calculatedNetCbm: number = 0;
   categoryGrades: string[] = ['A', 'B', 'C', 'D'];
+  preAllowance: number[] = [5, 10, 15, 20, 25, 30];
   pitNumbers: number[] = Array.from({ length: 10 }, (_, i) => i + 1);
   isSubmitting = false;
 
@@ -49,6 +50,7 @@ export class StockgraniteblockComponent implements OnInit {
       blockNo: [null, Validators.required],
       buyerBlockNo: [null, Validators.required],
       categoryGrade: ['', Validators.required],
+      preAllowance: ['', Validators.required],
       measurement: this.fb.group({
         lg: [null, [Validators.required, Validators.min(0)]],
         wd: [null, [Validators.required, Validators.min(0)]],

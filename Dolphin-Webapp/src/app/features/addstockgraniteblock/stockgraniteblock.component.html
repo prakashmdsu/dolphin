@@ -70,15 +70,13 @@
             Required
           </mat-error>
         </mat-form-field>
-                       <mat-form-field appearance="outline">
-            <mat-label>Net weight in MT </mat-label>
-            <input matInput type="number" formControlName="netWeightMt" />
-            <mat-error
-              *ngIf="blockForm.get('netWeightMt')?.hasError('required')"
-            >
-              Required
-            </mat-error>
-          </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Net weight in MT </mat-label>
+          <input matInput type="number" formControlName="netWeightMt" />
+          <mat-error *ngIf="blockForm.get('netWeightMt')?.hasError('required')">
+            Required
+          </mat-error>
+        </mat-form-field>
       </div>
 
       <div class="measurement-section">
@@ -113,11 +111,10 @@
               Required
             </mat-error>
           </mat-form-field>
-
         </div>
       </div>
 
-      <div class="form-row calculated-fields">
+      <!-- <div class="form-row calculated-fields">
         <mat-form-field appearance="outline">
           <mat-label>Quarry CBM</mat-label>
           <input
@@ -150,6 +147,44 @@
             class="calculated-field"
           />
         </mat-form-field>
+      </div> -->
+
+      <div class="form-row calculated-fields">
+        <h3>Gross Measurement (LG, WD, HT)</h3>
+        <div class="measurement-row">
+          <!-- <mat-form-field appearance="outline">
+          <mat-label>Quarry CBM</mat-label>
+          <input
+            matInput
+            type="number"
+            [value]="calculatedQuarryCbm"
+            readonly
+            class="calculated-field"
+          />
+        </mat-form-field> -->
+
+          <!-- <mat-form-field appearance="outline">
+          <mat-label>DMG Tonnage</mat-label>
+          <input
+            matInput
+            type="number"
+            [value]="calculatedDmgTonnage"
+            readonly
+            class="calculated-field"
+          />
+        </mat-form-field> -->
+
+          <mat-form-field appearance="outline">
+            <mat-label>Net CBM</mat-label>
+            <input
+              matInput
+              type="number"
+              [value]="calculatedNetCbm"
+              readonly
+              class="calculated-field"
+            />
+          </mat-form-field>
+        </div>
       </div>
 
       <mat-form-field appearance="outline" class="full-width">
