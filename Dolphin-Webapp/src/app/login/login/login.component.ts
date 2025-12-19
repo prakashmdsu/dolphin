@@ -1,24 +1,22 @@
 import { Component } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { HttpClient } from '@angular/common/http';
-// import { HttpServeService } from '../../Shared/http-service.service';
-import { RouterModule } from '@angular/router';
 import { Router } from '@angular/router';
 import { HttpService } from '../../shared/http-serve.service';
+
 @Component({
   selector: 'app-login',
   standalone: false,
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css',
+  styleUrls: ['./login.component.css'],
 })
 export class LoginComponent {
   username: string = '';
   password: string = '';
-  apiUrl: string = environment.apiUrl; // Set this to your .NET Core API base URL
-
+  apiUrl: string = environment.apiUrl;
   isForgotPassword: boolean = false;
+
   constructor(private services: HttpService, private router: Router) {}
-  // login.component.ts
+
   onSubmit() {
     if (!this.isForgotPassword) {
       const loginData = { Email: this.username, Password: this.password };
@@ -35,7 +33,7 @@ export class LoginComponent {
           };
           localStorage.setItem('userData', JSON.stringify(initialUserData));
 
-          // Step 2: Now fetch profile (token will be attached by interceptor)
+          // Step 2: Fetch profile
           this.services
             .get<any>('Auth/profile?email=' + this.username)
             .subscribe({
@@ -49,44 +47,57 @@ export class LoginComponent {
                 localStorage.setItem('userData', JSON.stringify(fullUserData));
 
                 // Step 4: Navigate based on role
-                if (profileResponse.role === 'admin') {
-                  this.router.navigate(['/features/dashboard']);
-                } else {
-                  this.router.navigate(['/user/dashboard']);
-                }
+                this.navigateByRole(profileResponse.role);
               },
               error: (err) => {
                 console.error('Profile fetch failed:', err);
-                // Still navigate since login was successful
-                if (response.user?.role === 'admin') {
-                  this.router.navigate(['/features/dashboard']);
-                } else {
-                  this.router.navigate(['/user/dashboard']);
-                }
+                // Fallback: use role from login response if available
+                const fallbackRole = response.user?.role || 'member';
+                this.navigateByRole(fallbackRole);
               },
             });
         },
         error: (error) => {
           console.error('Login failed:', error);
-          alert('Login failed');
+          alert('Login failed. Please check your credentials.');
         },
       });
     } else {
-      // Forgot password - should be POST, not GET
       this.services
         .post('Auth/passwordrequest', { email: this.username })
         .subscribe({
-          next: (res) => {
+          next: () => {
             alert('Your password has been sent to your registered email');
+            this.toggleForgotPassword();
           },
-          error: (err) => {
+          error: () => {
             alert('Email address does not exist, please contact admin');
           },
         });
     }
   }
+
+  // Navigate based on user role
+  private navigateByRole(role: string): void {
+    switch (role?.toLowerCase()) {
+      case 'superadmin':
+        this.router.navigate(['/features/dashboard']);
+        break;
+      case 'admin':
+        this.router.navigate(['/features/dashboard']);
+        break;
+      case 'member':
+        this.router.navigate(['/features/granitestocks']);
+        break;
+      default:
+        // Default to member access
+        this.router.navigate(['/features/granitestocks']);
+        break;
+    }
+  }
+
   toggleForgotPassword() {
     this.isForgotPassword = !this.isForgotPassword;
-    this.password = ''; // Clear the password field when toggling
+    this.password = '';
   }
 }

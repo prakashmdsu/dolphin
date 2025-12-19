@@ -1,8 +1,10 @@
 <div class="block-dialog-container">
   <!-- Dialog Header -->
   <div mat-dialog-title class="dialog-header">
-    <mat-icon>inventory_2</mat-icon>
-    <h2>{{ getDialogTitle() }}</h2>
+    <div class="header-left">
+      <mat-icon>inventory_2</mat-icon>
+      <h2>{{ getDialogTitle() }}</h2>
+    </div>
     <button mat-icon-button mat-dialog-close class="close-button">
       <mat-icon>close</mat-icon>
     </button>
@@ -47,9 +49,23 @@
       </div>
 
       <div class="form-row">
+        <!-- Block Type - Visible for ALL roles -->
         <mat-form-field appearance="outline">
+          <mat-label>Block Type</mat-label>
+          <mat-select formControlName="blockType">
+            <mat-option *ngFor="let type of blockTypes" [value]="type">
+              {{ type }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="blockForm.get('blockType')?.hasError('required')">
+            Required
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Buyer Block No - Admin/SuperAdmin only -->
+        <mat-form-field appearance="outline" *ngIf="isAdminOrAbove">
           <mat-label>Buyer Block No</mat-label>
-          <input matInput type="number" formControlName="buyerBlockNo" />
+          <input matInput type="text" formControlName="buyerBlockNo" />
           <mat-error
             *ngIf="blockForm.get('buyerBlockNo')?.hasError('required')"
           >
@@ -70,13 +86,15 @@
             Required
           </mat-error>
         </mat-form-field>
-        <mat-form-field appearance="outline">
-          <mat-label>Net weight in MT </mat-label>
+
+        <!-- Net Weight MT - Admin/SuperAdmin only -->
+        <!-- <mat-form-field appearance="outline" *ngIf="isAdminOrAbove">
+          <mat-label>Net weight in MT</mat-label>
           <input matInput type="number" formControlName="netWeightMt" />
           <mat-error *ngIf="blockForm.get('netWeightMt')?.hasError('required')">
             Required
           </mat-error>
-        </mat-form-field>
+        </mat-form-field> -->
       </div>
 
       <div class="measurement-section">
@@ -111,68 +129,66 @@
               Required
             </mat-error>
           </mat-form-field>
+
+          <!-- DMG Tonnage - Visible for ALL roles -->
+          <mat-form-field appearance="outline">
+            <mat-label>DMG Tonnage</mat-label>
+            <input
+              matInput
+              type="number"
+              [value]="calculatedDmgTonnage"
+              readonly
+              class="calculated-field"
+            />
+          </mat-form-field>
         </div>
       </div>
 
-      <!-- <div class="form-row calculated-fields">
+      <!-- Pre Allowance Section - Admin/SuperAdmin only -->
+      <div class="measurement-section" *ngIf="isAdminOrAbove">
         <mat-form-field appearance="outline">
-          <mat-label>Quarry CBM</mat-label>
-          <input
-            matInput
-            type="number"
-            [value]="calculatedQuarryCbm"
-            readonly
-            class="calculated-field"
-          />
+          <mat-label>Pre Allowance</mat-label>
+          <mat-select formControlName="preAllowance">
+            <mat-option
+              *ngFor="let preallwnc of preAllowance"
+              [value]="preallwnc"
+            >
+              {{ preallwnc }}
+            </mat-option>
+          </mat-select>
+          <mat-error
+            *ngIf="blockForm.get('preAllowance')?.hasError('required')"
+          >
+            Required
+          </mat-error>
         </mat-form-field>
+      </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>DMG Tonnage</mat-label>
-          <input
-            matInput
-            type="number"
-            [value]="calculatedDmgTonnage"
-            readonly
-            class="calculated-field"
-          />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Net CBM</mat-label>
-          <input
-            matInput
-            type="number"
-            [value]="calculatedNetCbm"
-            readonly
-            class="calculated-field"
-          />
-        </mat-form-field>
-      </div> -->
-
-      <div class="form-row calculated-fields">
-        <h3>Gross Measurement (LG, WD, HT)</h3>
+      <!-- Gross Measurement Section - Admin/SuperAdmin only -->
+      <div class="measurement-section" *ngIf="isAdminOrAbove">
+        <h3>Gross Measurement</h3>
         <div class="measurement-row">
-          <!-- <mat-form-field appearance="outline">
-          <mat-label>Quarry CBM</mat-label>
-          <input
-            matInput
-            type="number"
-            [value]="calculatedQuarryCbm"
-            readonly
-            class="calculated-field"
-          />
-        </mat-form-field> -->
+          <mat-form-field appearance="outline">
+            <mat-label>Quarry CBM</mat-label>
+            <input
+              matInput
+              type="number"
+              [value]="calculatedQuarryCbm"
+              readonly
+              class="calculated-field"
+            />
+          </mat-form-field>
 
-          <!-- <mat-form-field appearance="outline">
-          <mat-label>DMG Tonnage</mat-label>
-          <input
-            matInput
-            type="number"
-            [value]="calculatedDmgTonnage"
-            readonly
-            class="calculated-field"
-          />
-        </mat-form-field> -->
+          <mat-form-field appearance="outline">
+            <mat-label>Gross Volume</mat-label>
+            <input
+              matInput
+              type="number"
+              [value]="grossVolume"
+              readonly
+              class="calculated-field"
+            />
+          </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Net CBM</mat-label>
@@ -222,7 +238,6 @@
       (click)="onSubmit()"
       [disabled]="blockForm.invalid || isSubmitting"
     >
-      <!-- <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner> -->
       <mat-icon *ngIf="!isSubmitting">save</mat-icon>
       {{ isSubmitting ? "Saving..." : "Save Block" }}
     </button>

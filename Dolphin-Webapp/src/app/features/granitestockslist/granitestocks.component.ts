@@ -12,6 +12,7 @@ import {
 } from '../addstockgraniteblock/stockgraniteblock.component';
 import { DispatchStatus } from '../../shared/enum/stausenum';
 import { UpdategraniteBlockStatusComponent } from '../updategranite-block-status/updategranite-block-status.component';
+import { AuthService } from '../../shared/auth.service';
 
 interface ApiResponse {
   data: GraniteBlock[];
@@ -27,30 +28,22 @@ interface ApiResponse {
 export class GranitestocksComponent implements OnInit {
   dispatchStatus = DispatchStatus;
   dispatchStatusKeys: { key: number; label: string }[] = [];
-  displayedColumns: string[] = [
-    'date',
-    'pitNo',
-    'blockNo',
-    'buyerBlockNo',
-    'categoryGrade',
-    'measurement',
-    'quarryCbm',
-    'dmgTonnage',
-    'netCbm',
-    'status',
-    'note',
-  ];
+  displayedColumns: string[] = [];
 
   dataSource = new MatTableDataSource<GraniteBlock>([]);
   totalItems = 0;
   pageSize = 10;
   pageIndex = 0;
   isLoading = false;
-  showAdvancedFilters = true;
+  showAdvancedFilters = false;
+
+  // Role-based access
+  isMember: boolean = false;
+  isAdmin: boolean = false;
+  isSuperAdmin: boolean = false;
 
   // Filter form with additional fields
   filterForm = new FormGroup({
-    // ... your existing form controls
     blockNo: new FormControl(''),
     status: new FormControl(''),
     startDate: new FormControl(''),
@@ -59,8 +52,6 @@ export class GranitestocksComponent implements OnInit {
     grade: new FormControl(''),
     minCbm: new FormControl(''),
     maxCbm: new FormControl(''),
-
-    // Add these new controls
     advancedTick: new FormControl(false),
     minLg: new FormControl(''),
     minWd: new FormControl(''),
@@ -68,6 +59,7 @@ export class GranitestocksComponent implements OnInit {
   });
 
   showMeasurementFilters = false;
+
   // Options for dropdowns
   statusOptions = [
     { value: DispatchStatus.ReadyForDispatch, label: 'Ready For Dispatch' },
@@ -76,18 +68,31 @@ export class GranitestocksComponent implements OnInit {
     { value: DispatchStatus.Shipped, label: 'Shipped' },
     { value: DispatchStatus.Cancelled, label: 'Cancelled' },
   ];
-  pitOptions = [1, 2, 3, 4, 5]; // Add your pit options
-  gradeOptions = ['A', 'B', 'C', 'D']; // Add your grade options
+  pitOptions = [1, 2, 3, 4, 5];
+  gradeOptions = ['A', 'B', 'C', 'D'];
 
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private httpService: HttpService, private dialog: MatDialog) {}
+  constructor(
+    private httpService: HttpService,
+    private dialog: MatDialog,
+    private authService: AuthService
+  ) {
+    // Set role flags
+    const userRole = this.authService.getUserRole();
+    this.isMember = userRole === 'member';
+    this.isAdmin = userRole === 'admin';
+    this.isSuperAdmin = userRole === 'superadmin';
+
+    // Set displayed columns based on role
+    this.setDisplayedColumns();
+  }
 
   totals = { totalQuarryCbm: 0, totalDmgTonnage: 0, totalNetCbm: 0 };
 
   ngOnInit() {
     this.dispatchStatusKeys = Object.keys(this.dispatchStatus)
-      .filter((key) => !isNaN(Number(key))) // Filters numeric keys from reverse mapping
+      .filter((key) => !isNaN(Number(key)))
       .map((key) => {
         const value = Number(key);
         return {
@@ -121,12 +126,57 @@ export class GranitestocksComponent implements OnInit {
     });
   }
 
+  private setDisplayedColumns(): void {
+    if (this.isMember) {
+      // Member sees limited columns - only DMG Tonnage, no Quarry CBM, no Net CBM
+      this.displayedColumns = [
+        'date',
+        'pitNo',
+        'blockNo',
+        'categoryGrade',
+        'measurement',
+        'dmgTonnage',
+        'status',
+        'note',
+      ];
+    } else if (this.isAdmin) {
+      // Admin sees more columns
+      this.displayedColumns = [
+        'date',
+        'pitNo',
+        'blockNo',
+        'buyerBlockNo',
+        'categoryGrade',
+        'measurement',
+        'quarryCbm',
+        'dmgTonnage',
+        'netCbm',
+        'status',
+        'note',
+      ];
+    } else {
+      // SuperAdmin sees all columns
+      this.displayedColumns = [
+        'date',
+        'pitNo',
+        'blockNo',
+        'buyerBlockNo',
+        'categoryGrade',
+        'measurement',
+        'quarryCbm',
+        'dmgTonnage',
+        'netCbm',
+        'status',
+        'note',
+      ];
+    }
+  }
+
   private setupFilterSubscriptions() {
-    // Subscribe to form changes with debounce
     this.filterForm.valueChanges
       .pipe(debounceTime(500), distinctUntilChanged())
       .subscribe(() => {
-        this.pageIndex = 0; // Reset to first page when filters change
+        this.pageIndex = 0;
         this.loadData();
       });
   }
@@ -140,32 +190,33 @@ export class GranitestocksComponent implements OnInit {
       pageSize: this.pageSize,
     };
 
-    // Your existing filter parameters
+    // Basic filter parameters (all roles)
     if (filters.blockNo) params.blockNo = filters.blockNo;
     if (filters.status !== '') params.status = filters.status;
     if (filters.startDate)
       params.startDate = new Date(filters.startDate).toISOString();
     if (filters.endDate)
       params.endDate = new Date(filters.endDate).toISOString();
-    if (filters.pitNo) params.pitNo = filters.pitNo;
-    if (filters.grade) params.grade = filters.grade;
-    if (filters.minCbm) params.minCbm = filters.minCbm;
-    if (filters.maxCbm) params.maxCbm = filters.maxCbm;
 
-    // Add these new lines for measurement filters
-    if (filters.advancedTick) {
-      params.advancedTick = true;
-      if (filters.minLg) params.minLg = Number(filters.minLg);
-      if (filters.minWd) params.minWd = Number(filters.minWd);
-      if (filters.minHt) params.minHt = Number(filters.minHt);
+    // Advanced filter parameters (SuperAdmin only)
+    if (this.isSuperAdmin) {
+      if (filters.pitNo) params.pitNo = filters.pitNo;
+      if (filters.grade) params.grade = filters.grade;
+      if (filters.minCbm) params.minCbm = filters.minCbm;
+      if (filters.maxCbm) params.maxCbm = filters.maxCbm;
+
+      if (filters.advancedTick) {
+        params.advancedTick = true;
+        if (filters.minLg) params.minLg = Number(filters.minLg);
+        if (filters.minWd) params.minWd = Number(filters.minWd);
+        if (filters.minHt) params.minHt = Number(filters.minHt);
+      }
     }
 
-    // Rest of your existing loadData() method remains the same
     this.httpService
       .getFilteroption<any>('dolphin/getgranitesblockscategory', { params })
       .subscribe({
         next: (response) => {
-          // Your existing response handling
           this.dataSource.data = response.data;
           this.totalItems = response.totalCount;
           this.totals = this.calculateTotals();
@@ -177,6 +228,14 @@ export class GranitestocksComponent implements OnInit {
         },
       });
   }
+
+  // Toggle advanced filters - only for superadmin
+  toggleAdvancedFilters(): void {
+    if (this.isSuperAdmin) {
+      this.showAdvancedFilters = !this.showAdvancedFilters;
+    }
+  }
+
   // Pagination methods
   getTotalPages(): number {
     return Math.ceil(this.totalItems / this.pageSize);
@@ -262,65 +321,57 @@ export class GranitestocksComponent implements OnInit {
     return visiblePages;
   }
 
-  // UI helper methods
-  toggleAdvancedFilters(): void {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
-  }
-
   refreshData(): void {
     this.loadData();
   }
 
   exportData(): void {
-    // Implement export functionality
     console.log('Export data functionality to be implemented');
   }
 
-// Update your getStatusIcon method to handle numeric status values
-getStatusIcon(status: number | string): string {
-  const statusNum = typeof status === 'string' ? parseInt(status) : status;
-  
-  switch (statusNum) {
-    case DispatchStatus.ReadyForDispatch: // 1
-      return 'inventory';
-    case DispatchStatus.LoadedOnTruck: // 2
-      return 'local_shipping';
-    case DispatchStatus.AtPort: // 3
-      return 'anchor';
-    case DispatchStatus.Shipped: // 4
-      return 'sailing';
-    case DispatchStatus.Cancelled: // 5
-      return 'cancel';
-    default:
-      return 'help';
-  }
-}
+  getStatusIcon(status: number | string): string {
+    const statusNum = typeof status === 'string' ? parseInt(status) : status;
 
-// Add a method to get status label from numeric value
-getStatusLabel(status: number | string): string {
-  const statusNum = typeof status === 'string' ? parseInt(status) : status;
-  return DispatchStatus[statusNum] || 'Unknown';
-}
-
-// Add a method to get status class for styling
-getStatusClass(status: number | string): string {
-  const statusNum = typeof status === 'string' ? parseInt(status) : status;
-  
-  switch (statusNum) {
-    case DispatchStatus.ReadyForDispatch:
-      return 'status-ready';
-    case DispatchStatus.LoadedOnTruck:
-      return 'status-loaded';
-    case DispatchStatus.AtPort:
-      return 'status-port';
-    case DispatchStatus.Shipped:
-      return 'status-shipped';
-    case DispatchStatus.Cancelled:
-      return 'status-cancelled';
-    default:
-      return 'status-unknown';
+    switch (statusNum) {
+      case DispatchStatus.ReadyForDispatch:
+        return 'inventory';
+      case DispatchStatus.LoadedOnTruck:
+        return 'local_shipping';
+      case DispatchStatus.AtPort:
+        return 'anchor';
+      case DispatchStatus.Shipped:
+        return 'sailing';
+      case DispatchStatus.Cancelled:
+        return 'cancel';
+      default:
+        return 'help';
+    }
   }
-}
+
+  getStatusLabel(status: number | string): string {
+    const statusNum = typeof status === 'string' ? parseInt(status) : status;
+    return DispatchStatus[statusNum] || 'Unknown';
+  }
+
+  getStatusClass(status: number | string): string {
+    const statusNum = typeof status === 'string' ? parseInt(status) : status;
+
+    switch (statusNum) {
+      case DispatchStatus.ReadyForDispatch:
+        return 'status-ready';
+      case DispatchStatus.LoadedOnTruck:
+        return 'status-loaded';
+      case DispatchStatus.AtPort:
+        return 'status-port';
+      case DispatchStatus.Shipped:
+        return 'status-shipped';
+      case DispatchStatus.Cancelled:
+        return 'status-cancelled';
+      default:
+        return 'status-unknown';
+    }
+  }
+
   calculateTotals(): {
     totalQuarryCbm: number;
     totalDmgTonnage: number;
@@ -345,7 +396,6 @@ getStatusClass(status: number | string): string {
 
   clearFilters(): void {
     this.filterForm.reset();
-    // Reset to default date range
     const endDate = new Date();
     const startDate = new Date();
     startDate.setMonth(startDate.getMonth() - 1);
@@ -370,14 +420,13 @@ getStatusClass(status: number | string): string {
     const wd = +measurement.wd || 0;
     const ht = +measurement.ht || 0;
 
-    const quarryCbm = +((lg * wd * ht) / 1000000).toFixed(4); // m³
-    const dmgTonnage = +(quarryCbm * 2.85).toFixed(4); // example factor
-    const netCbm = +(dmgTonnage / 6.5).toFixed(4); // example factor
+    const quarryCbm = +((lg * wd * ht) / 1000000).toFixed(4);
+    const dmgTonnage = +(quarryCbm * 2.85).toFixed(4);
+    const netCbm = +(dmgTonnage / 6.5).toFixed(4);
 
     return { quarryCbm, dmgTonnage, netCbm };
   }
 
-  // Method to open dialog for adding new block
   openAddBlockDialog(): void {
     const dialogRef = this.dialog.open(StockgraniteblockComponent, {
       width: '800px',
@@ -391,8 +440,7 @@ getStatusClass(status: number | string): string {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         console.log('Block added:', result);
-        this.loadData(); // Refresh the table data
-        // You can also show a success message here
+        this.loadData();
       }
     });
   }
@@ -410,13 +458,11 @@ getStatusClass(status: number | string): string {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         console.log('Block added:', result);
-        this.loadData(); // Refresh the table data
-        // You can also show a success message here
+        this.loadData();
       }
     });
   }
 
-  // Method to open dialog for editing existing block
   openEditBlockDialog(block: GraniteBlock): void {
     const dialogRef = this.dialog.open(StockgraniteblockComponent, {
       width: '800px',
@@ -431,8 +477,7 @@ getStatusClass(status: number | string): string {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         console.log('Block updated:', result);
-        this.loadData(); // Refresh the table data
-        // You can also show a success message here
+        this.loadData();
       }
     });
   }

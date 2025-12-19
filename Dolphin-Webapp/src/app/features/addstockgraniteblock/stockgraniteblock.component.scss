@@ -1,4 +1,4 @@
-.block-form-container {
+.block-dialog-container {
   max-width: 900px;
   margin: auto;
   padding: 24px;
@@ -7,6 +7,46 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+// Dialog Header
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-icon {
+    color: #1a237e;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.close-button {
+  color: #666;
+
+  &:hover {
+    color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+  }
+}
+
+// Form styles
 .form-title {
   font-size: 24px;
   font-weight: 500;
@@ -22,21 +62,61 @@
 
 .measurement-section {
   margin-bottom: 16px;
+
+  h3 {
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 8px;
+  }
 }
 
 .measurement-row {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
+.measurement-row .mat-mdc-form-field,
 .measurement-row .mat-form-field {
-  width: 80px; /* small width for measurement fields */
+  width: 120px;
+  min-width: 100px;
+  flex: 0 0 auto;
 }
 
 .full-width {
   width: 100%;
 }
 
+.calculated-field {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.mat-mdc-form-field,
+.mat-form-field {
+  flex: 1;
+  min-width: 150px;
+}
+
+// Dialog Content
+.dialog-content {
+  padding: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// Dialog Actions
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 16px;
+}
+
+// Submit section (if using outside dialog)
 .submit-section {
   display: flex;
   gap: 12px;
@@ -44,6 +124,12 @@
   margin-top: 16px;
 }
 
-.mat-form-field {
-  flex: 1;
+// Block form container (if using outside dialog)
+.block-form-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 24px;
+  background: #fafafa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }

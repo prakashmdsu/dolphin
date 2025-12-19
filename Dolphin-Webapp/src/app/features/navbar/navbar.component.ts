@@ -1,5 +1,6 @@
+// app/features/navbar/navbar.component.ts
 import { Component, HostListener } from '@angular/core';
-import { AuthService } from '../../shared/auth.service';
+import { AuthService, UserRole } from '../../shared/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -19,24 +20,42 @@ export class NavbarComponent {
     this.isMobile = window.innerWidth <= 768;
   }
 
-  navItems = [
-    { label: 'Dashboard', route: '/features/dashboard', icon: 'dashboard' },
+  navItems: NavItem[] = [
+    {
+      label: 'Dashboard',
+      route: '/features/dashboard',
+      icon: 'dashboard',
+      allowedRoles: ['admin', 'superadmin'],
+    },
     {
       label: 'Granite Stocks',
       route: '/features/granitestocks',
       icon: 'inventory',
+      allowedRoles: ['member', 'admin', 'superadmin'], // All roles
     },
     {
       label: 'Add Client',
       route: '/features/addclient',
       icon: 'person_add',
-      adminOnly: true,
+      allowedRoles: ['superadmin'], // SuperAdmin only
     },
-    { label: 'Billing', route: '/features/billing', icon: 'receipt' },
+    {
+      label: 'Billing',
+      route: '/features/billing',
+      icon: 'receipt',
+      allowedRoles: ['admin', 'superadmin'],
+    },
     {
       label: 'Billed Invoices',
       route: '/features/reports',
       icon: 'description',
+      allowedRoles: ['admin', 'superadmin'],
+    },
+    {
+      label: 'Summary',
+      route: '/features/summary',
+      icon: 'summarize',
+      allowedRoles: ['admin', 'superadmin'],
     },
   ];
 
@@ -48,8 +67,17 @@ export class NavbarComponent {
     return this.authService.getUserRole();
   }
 
+  // Check if current user can see nav item
+  canAccess(item: NavItem): boolean {
+    return this.authService.hasRole(item.allowedRoles);
+  }
+
   isAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  isSuperAdmin(): boolean {
+    return this.authService.isSuperAdmin();
   }
 
   toggleNavbar(expand: boolean): void {
@@ -59,4 +87,11 @@ export class NavbarComponent {
   logout(): void {
     this.authService.logout();
   }
+}
+
+interface NavItem {
+  label: string;
+  route: string;
+  icon: string;
+  allowedRoles: UserRole[];
 }

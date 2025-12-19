@@ -50,16 +50,17 @@ namespace Dolphin.Services.Helper
                 Date = block.Date,
                 PitNo = block.PitNo,
                 BlockNo = block.BlockNo,
-                BuyerBlockNo = block.BuyerBlockNo,
                 CategoryGrade = block.CategoryGrade,
                 Measurement = block.Measurement,
-                 Status = block.Status, 
+                Status = block.Status,
                 UpdatedDate = block.UpdatedDate,
                 Note = block.Note,
                 EnteredBy = block.EnteredBy,
                 QuarryCbm = block.QuarryCbm,
                 DmgTonnage = block.DmgTonnage,
-                NetCbm = block.NetCbm
+                NetCbm = block.NetCbm,
+                BlockType = block.BlockType
+
             };
         }
 

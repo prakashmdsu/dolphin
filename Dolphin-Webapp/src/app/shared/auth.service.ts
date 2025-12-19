@@ -3,6 +3,8 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpService } from './http-serve.service';
 
+export type UserRole = 'member' | 'admin' | 'superadmin';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -22,8 +24,8 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  getUserRole(): string {
-    return this.getUserData()?.profile?.role || '';
+  getUserRole(): UserRole {
+    return this.getUserData()?.profile?.role || 'member';
   }
 
   getUserName(): string {
@@ -34,18 +36,45 @@ export class AuthService {
     );
   }
 
+  // Role checks
+  isMember(): boolean {
+    return this.getUserRole() === 'member';
+  }
+
   isAdmin(): boolean {
-    return this.getUserRole() === 'admin';
+    return (
+      this.getUserRole() === 'admin' || this.getUserRole() === 'superadmin'
+    );
+  }
+
+  isSuperAdmin(): boolean {
+    return this.getUserRole() === 'superadmin';
+  }
+
+  // Check if user has required role
+  hasRole(allowedRoles: UserRole[]): boolean {
+    return allowedRoles.includes(this.getUserRole());
+  }
+
+  // Check minimum access level
+  hasMinimumRole(minimumRole: UserRole): boolean {
+    const roleHierarchy: UserRole[] = ['member', 'admin', 'superadmin'];
+    const userRoleIndex = roleHierarchy.indexOf(this.getUserRole());
+    const minimumRoleIndex = roleHierarchy.indexOf(minimumRole);
+    return userRoleIndex >= minimumRoleIndex;
   }
 
   logout(): void {
-    // Call backend (optional for stateless JWT)
     this.http.post('Auth/logout', {}).subscribe({
-      next: () => console.log('Logged out from server'),
-      error: () => console.log('Server logout failed, continuing local logout'),
+      next: () => {
+        console.log('Logged out from server');
+        this.clearSession();
+      },
+      error: () => {
+        console.log('Server logout failed, continuing local logout');
+        this.clearSession();
+      },
     });
-
-    this.clearSession();
   }
 
   clearSession(): void {

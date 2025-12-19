@@ -8,19 +8,22 @@ public class GraniteStockBlockDto
     public DateTime Date { get; set; }
     public int PitNo { get; set; }
     public int BlockNo { get; set; }
-    public int BuyerBlockNo { get; set; }
+    public string? BuyerBlockNo { get; set; }
     public string CategoryGrade { get; set; }
     public Measurement Measurement { get; set; }
     public DispatchStatus? Status { get; set; }
     public DateTime? UpdatedDate { get; set; }
     public string? Note { get; set; }
     public string? EnteredBy { get; set; }
-   public bool IsBilled =>Status.HasValue;
+    public bool IsBilled => Status.HasValue;
 
     // Calculated fields
     public double QuarryCbm { get; set; }
     public double DmgTonnage { get; set; }
     public double NetCbm { get; set; }
+    public double? NetWeightMt { get; set; }
+    public double? PreAllownace { get; set; }
+    public string BlockType { get; set; }
 }
 
 public class GraniteTotalsDto

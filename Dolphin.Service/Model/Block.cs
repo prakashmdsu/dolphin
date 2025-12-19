@@ -24,7 +24,7 @@ namespace Dolphin.Services.Models
         public string? GatePassNo { get; set; }
 
         [BsonElement("buyerBlockNo")]
-        public int BuyerBlockNo { get; set; }
+        public string? BuyerBlockNo { get; set; }
 
         [BsonElement("categoryGrade")]
         public string CategoryGrade { get; set; }
@@ -58,9 +58,11 @@ namespace Dolphin.Services.Models
         // [BsonIgnore]
         public double NetCbm { get; set; }
         [BsonElement("netweightmt")]
-        public double NetWeightMt { get; set; }
+        public double? NetWeightMt { get; set; }
         [BsonElement("preallowance")]
-        public Double PreAllownace { get; set; }
+        public Double? PreAllownace { get; set; }
+        [BsonElement("blocktype")]
+        public string BlockType { get; set; }
 
     }
 
