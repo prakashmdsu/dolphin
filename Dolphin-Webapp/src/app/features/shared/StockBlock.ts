@@ -16,7 +16,9 @@ export interface StockGraniteBlock {
   updatedDate: string | null; // ISO date string or Date
   note: string;
   enteredBy: string | null;
-
+  preAllowance: number | null;
+  allowanceType: string | null;
+  tonnageAllowance: number | null;
   quarryCbm?: number;
   dmgTonnage?: number;
   netCbm?: number;

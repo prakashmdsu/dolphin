@@ -5377,6 +5377,8 @@ export {
   InteractivityChecker,
   FocusTrapFactory,
   CdkTrapFocus,
+  isFakeMousedownFromScreenReader,
+  isFakeTouchstartFromScreenReader,
   LiveAnnouncer,
   FocusMonitor,
   CdkMonitorFocus,
@@ -5429,4 +5431,4 @@ export {
   MatRippleLoader,
   _MatInternalFormField
 };
-//# sourceMappingURL=chunk-46D3EHHI.js.map
+//# sourceMappingURL=chunk-TKXULTYZ.js.map

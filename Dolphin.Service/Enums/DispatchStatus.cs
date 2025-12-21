@@ -4,5 +4,6 @@ public enum DispatchStatus
     LoadedOnTruck = 2,
     AtPort = 3,
     Shipped = 4,
-    Cancelled = 5
+    Cancelled = 5,
+    InspectionCompleted = 6
 }

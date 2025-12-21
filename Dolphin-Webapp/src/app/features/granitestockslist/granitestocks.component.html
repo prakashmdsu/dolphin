@@ -482,6 +482,27 @@
               *matRowDef="let row; columns: displayedColumns"
               class="data-row"
             ></tr>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>settings</mat-icon>
+                Actions
+              </th>
+              <td mat-cell *matCellDef="let block">
+                <!-- Edit button - Admin/SuperAdmin only, only for ReadyForDispatch status -->
+                <button
+                  mat-icon-button
+                  color="primary"
+                  *ngIf="
+                    (isAdmin || isSuperAdmin) &&
+                    block.status === dispatchStatus.ReadyForDispatch
+                  "
+                  (click)="onEditBlock(block)"
+                  matTooltip="Edit Block"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </td>
+            </ng-container>
           </table>
         </div>
 

@@ -1,4 +1,5 @@
 export interface GraniteBlock {
+  id?: string;
   date?: string;
   pitNo?: number;
   blockNo: number;

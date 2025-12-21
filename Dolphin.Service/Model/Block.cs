@@ -60,9 +60,13 @@ namespace Dolphin.Services.Models
         [BsonElement("netweightmt")]
         public double? NetWeightMt { get; set; }
         [BsonElement("preallowance")]
-        public Double? PreAllownace { get; set; }
+        public Double? PreAllowance { get; set; }
         [BsonElement("blocktype")]
         public string BlockType { get; set; }
+        [BsonElement("tonnageallowance")]
+        public double? TonnageAllowance { get; set; }
+        [BsonElement("allowancetype")]
+        public string allowanceType { get; set; }
 
     }
 

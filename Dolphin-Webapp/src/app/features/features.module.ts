@@ -5,7 +5,6 @@ import { BillingComponent } from './billing/billing.component';
 import { ReportsComponent } from './reports/reports.component';
 import { FeaturesRoutingModule } from './features-routing.module';
 import { LayoutComponent } from './layout/layout.component';
-import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,15 +12,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon'; // Make sure this is imported
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTableModule } from '@angular/material/table';
-import { MatOptionModule } from '@angular/material/core'; // sometimes needed explicitly
+import { MatOptionModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { StockgraniteblockComponent } from './addstockgraniteblock/stockgraniteblock.component';
-import { HttpService } from '../shared/http-serve.service';
 import { GranitestocksComponent } from './granitestockslist/granitestocks.component';
 import { AddclientComponent } from './addclient/addclient.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -31,8 +29,9 @@ import { BillingSummaryComponent } from './billing-summary/billing-summary.compo
 import { MatDialogModule } from '@angular/material/dialog';
 import { UpdategraniteBlockStatusComponent } from './updategranite-block-status/updategranite-block-status.component';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio'; // Add this for radio buttons
+import { MatMenuModule } from '@angular/material/menu'; // Add this for menu
 
-// import { SelectionModel } from '@angular/cdk/collections';
 @NgModule({
   declarations: [
     LayoutComponent,
@@ -46,11 +45,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     BillingSummaryComponent,
     UpdategraniteBlockStatusComponent,
   ],
-  // providers: [HttpService],
   imports: [
     CommonModule,
     FeaturesRoutingModule,
-    HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
     MatInputModule,
@@ -60,7 +57,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatDialogModule,
     MatNativeDateModule,
     MatButtonModule,
-    MatIconModule,
+    MatIconModule, // This is required for mat-icon
     MatToolbarModule,
     MatCardModule,
     MatDividerModule,
@@ -70,7 +67,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatPaginatorModule,
     MatChipsModule,
     MatCheckboxModule,
-    MatInputModule,
+    MatRadioModule, // Add this
+    MatMenuModule, // Add this
   ],
 })
 export class FeaturesModule {}

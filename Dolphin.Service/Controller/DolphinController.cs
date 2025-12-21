@@ -241,6 +241,75 @@ public class DolphinController : ControllerBase
         }
     }
 
+
+    [HttpGet("getgraniteblock/{id}")]
+    public async Task<IActionResult> GetGraniteBlockById(string id)
+    {
+        try
+        {
+
+            var block = await _myService.GetGraniteBlockByIdAsync(id);
+
+            if (block == null)
+            {
+                return NotFound(new { message = $"Block with ID {id} not found" });
+            }
+
+            return Ok(new { data = block });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while fetching the block", error = ex.Message });
+        }
+    }
+    [HttpPut("updategraniteblock/{id}")]
+    public async Task<IActionResult> UpdateGraniteBlock(string id, [FromBody] GraniteStockBlock block)
+    {
+        try
+        {
+            Console.WriteLine($"bock details : {block}...");
+
+            if (block == null)
+            {
+                return BadRequest(new { message = "Block data is required" });
+            }
+
+            var updatedBlock = await _myService.UpdateGraniteBlockAsync(id, block);
+
+            if (updatedBlock == null)
+            {
+                return NotFound(new { message = $"Block with ID {id} not found" });
+            }
+
+            return Ok(new
+            {
+                message = "Block updated successfully",
+                data = updatedBlock
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                message = "An error occurred while updating the block",
+                error = ex.Message
+            });
+        }
+    }
+
+
     [HttpPut("updateblockstatus")]
     public async Task<ActionResult<long>> updateblockstatus([FromBody] IdsandStatus idsandStatus)
     {

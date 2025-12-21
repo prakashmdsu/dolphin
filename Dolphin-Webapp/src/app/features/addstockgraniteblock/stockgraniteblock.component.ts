@@ -21,10 +21,12 @@ export class StockgraniteblockComponent implements OnInit {
   calculatedQuarryCbm: number = 0;
   calculatedDmgTonnage: number = 0;
   calculatedNetCbm: number = 0;
+  grossVolume: number = 0;
+  customerTonnage: number = 0;
+
   categoryGrades: string[] = ['A', 'B', 'C', 'D'];
   preAllowance: number[] = [5, 10, 15, 20, 25, 30];
-  blockTypes: string[] = ['Shaped', 'Irregular Shape']; // New dropdown options
-  grossVolume: number = 0;
+  blockTypes: string[] = ['Shaped', 'Irregular Shape'];
   pitNumbers: number[] = Array.from({ length: 10 }, (_, i) => i + 1);
   isSubmitting = false;
 
@@ -39,7 +41,6 @@ export class StockgraniteblockComponent implements OnInit {
     public dialogRef: MatDialogRef<StockgraniteblockComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
-    // Set role flags
     this.isMember = this.authService.getUserRole() === 'member';
     this.isAdminOrAbove = this.authService.isAdmin();
   }
@@ -48,7 +49,6 @@ export class StockgraniteblockComponent implements OnInit {
     this.initializeForm();
     this.setupFormSubscriptions();
 
-    // If editing, populate form with existing data
     if (this.data.mode === 'edit' && this.data.block) {
       this.populateForm(this.data.block);
     }
@@ -60,10 +60,12 @@ export class StockgraniteblockComponent implements OnInit {
       date: [new Date(), Validators.required],
       pitNo: [null, Validators.required],
       blockNo: [null, Validators.required],
-      blockType: ['', Validators.required], // New field - required for all roles
+      blockType: ['', Validators.required],
       buyerBlockNo: [null, this.isAdminOrAbove ? Validators.required : []],
       categoryGrade: ['', Validators.required],
-      preAllowance: ['', this.isAdminOrAbove ? Validators.required : []],
+      allowanceType: ['volume'], // Default to volume
+      preAllowance: [null],
+      tonnageAllowance: [null],
       grossVolume: [''],
       measurement: this.fb.group({
         lg: [null, [Validators.required, Validators.min(0)]],
@@ -73,19 +75,37 @@ export class StockgraniteblockComponent implements OnInit {
       dispatchStatus: [false],
       updatedDate: [null],
       note: [''],
-      // netWeightMt: [
-      //   null,
-      //   this.isAdminOrAbove ? [Validators.required, Validators.min(0)] : [],
-      // ],
+      netWeightMt: [
+        null,
+        this.isAdminOrAbove ? [Validators.required, Validators.min(0)] : [],
+      ],
     });
   }
 
   private setupFormSubscriptions() {
+    // Listen to measurement changes
     this.blockForm.get('measurement')?.valueChanges.subscribe(() => {
       this.updateCalculatedFields();
     });
 
+    // Listen to pre-allowance changes
     this.blockForm.get('preAllowance')?.valueChanges.subscribe(() => {
+      this.updateCalculatedFields();
+    });
+
+    // Listen to allowance type changes
+    this.blockForm.get('allowanceType')?.valueChanges.subscribe((value) => {
+      // Clear the other field when switching
+      if (value === 'volume') {
+        this.blockForm.get('tonnageAllowance')?.setValue(null);
+      } else {
+        this.blockForm.get('preAllowance')?.setValue(null);
+      }
+      this.updateCalculatedFields();
+    });
+
+    // Listen to tonnage allowance changes
+    this.blockForm.get('tonnageAllowance')?.valueChanges.subscribe(() => {
       this.updateCalculatedFields();
     });
   }
@@ -103,18 +123,64 @@ export class StockgraniteblockComponent implements OnInit {
     const lg = +m.lg || 0;
     const wd = +m.wd || 0;
     const ht = +m.ht || 0;
+    const allowanceType =
+      this.blockForm.get('allowanceType')?.value || 'volume';
     const preAllowanceValue = +this.blockForm.get('preAllowance')?.value || 0;
+    const tonnageAllowance =
+      +this.blockForm.get('tonnageAllowance')?.value || 0;
 
+    // Quarry CBM = Raw volume (no deduction) - for Govt
     this.calculatedQuarryCbm = +((lg * wd * ht) / 1000000).toFixed(4);
-    this.grossVolume = +(
-      ((lg - preAllowanceValue) *
-        (wd - preAllowanceValue) *
-        (ht - preAllowanceValue)) /
-      1000000
-    ).toFixed(4);
 
+    // DMG Tonnage = Quarry CBM × 2.85 (for Govt - no deduction)
     this.calculatedDmgTonnage = +(this.calculatedQuarryCbm * 2.85).toFixed(4);
-    this.calculatedNetCbm = +(this.calculatedDmgTonnage / 6.5).toFixed(4);
+
+    if (allowanceType === 'volume') {
+      // Volume-based allowance: Deduct from dimensions
+      this.grossVolume = +(
+        ((lg - preAllowanceValue) *
+          (wd - preAllowanceValue) *
+          (ht - preAllowanceValue)) /
+        1000000
+      ).toFixed(4);
+
+      // Ensure gross volume doesn't go negative
+      if (this.grossVolume < 0) {
+        this.grossVolume = 0;
+      }
+
+      // Customer Tonnage = Gross Volume × 2.85
+      this.customerTonnage = +(this.grossVolume * 2.85).toFixed(4);
+
+      // Net CBM = Customer Tonnage / 6.5
+      this.calculatedNetCbm = +(this.customerTonnage / 6.5).toFixed(4);
+    } else {
+      // Tonnage-based allowance: Deduct tonnes directly from DMG Tonnage
+      this.customerTonnage = +(
+        this.calculatedDmgTonnage - tonnageAllowance
+      ).toFixed(4);
+
+      // Ensure customer tonnage doesn't go negative
+      if (this.customerTonnage < 0) {
+        this.customerTonnage = 0;
+      }
+
+      // Gross Volume = Customer Tonnage / 2.85 (reverse calculation)
+      this.grossVolume = +(this.customerTonnage / 2.85).toFixed(4);
+
+      // Net CBM = Customer Tonnage / 6.5
+      this.calculatedNetCbm = +(this.customerTonnage / 6.5).toFixed(4);
+    }
+  }
+
+  // Check if volume allowance is selected
+  isVolumeAllowance(): boolean {
+    return this.blockForm.get('allowanceType')?.value === 'volume';
+  }
+
+  // Check if tonnage allowance is selected
+  isTonnageAllowance(): boolean {
+    return this.blockForm.get('allowanceType')?.value === 'tonnage';
   }
 
   onSubmit() {
@@ -124,13 +190,15 @@ export class StockgraniteblockComponent implements OnInit {
         ...this.blockForm.value,
         quarryCbm: this.calculatedQuarryCbm,
         dmgTonnage: this.calculatedDmgTonnage,
+        grossVolume: this.grossVolume,
+        customerTonnage: this.customerTonnage,
         netCbm: this.calculatedNetCbm,
       };
 
       const apiCall =
         this.data.mode === 'edit'
           ? this.httpService.put(
-              `dolphin/updategranitestocks/${block.id}`,
+              `dolphin/updategraniteblock/${block.id}`,
               block
             )
           : this.httpService.post('dolphin/addgranitestocks', block);
@@ -157,7 +225,10 @@ export class StockgraniteblockComponent implements OnInit {
       this.populateForm(this.data.block);
     } else {
       this.blockForm.reset();
-      this.blockForm.patchValue({ date: new Date() });
+      this.blockForm.patchValue({
+        date: new Date(),
+        allowanceType: 'volume',
+      });
     }
     this.updateCalculatedFields();
   }

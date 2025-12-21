@@ -457,6 +457,101 @@ public class MyService
         await collection.InsertOneAsync(stock);
         return stock;
     }
+    /// <summary>
+    /// Get a single granite stock block by its ID for editing
+    /// </summary>
+    /// <param name="id">The MongoDB ObjectId as string</param>
+    /// <returns>GraniteStockBlockDto with all block details including calculated fields</returns>
+    public async Task<GraniteStockBlockDto?> GetGraniteBlockByIdAsync(string id)
+    {
+        var collection = _dolphinRepository.GetCollection("granitestockblock") as IMongoCollection<GraniteStockBlock>;
+
+        // Validate and parse the ObjectId
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            throw new ArgumentException("Invalid block ID format", nameof(id));
+        }
+
+        var filter = Builders<GraniteStockBlock>.Filter.Eq(x => x.Id, id);
+        var block = await collection.Find(filter).FirstOrDefaultAsync();
+
+        if (block == null)
+        {
+            return null;
+        }
+
+        // Calculate derived fields
+        var calculatedBlock = _metricHelper.CalculateDerivedFieldsForBlock(block);
+
+        // Map to DTO
+        return _metricHelper.MapToDto(calculatedBlock);
+    }
+
+    /// <summary>
+    /// Update an existing granite stock block
+    /// </summary>
+    /// <param name="id">The MongoDB ObjectId as string</param>
+    /// <param name="updatedBlock">The updated block data</param>
+    /// <returns>Updated GraniteStockBlockDto</returns>
+    public async Task<GraniteStockBlockDto?> UpdateGraniteBlockAsync(string id, GraniteStockBlock updatedBlock)
+    {
+        var collection = _dolphinRepository.GetCollection("granitestockblock") as IMongoCollection<GraniteStockBlock>;
+
+        // Validate and parse the ObjectId
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            throw new ArgumentException("Invalid block ID format", nameof(id));
+        }
+        updatedBlock.Status = DispatchStatus.InspectionCompleted;
+        // Check if block exists
+        var existingBlock = await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        if (existingBlock == null)
+        {
+            return null;
+        }
+
+        // Check for duplicate block number (exclude current block)
+        var duplicateBlock = await collection.Find(x => x.BlockNo == updatedBlock.BlockNo && x.Id != id).FirstOrDefaultAsync();
+        if (duplicateBlock != null)
+        {
+            throw new InvalidOperationException($"Block number {updatedBlock.BlockNo} already exists");
+        }
+
+        // Build update definition
+        var update = Builders<GraniteStockBlock>.Update
+            .Set(x => x.Date, updatedBlock.Date.ToUniversalTime())
+            .Set(x => x.PitNo, updatedBlock.PitNo)
+            .Set(x => x.BlockNo, updatedBlock.BlockNo)
+            .Set(x => x.BuyerBlockNo, updatedBlock.BuyerBlockNo)
+            .Set(x => x.CategoryGrade, updatedBlock.CategoryGrade)
+            .Set(x => x.Measurement, updatedBlock.Measurement)
+            .Set(x => x.Note, updatedBlock.Note)
+            .Set(x => x.NetWeightMt, updatedBlock.NetWeightMt)
+            .Set(x => x.PreAllowance, updatedBlock.PreAllowance)
+            .Set(x => x.BlockType, updatedBlock.BlockType)
+            .Set(x => x.UpdatedDate, DateTime.UtcNow)
+            .Set(x => x.Status, updatedBlock.Status)
+            .Set(x => x.TonnageAllowance, updatedBlock.TonnageAllowance)
+            .Set(x => x.allowanceType, updatedBlock.allowanceType);
+
+
+        // Only update status if provided (preserve existing status if not changing)
+        if (updatedBlock.Status.HasValue)
+        {
+            update = update.Set(x => x.Status, updatedBlock.Status);
+        }
+
+        var filter = Builders<GraniteStockBlock>.Filter.Eq(x => x.Id, id);
+        var result = await collection.UpdateOneAsync(filter, update);
+
+        if (result.ModifiedCount == 0 && result.MatchedCount == 0)
+        {
+            return null;
+        }
+
+        // Fetch the updated block and return as DTO
+        return await GetGraniteBlockByIdAsync(id);
+    }
 
     public async Task<long> UpdateBlockStatusById(IdsandStatus stock)
     {

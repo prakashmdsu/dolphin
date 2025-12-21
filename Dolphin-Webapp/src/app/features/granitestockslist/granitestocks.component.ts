@@ -67,6 +67,10 @@ export class GranitestocksComponent implements OnInit {
     { value: DispatchStatus.AtPort, label: 'At Port' },
     { value: DispatchStatus.Shipped, label: 'Shipped' },
     { value: DispatchStatus.Cancelled, label: 'Cancelled' },
+    {
+      value: DispatchStatus.InspectionCompleted,
+      label: 'Inspection completed',
+    },
   ];
   pitOptions = [1, 2, 3, 4, 5];
   gradeOptions = ['A', 'B', 'C', 'D'];
@@ -125,10 +129,8 @@ export class GranitestocksComponent implements OnInit {
       }
     });
   }
-
   private setDisplayedColumns(): void {
     if (this.isMember) {
-      // Member sees limited columns - only DMG Tonnage, no Quarry CBM, no Net CBM
       this.displayedColumns = [
         'date',
         'pitNo',
@@ -140,7 +142,6 @@ export class GranitestocksComponent implements OnInit {
         'note',
       ];
     } else if (this.isAdmin) {
-      // Admin sees more columns
       this.displayedColumns = [
         'date',
         'pitNo',
@@ -153,9 +154,10 @@ export class GranitestocksComponent implements OnInit {
         'netCbm',
         'status',
         'note',
+        'actions', // Add actions column
       ];
     } else {
-      // SuperAdmin sees all columns
+      // SuperAdmin
       this.displayedColumns = [
         'date',
         'pitNo',
@@ -168,10 +170,39 @@ export class GranitestocksComponent implements OnInit {
         'netCbm',
         'status',
         'note',
+        'actions', // Add actions column
       ];
     }
   }
+  onEditBlock(block: GraniteBlock): void {
+    // Fetch full block details using blockId
+    this.httpService.get<any>(`dolphin/getgraniteblock/${block.id}`).subscribe({
+      next: (response) => {
+        const blockDetails = response.data || response;
 
+        const dialogRef = this.dialog.open(StockgraniteblockComponent, {
+          width: '800px',
+          maxWidth: '90vw',
+          disableClose: true,
+          data: {
+            mode: 'edit',
+            block: blockDetails,
+          } as DialogData,
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+          if (result) {
+            console.log('Block updated:', result);
+            this.loadData(); // Refresh the list
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error fetching block details:', error);
+        // Optionally show a snackbar/toast error message
+      },
+    });
+  }
   private setupFilterSubscriptions() {
     this.filterForm.valueChanges
       .pipe(debounceTime(500), distinctUntilChanged())

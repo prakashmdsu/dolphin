@@ -27,7 +27,7 @@ export interface BlockData {
   selector: 'app-updategranite-block-status',
   standalone: false,
   templateUrl: './updategranite-block-status.component.html',
-  styleUrl: './updategranite-block-status.component.scss'
+  styleUrl: './updategranite-block-status.component.scss',
 })
 export class UpdategraniteBlockStatusComponent implements OnInit {
   blockNumber: string = '';
@@ -35,12 +35,16 @@ export class UpdategraniteBlockStatusComponent implements OnInit {
   displayedColumns: string[] = ['select', 'blockNo', 'gatePassNo', 'status'];
   selection = new SelectionModel<BlockData>(true, []);
   updateForm: FormGroup;
-  
+
   statusOptions = [
     { value: DispatchStatus.AtPort, label: 'At Port' },
     { value: DispatchStatus.Shipped, label: 'Shipped' },
     { value: DispatchStatus.ReadyForDispatch, label: 'Ready for Dispatch' },
-     { value: DispatchStatus.LoadedOnTruck, label: 'Loaded on Truck' },
+    { value: DispatchStatus.LoadedOnTruck, label: 'Loaded on Truck' },
+    {
+      value: DispatchStatus.InspectionCompleted,
+      label: 'Inspection completed',
+    },
   ];
 
   constructor(
@@ -50,7 +54,7 @@ export class UpdategraniteBlockStatusComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {
     this.updateForm = this.fb.group({
-      status: ['', Validators.required]
+      status: ['', Validators.required],
     });
   }
 
@@ -62,20 +66,23 @@ export class UpdategraniteBlockStatusComponent implements OnInit {
     if (!this.blockNumber.trim()) {
       return;
     }
-    
+
     // If your HttpService supports generics:
-this.httpService.get<BlockData[]>(`dolphin/getgranitesblockscategorybygatepassorblockno?gatePassNo=${this.blockNumber}`)
-  .subscribe({
-    next: (res) => {
-      console.log('API Response:', res);
-      this.blocksData = res || [];
-      this.selection.clear();
-    },
-    error: (err) => {
-      console.error('API Error:', err);
-      this.blocksData = [];
-    },
-  });
+    this.httpService
+      .get<BlockData[]>(
+        `dolphin/getgranitesblockscategorybygatepassorblockno?gatePassNo=${this.blockNumber}`
+      )
+      .subscribe({
+        next: (res) => {
+          console.log('API Response:', res);
+          this.blocksData = res || [];
+          this.selection.clear();
+        },
+        error: (err) => {
+          console.error('API Error:', err);
+          this.blocksData = [];
+        },
+      });
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -99,11 +106,15 @@ this.httpService.get<BlockData[]>(`dolphin/getgranitesblockscategorybygatepassor
     if (!row) {
       return `${this.isAllSelected() ? 'deselect' : 'select'} all`;
     }
-    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${row.blockNo}`;
+    return `${this.selection.isSelected(row) ? 'deselect' : 'select'} row ${
+      row.blockNo
+    }`;
   }
 
   getStatusLabel(status: number): string {
-    const statusOption = this.statusOptions.find(option => option.value === status);
+    const statusOption = this.statusOptions.find(
+      (option) => option.value === status
+    );
     return statusOption ? statusOption.label : 'Unknown';
   }
 
@@ -124,30 +135,29 @@ this.httpService.get<BlockData[]>(`dolphin/getgranitesblockscategorybygatepassor
 
     const selectedBlocks = this.selection.selected;
     const newStatus = this.updateForm.get('status')?.value;
-    const selectedIds = selectedBlocks.map(block => block.id);
+    const selectedIds = selectedBlocks.map((block) => block.id);
 
     console.log('Updating blocks:', {
       ids: selectedIds,
       status: newStatus,
-      selectedBlocks: selectedBlocks
+      selectedBlocks: selectedBlocks,
     });
 
     // Here you would make the API call to update the status
     // Example API call:
     const updateData = {
-  ids: {
-    id: selectedIds,
-    status: newStatus
-  }
-};
-
+      ids: {
+        id: selectedIds,
+        status: newStatus,
+      },
+    };
 
     this.httpService.put('dolphin/updateblockstatus', updateData).subscribe({
       next: (response) => {
         console.log('Status updated successfully:', response);
         // Update local data
-        selectedBlocks.forEach(block => {
-          const index = this.blocksData.findIndex(b => b.id === block.id);
+        selectedBlocks.forEach((block) => {
+          const index = this.blocksData.findIndex((b) => b.id === block.id);
           if (index !== -1) {
             this.blocksData[index].status = newStatus;
           }
@@ -158,7 +168,7 @@ this.httpService.get<BlockData[]>(`dolphin/getgranitesblockscategorybygatepassor
       },
       error: (error) => {
         console.error('Error updating status:', error);
-      }
+      },
     });
   }
 
