@@ -34,31 +34,31 @@
   gap: 8px;
   flex: 1 1 100%;
   min-width: 400px;
-  
+
   .toggle-label {
     font-size: 14px;
     color: rgba(0, 0, 0, 0.6);
     font-weight: 400;
     margin-bottom: 4px;
   }
-  
+
   .toggle-container {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .toggle-option {
       font-size: 14px;
       color: #666;
       font-weight: 400;
       transition: all 0.3s ease;
-      
+
       &.active {
         color: #1976d2;
         font-weight: 500;
       }
     }
-    
+
     .toggle-switch {
       position: relative;
       width: 48px;
@@ -67,11 +67,11 @@
       border-radius: 12px;
       cursor: pointer;
       transition: background-color 0.3s ease;
-      
+
       &.indian {
         background-color: #1976d2;
       }
-      
+
       .toggle-slider {
         position: absolute;
         top: 2px;
@@ -83,7 +83,7 @@
         transition: transform 0.3s ease;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
-      
+
       &.indian .toggle-slider {
         transform: translateX(24px);
       }
@@ -137,12 +137,12 @@
   .client-type-toggle {
     min-width: 100%;
   }
-  
+
   .client-form-container {
     margin: 16px;
     padding: 16px;
   }
-  
+
   .toggle-container {
     .toggle-option {
       font-size: 13px;
@@ -154,5 +154,311 @@
 .toggle-switch:hover {
   .toggle-slider {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// client-list.component.scss
+// Copy most styles from reports.component.scss, then add these specific styles:
+
+.client-list-container {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+// Chip styles for client type
+.indian-chip {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.international-chip {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.client-name {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.gstin-cell {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+
+.address-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.no-data {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+// Dialog styles
+.client-details {
+  .detail-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    strong {
+      min-width: 120px;
+      color: #6b7280;
+    }
+
+    span {
+      color: #111827;
+    }
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+// Copy remaining styles from reports.component.scss
+// (page-header, filter-card, table-card, pagination, etc.)
+// addclient.component.scss
+
+.client-management-container {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: #f8fafc;
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// Fix for page header to not be hidden
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 24px;
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
+  width: 100%;
+  box-sizing: border-box;
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+
+    button {
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      mat-icon {
+        margin-right: 4px;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+
+    .page-title {
+      font-size: 20px;
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+// Form Card - ensure full width and proper display
+.form-card {
+  margin-bottom: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 2px solid #667eea;
+  overflow: visible; // Changed from hidden
+  width: 100%;
+  box-sizing: border-box;
+
+  .mat-mdc-card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 16px 24px;
+
+    .mat-mdc-card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      color: white;
+      margin: 0;
+    }
+  }
+
+  .mat-mdc-card-content {
+    padding: 24px;
+  }
+}
+
+// Form row fix - ensure proper grid layout
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  &.indian-fields {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Address field full width
+.address-field {
+  grid-column: 1 / -1; // Span all columns
+  width: 100%;
+}
+
+// Toggle fix
+.client-type-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+  min-width: 200px;
+
+  .toggle-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+    font-weight: 400;
+  }
+
+  .toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .toggle-option {
+      font-size: 14px;
+      color: #666;
+      font-weight: 400;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+
+      &.active {
+        color: #667eea;
+        font-weight: 600;
+      }
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background-color: #ccc;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      flex-shrink: 0;
+
+      &.indian {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .toggle-slider {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      &.indian .toggle-slider {
+        transform: translateX(24px);
+      }
+    }
+  }
+}
+
+// Submit section
+.submit-section {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @media (max-width: 600px) {
+    justify-content: center;
   }
 }

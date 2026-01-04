@@ -1,112 +1,599 @@
-<div class="client-form-container">
-  <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
-    <h2 class="form-title">Add / Edit Client</h2>
-
-    <div class="form-row">
-      <mat-form-field appearance="outline">
-        <mat-label>Client Name</mat-label>
-        <input matInput formControlName="clientName" />
-        <mat-error *ngIf="clientForm.get('clientName')?.hasError('required')">
-          Required
-        </mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="form-row">
-      <div class="client-type-toggle">
-        <label class="toggle-label">Client Type</label>
-        <div class="toggle-container">
-          <span class="toggle-option" [class.active]="!isIndianClient">International</span>
-          <div class="toggle-switch" [class.indian]="isIndianClient" (click)="toggleClientType()">
-            <div class="toggle-slider"></div>
-          </div>
-          <span class="toggle-option" [class.active]="isIndianClient">Indian</span>
-        </div>
-      </div>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Phone</mat-label>
-        <input matInput formControlName="phone" />
-        <mat-error *ngIf="clientForm.get('phone')?.hasError('required')">
-          Required
-        </mat-error>
-      </mat-form-field>
-            <mat-form-field appearance="outline">
-        <mat-label>Country</mat-label>
-        <input matInput formControlName="country" />
-        <mat-error *ngIf="clientForm.get('country')?.hasError('required')">
-          Required
-        </mat-error>
-      </mat-form-field>
-    </div>
-
-    <!-- Indian-specific fields - Only show when Indian is selected -->
-    <ng-container *ngIf="isIndianClient">
-      <div class="form-row indian-fields">
-        <mat-form-field appearance="outline">
-          <mat-label>GSTIN</mat-label>
-          <input matInput formControlName="gstin" />
-          <mat-error *ngIf="clientForm.get('gstin')?.hasError('required')">
-            Required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>PAN Number</mat-label>
-          <input matInput formControlName="panNumber" />
-          <mat-error *ngIf="clientForm.get('panNumber')?.hasError('required')">
-            Required
-          </mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="form-row indian-fields">
-        <mat-form-field appearance="outline">
-          <mat-label>State</mat-label>
-          <mat-select formControlName="state">
-            <mat-option *ngFor="let state of indianStates" [value]="state">
-              {{ state.name }} ({{ state.code }})
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="clientForm.get('state')?.hasError('required')">
-            Required
-          </mat-error>
-        </mat-form-field>
-      </div>
-    </ng-container>
-
-    <div class="form-row">
-
-
-      <mat-form-field appearance="outline" class="address-field">
-        <mat-label>Address</mat-label>
-        <textarea 
-          matInput 
-          formControlName="address" 
-          rows="3" 
-          placeholder="Enter complete address...">
-        </textarea>
-        <mat-error *ngIf="clientForm.get('address')?.hasError('required')">
-          Required
-        </mat-error>
-      </mat-form-field>
-    </div>
-
-    <div class="submit-section">
+<!-- addclient.component.html -->
+<div class="client-management-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <mat-icon>people</mat-icon>
+      Client Management
+    </h1>
+    <div class="header-actions">
       <button
         mat-raised-button
         color="primary"
-        type="submit"
-        [disabled]="clientForm.invalid">
-        Save Client
+        (click)="refreshData()"
+        *ngIf="!showForm"
+      >
+        <mat-icon>refresh</mat-icon>
+        Refresh
       </button>
       <button
-        mat-stroked-button
+        mat-raised-button
+        color="accent"
+        (click)="openAddForm()"
+        *ngIf="!showForm"
+      >
+        <mat-icon>add</mat-icon>
+        Add Client
+      </button>
+      <button
+        mat-raised-button
         color="warn"
-        type="button"
-        (click)="resetForm()">
-        Reset
+        (click)="closeForm()"
+        *ngIf="showForm"
+      >
+        <mat-icon>close</mat-icon>
+        Close Form
       </button>
     </div>
-  </form>
+  </div>
+
+  <!-- Add/Edit Form Section -->
+  <mat-card class="form-card" *ngIf="showForm" [@slideDown]>
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>{{ isEditMode ? "edit" : "person_add" }}</mat-icon>
+        {{ isEditMode ? "Edit Client" : "Add New Client" }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="clientForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Client Name</mat-label>
+            <input matInput formControlName="clientName" />
+            <mat-error
+              *ngIf="clientForm.get('clientName')?.hasError('required')"
+            >
+              Required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <div class="client-type-toggle">
+            <label class="toggle-label">Client Type</label>
+            <div class="toggle-container">
+              <span class="toggle-option" [class.active]="!isIndianClient"
+                >International</span
+              >
+              <div
+                class="toggle-switch"
+                [class.indian]="isIndianClient"
+                (click)="toggleClientType()"
+              >
+                <div class="toggle-slider"></div>
+              </div>
+              <span class="toggle-option" [class.active]="isIndianClient"
+                >Indian</span
+              >
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+            <mat-error *ngIf="clientForm.get('phone')?.hasError('required')">
+              Required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Country</mat-label>
+            <input matInput formControlName="country" />
+            <mat-error *ngIf="clientForm.get('country')?.hasError('required')">
+              Required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Indian-specific fields -->
+        <ng-container *ngIf="isIndianClient">
+          <div class="form-row indian-fields">
+            <mat-form-field appearance="outline">
+              <mat-label>GSTIN</mat-label>
+              <input matInput formControlName="gstin" />
+              <mat-error *ngIf="clientForm.get('gstin')?.hasError('required')">
+                Required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>PAN Number</mat-label>
+              <input matInput formControlName="panNumber" />
+              <mat-error
+                *ngIf="clientForm.get('panNumber')?.hasError('required')"
+              >
+                Required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row indian-fields">
+            <mat-form-field appearance="outline">
+              <mat-label>State</mat-label>
+              <mat-select formControlName="state">
+                <mat-option *ngFor="let state of indianStates" [value]="state">
+                  {{ state.name }} ({{ state.code }})
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="clientForm.get('state')?.hasError('required')">
+                Required
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </ng-container>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="address-field">
+            <mat-label>Address</mat-label>
+            <textarea
+              matInput
+              formControlName="address"
+              rows="3"
+              placeholder="Enter complete address..."
+            ></textarea>
+            <mat-error *ngIf="clientForm.get('address')?.hasError('required')">
+              Required
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="submit-section">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="clientForm.invalid || isSubmitting"
+          >
+            <mat-icon>{{ isEditMode ? "save" : "add" }}</mat-icon>
+            {{ isEditMode ? "Update Client" : "Save Client" }}
+          </button>
+          <button mat-stroked-button type="button" (click)="resetForm()">
+            <mat-icon>refresh</mat-icon>
+            Reset
+          </button>
+          <button
+            mat-stroked-button
+            color="warn"
+            type="button"
+            (click)="closeForm()"
+          >
+            <mat-icon>cancel</mat-icon>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Filter Section -->
+  <mat-card class="filter-card" *ngIf="!showForm">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>filter_list</mat-icon>
+        Search Clients
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <div class="filter-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search by Name</mat-label>
+            <input
+              matInput
+              formControlName="clientName"
+              placeholder="Enter client name"
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Client Type</mat-label>
+            <mat-select formControlName="clientType">
+              <mat-option value="">All</mat-option>
+              <mat-option value="INDIAN">Indian</mat-option>
+              <mat-option value="INTERNATIONAL">International</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Country</mat-label>
+            <input
+              matInput
+              formControlName="country"
+              placeholder="Enter country"
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="filter-actions">
+          <button
+            mat-raised-button
+            color="accent"
+            (click)="clearFilters()"
+            type="button"
+          >
+            <mat-icon>clear_all</mat-icon>
+            Clear Filters
+          </button>
+          <span class="filter-results" [class.loading]="isLoading">
+            {{
+              isLoading ? "Loading" : filteredClients.length + " clients found"
+            }}
+          </span>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Data Table -->
+  <div class="table-container" *ngIf="!showForm && !isLoading">
+    <mat-card class="table-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>table_view</mat-icon>
+          Client List
+        </mat-card-title>
+        <div class="table-actions">
+          <mat-form-field appearance="outline" class="page-size-selector">
+            <mat-label>Rows per page</mat-label>
+            <mat-select
+              [value]="pageSize"
+              (selectionChange)="changePageSize($event.value)"
+            >
+              <mat-option [value]="5">5</mat-option>
+              <mat-option [value]="10">10</mat-option>
+              <mat-option [value]="25">25</mat-option>
+              <mat-option [value]="50">50</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="table-wrapper">
+          <table
+            mat-table
+            [dataSource]="paginatedClients"
+            matSort
+            (matSortChange)="sortData($any($event))"
+            class="client-table"
+          >
+            <!-- Client Name -->
+            <ng-container matColumnDef="clientName">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>person</mat-icon>
+                Client Name
+              </th>
+              <td mat-cell *matCellDef="let client" class="client-name">
+                {{ client.clientName }}
+              </td>
+            </ng-container>
+
+            <!-- Client Type -->
+            <ng-container matColumnDef="clientType">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>category</mat-icon>
+                Type
+              </th>
+              <td mat-cell *matCellDef="let client">
+                <mat-chip
+                  [class.indian-chip]="client.clientType === 'INDIAN'"
+                  [class.international-chip]="
+                    client.clientType === 'INTERNATIONAL' || !client.clientType
+                  "
+                >
+                  {{ client.clientType || "INTERNATIONAL" }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Phone -->
+            <ng-container matColumnDef="phone">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>phone</mat-icon>
+                Phone
+              </th>
+              <td mat-cell *matCellDef="let client">
+                {{ client.phone || "-" }}
+              </td>
+            </ng-container>
+
+            <!-- Country -->
+            <ng-container matColumnDef="country">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                <mat-icon>public</mat-icon>
+                Country
+              </th>
+              <td mat-cell *matCellDef="let client">
+                {{ client.country || "-" }}
+              </td>
+            </ng-container>
+
+            <!-- State -->
+            <ng-container matColumnDef="stateName">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>location_on</mat-icon>
+                State
+              </th>
+              <td mat-cell *matCellDef="let client">
+                <span *ngIf="client.stateName"
+                  >{{ client.stateName }} ({{ client.stateCode }})</span
+                >
+                <span *ngIf="!client.stateName" class="no-data-text">-</span>
+              </td>
+            </ng-container>
+
+            <!-- GSTIN -->
+            <ng-container matColumnDef="gstin">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>badge</mat-icon>
+                GSTIN
+              </th>
+              <td mat-cell *matCellDef="let client" class="gstin-cell">
+                {{ client.gstin || "-" }}
+              </td>
+            </ng-container>
+
+            <!-- Address -->
+            <ng-container matColumnDef="address">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>home</mat-icon>
+                Address
+              </th>
+              <td mat-cell *matCellDef="let client" class="address-cell">
+                <span [matTooltip]="client.address" matTooltipPosition="above">
+                  {{ (client.address | slice : 0 : 25) || "-"
+                  }}{{ client.address?.length > 25 ? "..." : "" }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Actions -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-icon>settings</mat-icon>
+                Actions
+              </th>
+              <td mat-cell *matCellDef="let client">
+                <button
+                  mat-icon-button
+                  color="primary"
+                  (click)="viewClient(client)"
+                  matTooltip="View Details"
+                >
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="accent"
+                  (click)="editClient(client)"
+                  matTooltip="Edit Client"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="confirmDelete(client)"
+                  matTooltip="Delete Client"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumns"
+              class="data-row"
+            ></tr>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="custom-pagination">
+          <div class="pagination-info">
+            <span
+              >Showing {{ getStartIndex() }}-{{ getEndIndex() }} of
+              {{ filteredClients.length }} clients</span
+            >
+          </div>
+
+          <div class="pagination-controls">
+            <button
+              mat-icon-button
+              [disabled]="pageIndex === 0"
+              (click)="goToFirstPage()"
+              matTooltip="First page"
+            >
+              <mat-icon>first_page</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              [disabled]="pageIndex === 0"
+              (click)="goToPreviousPage()"
+              matTooltip="Previous page"
+            >
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+
+            <div class="page-numbers">
+              <button
+                *ngFor="let page of getVisiblePages()"
+                mat-button
+                [class.current-page]="page === pageIndex + 1"
+                [disabled]="page === '...'"
+                (click)="page !== '...' && goToPage(+page - 1)"
+                class="page-button"
+              >
+                {{ page }}
+              </button>
+            </div>
+
+            <button
+              mat-icon-button
+              [disabled]="pageIndex >= getTotalPages() - 1"
+              (click)="goToNextPage()"
+              matTooltip="Next page"
+            >
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              [disabled]="pageIndex >= getTotalPages() - 1"
+              (click)="goToLastPage()"
+              matTooltip="Last page"
+            >
+              <mat-icon>last_page</mat-icon>
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- No Data State -->
+  <div *ngIf="showForm && filteredClients.length === 0" class="no-data">
+    <mat-card class="no-data-card">
+      <mat-card-content>
+        <mat-icon>people_outline</mat-icon>
+        <h3>No clients found</h3>
+        <p>No clients match your current filter criteria.</p>
+        <button mat-raised-button color="primary" (click)="openAddForm()">
+          <mat-icon>add</mat-icon>
+          Add New Client
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>
+
+<!-- View Client Dialog -->
+<ng-template #viewDialogTemplate>
+  <h2 mat-dialog-title>
+    <mat-icon>person</mat-icon>
+    Client Details
+  </h2>
+  <mat-dialog-content>
+    <div class="client-details" *ngIf="selectedClient">
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon>person</mat-icon>
+          Client Name
+        </div>
+        <div class="detail-value">{{ selectedClient.clientName }}</div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon>category</mat-icon>
+          Type
+        </div>
+        <div class="detail-value">
+          <mat-chip
+            [class.indian-chip]="selectedClient.clientType === 'INDIAN'"
+            [class.international-chip]="selectedClient.clientType !== 'INDIAN'"
+          >
+            {{ selectedClient.clientType || "INTERNATIONAL" }}
+          </mat-chip>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon>phone</mat-icon>
+          Phone
+        </div>
+        <div class="detail-value">{{ selectedClient.phone }}</div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon>public</mat-icon>
+          Country
+        </div>
+        <div class="detail-value">{{ selectedClient.country }}</div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedClient.stateName">
+        <div class="detail-label">
+          <mat-icon>location_on</mat-icon>
+          State
+        </div>
+        <div class="detail-value">
+          {{ selectedClient.stateName }} ({{ selectedClient.stateCode }})
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedClient.gstin">
+        <div class="detail-label">
+          <mat-icon>badge</mat-icon>
+          GSTIN
+        </div>
+        <div class="detail-value gstin-value">{{ selectedClient.gstin }}</div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedClient.panNumber">
+        <div class="detail-label">
+          <mat-icon>credit_card</mat-icon>
+          PAN Number
+        </div>
+        <div class="detail-value">{{ selectedClient.panNumber }}</div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-label">
+          <mat-icon>home</mat-icon>
+          Address
+        </div>
+        <div class="detail-value address-value">
+          {{ selectedClient.address }}
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Close</button>
+    <button mat-raised-button color="primary" (click)="editFromDialog()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </mat-dialog-actions>
+</ng-template>
+
+<!-- Delete Confirmation Dialog -->
+<ng-template #deleteDialogTemplate>
+  <h2 mat-dialog-title>
+    <mat-icon color="warn">warning</mat-icon>
+    Confirm Delete
+  </h2>
+  <mat-dialog-content>
+    <p>
+      Are you sure you want to delete client
+      <strong>{{ selectedClient?.clientName }}</strong
+      >?
+    </p>
+    <p class="warning-text">This action cannot be undone.</p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button mat-raised-button color="warn" (click)="deleteClient()">
+      <mat-icon>delete</mat-icon>
+      Delete
+    </button>
+  </mat-dialog-actions>
+</ng-template>

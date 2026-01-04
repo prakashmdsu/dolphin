@@ -84,7 +84,7 @@
       </div>
 
       <div class="form-row">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" *ngIf="!isInternationalClient">
           <mat-label>GSTIN</mat-label>
           <input matInput formControlName="gstin" readonly />
           <mat-error *ngIf="isFieldInvalid('gstin')">
@@ -185,6 +185,22 @@
           </mat-select>
         </mat-form-field>
       </div>
+      <mat-form-field appearance="outline">
+        <mat-label>Buyer's Order Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="buyersOrderDatePicker"
+          formControlName="BuyersOrderDate"
+        />
+        <mat-datepicker-toggle
+          matSuffix
+          [for]="buyersOrderDatePicker"
+        ></mat-datepicker-toggle>
+        <mat-datepicker #buyersOrderDatePicker></mat-datepicker>
+        <mat-error *ngIf="isFieldInvalid('BuyersOrderDate')">
+          {{ getFieldErrorMessage("BuyersOrderDate") }}
+        </mat-error>
+      </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Delivery Note Date</mat-label>
@@ -202,26 +218,9 @@
     </div>
 
     <!-- International Export Fields Section - Only shown for international clients -->
-    <div class="international-fields-section" *ngIf="isInternationalClient">
+    <!-- <div class="international-fields-section" *ngIf="isInternationalClient">
       <h3>Export Information</h3>
       <div class="form-row">
-        <mat-form-field appearance="outline">
-          <mat-label>Buyer's Order Date</mat-label>
-          <input
-            matInput
-            [matDatepicker]="buyersOrderDatePicker"
-            formControlName="BuyersOrderDate"
-          />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="buyersOrderDatePicker"
-          ></mat-datepicker-toggle>
-          <mat-datepicker #buyersOrderDatePicker></mat-datepicker>
-          <mat-error *ngIf="isFieldInvalid('BuyersOrderDate')">
-            {{ getFieldErrorMessage("BuyersOrderDate") }}
-          </mat-error>
-        </mat-form-field>
-
         <mat-form-field appearance="outline">
           <mat-label>Place Receipt by Carrier</mat-label>
           <input matInput formControlName="PlaceReceiptbyCarrier" />
@@ -300,7 +299,7 @@
           </mat-error>
         </mat-form-field>
       </div>
-    </div>
+    </div> -->
 
     <!-- Transporter Section -->
     <div class="transporter-section">
@@ -446,7 +445,7 @@
                   </mat-form-field>
                 </div>
               </td>
-              <td>
+              <!-- <td>
                 <mat-form-field appearance="outline" class="disabled-field">
                   <input
                     matInput
@@ -458,7 +457,7 @@
                     >Required</mat-error
                   >
                 </mat-form-field>
-              </td>
+              </td> -->
               <!-- Continue with other cells, HSN and Permit No removed -->
               <td>
                 <mat-form-field appearance="outline" class="disabled-field">
@@ -522,9 +521,9 @@
           <tfoot>
             <tr class="totals-row">
               <td colspan="5" class="totals-label"><strong>TOTALS:</strong></td>
-              <td class="totals-value">
+              <!-- <td class="totals-value">
                 <strong>{{ calculateTotals().totalNetWeightMt }}</strong>
-              </td>
+              </td> -->
               <td class="totals-value">
                 <strong>{{ calculateTotals().totalQuarryCbm }}</strong>
               </td>
@@ -562,9 +561,7 @@
 
     <!-- Submit Buttons -->
     <div class="submit-section">
-      <button color="primary" type="submit" [disabled]="gatePassForm.invalid">
-        Submit Gate Pass
-      </button>
+      <button color="primary" type="submit">Submit Gate Pass</button>
       <button
         mat-stroked-button
         color="warn"

@@ -46,7 +46,7 @@ const routes: Routes = [
       {
         path: 'addclient',
         component: AddclientComponent,
-        canActivate: [roleGuard(['superadmin'])],
+        canActivate: [roleGuard(['admin', 'superadmin'])],
       },
       // Admin & SuperAdmin only
       {

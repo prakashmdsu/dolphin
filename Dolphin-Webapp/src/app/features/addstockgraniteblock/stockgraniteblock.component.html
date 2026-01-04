@@ -88,13 +88,13 @@
         </mat-form-field>
 
         <!-- Net Weight MT - Admin/SuperAdmin only -->
-        <mat-form-field appearance="outline" *ngIf="isAdminOrAbove">
+        <!-- <mat-form-field appearance="outline" *ngIf="isAdminOrAbove">
           <mat-label>Net weight in MT</mat-label>
           <input matInput type="number" formControlName="netWeightMt" />
           <mat-error *ngIf="blockForm.get('netWeightMt')?.hasError('required')">
             Required
           </mat-error>
-        </mat-form-field>
+        </mat-form-field> -->
       </div>
 
       <!-- Measurement Section -->
@@ -130,7 +130,16 @@
               Required
             </mat-error>
           </mat-form-field>
-
+          <mat-form-field appearance="outline">
+            <mat-label>Volume</mat-label>
+            <input
+              matInput
+              type="number"
+              [value]="volumeUser"
+              readonly
+              class="calculated-field govt-field"
+            />
+          </mat-form-field>
           <!-- DMG Tonnage - Visible for ALL roles (for Govt) -->
           <mat-form-field appearance="outline">
             <mat-label>DMG Tonnage (Govt)</mat-label>

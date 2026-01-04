@@ -79,24 +79,24 @@ namespace Dolphin.Services.Models
         [BsonElement("permitNo")]
         public string PermitNo { get; set; }
         [BsonElement("vesselorflightno")]
-        public string vesselorflightno { get; set; }
+        public string? vesselorflightno { get; set; }
         [BsonElement("portofdischarge")]
-        public string PortofDischarge { get; set; }
+        public string? PortofDischarge { get; set; }
         [BsonElement("portofloading")]
-        public string PortofLoading { get; set; }
+        public string? PortofLoading { get; set; }
 
         [BsonElement("PreCarrierBy")]
-        public string PreCarrierBy { get; set; }
+        public string? PreCarrierBy { get; set; }
         [BsonElement("placereceiptbycarrier")]
-        public string PlaceReceiptbyCarrier { get; set; }
+        public string? PlaceReceiptbyCarrier { get; set; }
         [BsonElement("shippingbillno")]
-        public string ShippingBillno { get; set; }
+        public string? ShippingBillno { get; set; }
         [BsonElement("shippingbilldate")]
-        public string ShippingBillDate { get; set; }
-        
+        public string? ShippingBillDate { get; set; }
+
         [BsonElement("portcode")]
-        public string PortCode { get; set; }
-        
+        public string? PortCode { get; set; }
+
 
     }
 

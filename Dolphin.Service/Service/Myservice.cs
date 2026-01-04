@@ -692,6 +692,69 @@ public class MyService
         var collection = _dolphinClient.GetCollection("client");
         return collection.Find(FilterDefinition<Client>.Empty).ToList(); // Example: Fetch all stocks
     }
+    // Get client by ID
+    public async Task<Client?> GetClientByIdAsync(string id)
+    {
+        var collection = _dolphinClient.GetCollection("client") as IMongoCollection<Client>;
+
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            throw new ArgumentException("Invalid client ID format", nameof(id));
+        }
+
+        var filter = Builders<Client>.Filter.Eq(x => x.Id, id);
+        return await collection.Find(filter).FirstOrDefaultAsync();
+    }
+
+    // Update client
+    public async Task<Client?> UpdateClientAsync(string id, Client updatedClient)
+    {
+        var collection = _dolphinClient.GetCollection("client") as IMongoCollection<Client>;
+
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            throw new ArgumentException("Invalid client ID format", nameof(id));
+        }
+
+        var existingClient = await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        if (existingClient == null)
+        {
+            return null;
+        }
+
+        var update = Builders<Client>.Update
+            .Set(x => x.clientName, updatedClient.clientName)
+            .Set(x => x.GSTIN, updatedClient.GSTIN)
+            .Set(x => x.Phone, updatedClient.Phone)
+            .Set(x => x.Country, updatedClient.Country)
+            .Set(x => x.Address, updatedClient.Address)
+            .Set(x => x.ClientType, updatedClient.ClientType)
+            .Set(x => x.PanNumber, updatedClient.PanNumber)
+            .Set(x => x.StateName, updatedClient.StateName)
+            .Set(x => x.StateCode, updatedClient.StateCode);
+
+        var filter = Builders<Client>.Filter.Eq(x => x.Id, id);
+        await collection.UpdateOneAsync(filter, update);
+
+        return await GetClientByIdAsync(id);
+    }
+
+    // Delete client
+    public async Task<bool> DeleteClientAsync(string id)
+    {
+        var collection = _dolphinClient.GetCollection("client") as IMongoCollection<Client>;
+
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+        {
+            throw new ArgumentException("Invalid client ID format", nameof(id));
+        }
+
+        var filter = Builders<Client>.Filter.Eq(x => x.Id, id);
+        var result = await collection.DeleteOneAsync(filter);
+
+        return result.DeletedCount > 0;
+    }
+
     public async Task<string?> GetLastGatePassNo()
     {
         var collectionInvoice = _dolphinInvoice.GetCollection("invoice");

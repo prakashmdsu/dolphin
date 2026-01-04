@@ -20,6 +20,7 @@ export class StockgraniteblockComponent implements OnInit {
   blockForm!: FormGroup;
   calculatedQuarryCbm: number = 0;
   calculatedDmgTonnage: number = 0;
+  volumeUser: number = 0;
   calculatedNetCbm: number = 0;
   grossVolume: number = 0;
   customerTonnage: number = 0;
@@ -75,10 +76,10 @@ export class StockgraniteblockComponent implements OnInit {
       dispatchStatus: [false],
       updatedDate: [null],
       note: [''],
-      netWeightMt: [
-        null,
-        this.isAdminOrAbove ? [Validators.required, Validators.min(0)] : [],
-      ],
+      // netWeightMt: [
+      //   null,
+      //   this.isAdminOrAbove ? [Validators.required, Validators.min(0)] : [],
+      // ],
     });
   }
 
@@ -129,6 +130,7 @@ export class StockgraniteblockComponent implements OnInit {
     const tonnageAllowance =
       +this.blockForm.get('tonnageAllowance')?.value || 0;
 
+    this.volumeUser = (lg * wd * ht) / 1000000;
     // Quarry CBM = Raw volume (no deduction) - for Govt
     this.calculatedQuarryCbm = +((lg * wd * ht) / 1000000).toFixed(4);
 

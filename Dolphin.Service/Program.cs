@@ -113,7 +113,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
         builder => builder
-            .WithOrigins("http://localhost:4200", "http://localhost", "http://192.168.0.145", "http://192.168.212.247")
+            .WithOrigins("http://localhost:4200", "http://localhost", "http://192.168.0.145", "http://192.168.212.247", "http://3.111.159.191")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials()); // Add this if you're sending cookies
@@ -122,7 +122,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();

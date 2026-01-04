@@ -37,10 +37,10 @@ export class NavbarComponent {
       label: 'Add Client',
       route: '/features/addclient',
       icon: 'person_add',
-      allowedRoles: ['superadmin'], // SuperAdmin only
+      allowedRoles: ['admin', 'superadmin'], // SuperAdmin only
     },
     {
-      label: 'Billing',
+      label: 'Dispatch',
       route: '/features/billing',
       icon: 'receipt',
       allowedRoles: ['admin', 'superadmin'],

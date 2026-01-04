@@ -1,7 +1,7 @@
 import {
   ScrollingModule,
   ViewportRuler
-} from "./chunk-UAYL2MJQ.js";
+} from "./chunk-V3LHS4YA.js";
 import {
   DataSource,
   _DisposeViewRepeaterStrategy,
@@ -15,7 +15,7 @@ import {
   MatCommonModule,
   Platform,
   _isNumberValue
-} from "./chunk-TKXULTYZ.js";
+} from "./chunk-WC3ED4SP.js";
 import {
   DOCUMENT
 } from "./chunk-3II4CH2V.js";

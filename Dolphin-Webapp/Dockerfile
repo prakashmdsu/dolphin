@@ -25,7 +25,7 @@ RUN rm -rf /usr/share/nginx/html/*
 # COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets from builder stage to nginx
-COPY --from=builder /app/dist/finance-webapp/browser/ /usr/share/nginx/html/
+COPY --from=builder /app/dist/dolphin-webapp/browser/ /usr/share/nginx/html/
 
 # Expose port 80
 EXPOSE 80

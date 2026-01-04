@@ -433,14 +433,80 @@ public class DolphinController : ControllerBase
 
         return Ok(invoices);
     }
+
+
+    // GET all clients
+    [HttpGet("getallclients")]
+    public ActionResult<List<Client>> GetAllClients()
+    {
+        var clients = _myService.GetAllClients();
+        return Ok(clients);
+    }
+
+    // GET client by ID
+    [HttpGet("client/{id}")]
+    public async Task<ActionResult<Client>> GetClientById(string id)
+    {
+        try
+        {
+            var client = await _myService.GetClientByIdAsync(id);
+            if (client == null)
+            {
+                return NotFound(new { message = $"Client with ID {id} not found" });
+            }
+            return Ok(client);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST add new client
     [HttpPost("addclient")]
     public async Task<ActionResult<Client>> AddClient([FromBody] Client client)
     {
         Client clientResponse = await _myService.AddNewClient(client);
-        return clientResponse;
+        return Ok(clientResponse);
     }
 
+    // PUT update client
+    [HttpPut("client/{id}")]
+    public async Task<ActionResult<Client>> UpdateClient(string id, [FromBody] Client client)
+    {
+        try
+        {
+            var updatedClient = await _myService.UpdateClientAsync(id, client);
+            if (updatedClient == null)
+            {
+                return NotFound(new { message = $"Client with ID {id} not found" });
+            }
+            return Ok(updatedClient);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 
+    // DELETE client
+    [HttpDelete("deleteclient/{id}")]
+    public async Task<ActionResult> DeleteClient(string id)
+    {
+        try
+        {
+            var deleted = await _myService.DeleteClientAsync(id);
+            if (!deleted)
+            {
+                return NotFound(new { message = $"Client with ID {id} not found" });
+            }
+            return Ok(new { message = "Client deleted successfully" });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
     [HttpPost("addgp")]
     public async Task<ActionResult<GpType>> AddGpType([FromBody] GpType gpType)
     {

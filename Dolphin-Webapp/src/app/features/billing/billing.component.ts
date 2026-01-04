@@ -21,7 +21,7 @@ export class BillingComponent implements OnInit {
   selectedBlockNos: number[] = [];
   gatePassNo?: string;
   isInternationalClient: boolean = false; // New property to track client type
-  
+
   hsnOptions = [
     {
       value: '25171000',
@@ -126,17 +126,17 @@ export class BillingComponent implements OnInit {
       termsOfPayment: ['100% advance payment'],
       deliveryNoteDate: [''],
       otherrefence: [''],
-      
+
       // International fields - conditionally validated
       BuyersOrderDate: [''],
-      PlaceReceiptbyCarrier: [''],
-      PortofDischarge: [''],
-      PortofLoading: [''],
-      PreCarrierBy: [''],
-      ShippingBillDate: [''],
-      ShippingBillno: [''],
-      vesselorflightno: [''],
-      portCode:['']
+      // PlaceReceiptbyCarrier: [''],
+      // PortofDischarge: [''],
+      // PortofLoading: [''],
+      // PreCarrierBy: [''],
+      // ShippingBillDate: [''],
+      // ShippingBillno: [''],
+      // vesselorflightno: [''],
+      // portCode: [''],
     });
   }
 
@@ -148,17 +148,21 @@ export class BillingComponent implements OnInit {
     const selectedClient = this.clients.find(
       (client) => client.clientName === clientId
     );
-    
+
     if (selectedClient) {
       // Check if client is international
-      this.isInternationalClient = selectedClient.clientType === 'INTERNATIONAL';
-      
+      this.isInternationalClient =
+        selectedClient.clientType === 'INTERNATIONAL';
+
       this.gatePassForm.patchValue({
-        gstin: selectedClient.gstin,
+        gstin: selectedClient.gstin || '',
         phone: selectedClient.phone,
         billToAddress: selectedClient.address,
         country: selectedClient.country,
       });
+
+      // Update GSTIN validator based on client type
+      this.updateGstinValidator();
 
       // Update validators for international fields
       this.updateInternationalFieldValidators();
@@ -171,25 +175,43 @@ export class BillingComponent implements OnInit {
         country: '',
       });
 
+      // Reset GSTIN to required (default for Indian)
+      this.updateGstinValidator();
+
       // Clear international fields and remove validators
       this.clearInternationalFields();
     }
   }
 
+  private updateGstinValidator(): void {
+    const gstinControl = this.gatePassForm.get('gstin');
+
+    if (gstinControl) {
+      if (this.isInternationalClient) {
+        // GSTIN not required for international clients
+        gstinControl.clearValidators();
+        gstinControl.setValue(''); // Clear value
+      } else {
+        // GSTIN required for Indian clients
+        gstinControl.setValidators([Validators.required]);
+      }
+      gstinControl.updateValueAndValidity();
+    }
+  }
   private updateInternationalFieldValidators(): void {
     const internationalFields = [
       'BuyersOrderDate',
-      'PlaceReceiptbyCarrier', 
+      'PlaceReceiptbyCarrier',
       'PortofDischarge',
       'PortofLoading',
       'PreCarrierBy',
       'ShippingBillDate',
       'ShippingBillno',
       'vesselorflightno',
-      'portCode'
+      'portCode',
     ];
 
-    internationalFields.forEach(fieldName => {
+    internationalFields.forEach((fieldName) => {
       const control = this.gatePassForm.get(fieldName);
       if (control) {
         if (this.isInternationalClient) {
@@ -207,17 +229,17 @@ export class BillingComponent implements OnInit {
     const internationalFields = [
       'BuyersOrderDate',
       'PlaceReceiptbyCarrier',
-      'PortofDischarge', 
+      'PortofDischarge',
       'PortofLoading',
       'PreCarrierBy',
       'ShippingBillDate',
       'ShippingBillno',
       'vesselorflightno',
-       'portCode'
+      'portCode',
     ];
 
     const patchObject: any = {};
-    internationalFields.forEach(fieldName => {
+    internationalFields.forEach((fieldName) => {
       patchObject[fieldName] = '';
       const control = this.gatePassForm.get(fieldName);
       if (control) {
@@ -273,10 +295,10 @@ export class BillingComponent implements OnInit {
         wd: [measurement.wd, [Validators.required, Validators.min(0.1)]],
         ht: [measurement.ht, [Validators.required, Validators.min(0.1)]],
       }),
-      netWeightMt: [
-        block?.netWeightMt || 0,
-        [Validators.required, Validators.min(0.1)],
-      ],
+      // netWeightMt: [
+      //   block?.netWeightMt || 0,
+      //   [Validators.required, Validators.min(0.1)],
+      // ],
       quarryCbm: [
         derived.quarryCbm,
         [Validators.required, Validators.min(0.1)],
@@ -352,25 +374,25 @@ export class BillingComponent implements OnInit {
     totalQuarryCbm: number;
     totalDmgTonnage: number;
     totalNetCbm: number;
-    totalNetWeightMt: number;
+    // totalNetWeightMt: number;
   } {
     let totalQuarryCbm = 0;
     let totalDmgTonnage = 0;
     let totalNetCbm = 0;
-    let totalNetWeightMt = 0;
+    // let totalNetWeightMt = 0;
 
     this.items.controls.forEach((item) => {
       totalQuarryCbm += +(item.get('quarryCbm')?.value || 0);
       totalDmgTonnage += +(item.get('dmgTonnage')?.value || 0);
       totalNetCbm += +(item.get('netCbm')?.value || 0);
-      totalNetWeightMt += +(item.get('netWeightMt')?.value || 0);
+      // totalNetWeightMt += +(item.get('netWeightMt')?.value || 0);
     });
 
     return {
       totalQuarryCbm: +totalQuarryCbm.toFixed(4),
       totalDmgTonnage: +totalDmgTonnage.toFixed(4),
       totalNetCbm: +totalNetCbm.toFixed(4),
-      totalNetWeightMt: +totalNetWeightMt.toFixed(4),
+      // totalNetWeightMt: +totalNetWeightMt.toFixed(4),
     };
   }
 

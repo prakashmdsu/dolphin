@@ -15,7 +15,7 @@ namespace Dolphin.Services.Models
 
 
         [BsonElement("gstin")]
-        public string GSTIN { get; set; }
+        public string? GSTIN { get; set; }
 
         [BsonElement("phone")]
         public string Phone { get; set; }

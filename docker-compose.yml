@@ -2,9 +2,7 @@ version: "3.8"
 
 services:
   dolphin-api:
-    build:
-      context: ./Dolphin.service
-      dockerfile: Dockerfile
+    image: 9164820596/dolphin-backend:latest
     ports:
       - "5000:5000"
     environment:
@@ -14,35 +12,22 @@ services:
       mongodb:
         condition: service_healthy
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   nginx:
-    build:
-      context: ./Dolphin-webapp
-      dockerfile: Dockerfile
+    image: 9164820596/dolphinwebapp:latest
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - /home/gahan/Documents:/home/gahan/Documents:ro
     ports:
       - "80:80"
     depends_on:
       - dolphin-api
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   mongodb:
     image: mongo:latest
     container_name: mongodb-container
     volumes:
-      - /home/gahan/Documents/mongo-data:/data/db
+      - ./mongo-data:/dolphin/db
     ports:
       - "27017:27017"
     restart: always
