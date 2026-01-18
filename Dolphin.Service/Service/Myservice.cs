@@ -502,7 +502,7 @@ public class MyService
         {
             throw new ArgumentException("Invalid block ID format", nameof(id));
         }
-        updatedBlock.Status = DispatchStatus.InspectionCompleted;
+        // updatedBlock.Status = DispatchStatus.InspectionCompleted;
         // Check if block exists
         var existingBlock = await collection.Find(x => x.Id == id).FirstOrDefaultAsync();
         if (existingBlock == null)

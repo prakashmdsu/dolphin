@@ -129,51 +129,61 @@ export class GranitestocksComponent implements OnInit {
       }
     });
   }
-  private setDisplayedColumns(): void {
-    if (this.isMember) {
-      this.displayedColumns = [
-        'date',
-        'pitNo',
-        'blockNo',
-        'categoryGrade',
-        'measurement',
-        'dmgTonnage',
-        'status',
-        'note',
-      ];
-    } else if (this.isAdmin) {
-      this.displayedColumns = [
-        'date',
-        'pitNo',
-        'blockNo',
-        'buyerBlockNo',
-        'categoryGrade',
-        'measurement',
-        'quarryCbm',
-        'dmgTonnage',
-        'netCbm',
-        'status',
-        'note',
-        'actions', // Add actions column
-      ];
-    } else {
-      // SuperAdmin
-      this.displayedColumns = [
-        'date',
-        'pitNo',
-        'blockNo',
-        'buyerBlockNo',
-        'categoryGrade',
-        'measurement',
-        'quarryCbm',
-        'dmgTonnage',
-        'netCbm',
-        'status',
-        'note',
-        'actions', // Add actions column
-      ];
-    }
+private setDisplayedColumns(): void {
+  if (this.isMember) {
+    // Member sees limited columns - add actions column
+    this.displayedColumns = [
+      'date',
+      'pitNo',
+      'blockNo',
+      'categoryGrade',
+      'measurement',
+      'dmgTonnage',
+      'status',
+      'note',
+      'actions',  // Add actions column for member
+    ];
+  } else if (this.isAdmin) {
+    // Admin sees more columns including actions
+    this.displayedColumns = [
+      'date',
+      'pitNo',
+      'blockNo',
+      'buyerBlockNo',
+      'categoryGrade',
+      'measurement',
+      'quarryCbm',
+      'dmgTonnage',
+      'netCbm',
+      'status',
+      'note',
+      'actions',
+    ];
+  } else if (this.isSuperAdmin) {
+    // SuperAdmin sees all columns including actions
+    this.displayedColumns = [
+      'date',
+      'pitNo',
+      'blockNo',
+      'buyerBlockNo',
+      'categoryGrade',
+      'measurement',
+      'quarryCbm',
+      'dmgTonnage',
+      'netCbm',
+      'status',
+      'note',
+      'actions',
+    ];
   }
+}
+canEditBlock(block: GraniteBlock): boolean {
+  const status = typeof block.status === 'string' 
+    ? parseInt(block.status) 
+    : block.status;
+  
+  return status === DispatchStatus.ReadyForDispatch;
+}
   onEditBlock(block: GraniteBlock): void {
     // Fetch full block details using blockId
     this.httpService.get<any>(`dolphin/getgraniteblock/${block.id}`).subscribe({

@@ -76,6 +76,7 @@ export class StockgraniteblockComponent implements OnInit {
       dispatchStatus: [false],
       updatedDate: [null],
       note: [''],
+      status:['']
       // netWeightMt: [
       //   null,
       //   this.isAdminOrAbove ? [Validators.required, Validators.min(0)] : [],
@@ -185,38 +186,61 @@ export class StockgraniteblockComponent implements OnInit {
     return this.blockForm.get('allowanceType')?.value === 'tonnage';
   }
 
-  onSubmit() {
-    if (this.blockForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
-      const block: StockGraniteBlock = {
-        ...this.blockForm.value,
-        quarryCbm: this.calculatedQuarryCbm,
-        dmgTonnage: this.calculatedDmgTonnage,
-        grossVolume: this.grossVolume,
-        customerTonnage: this.customerTonnage,
-        netCbm: this.calculatedNetCbm,
-      };
+onSubmit() {
+  if (this.blockForm.valid && !this.isSubmitting) {
+    this.isSubmitting = true;
+    
+    const formValue = this.blockForm.value;
+    
+    const block: any = {
+      ...formValue,
+      quarryCbm: this.calculatedQuarryCbm,
+      dmgTonnage: this.calculatedDmgTonnage,
+      grossVolume: this.grossVolume,
+      customerTonnage: this.customerTonnage,
+      netCbm: this.calculatedNetCbm,
+    };
 
-      const apiCall =
-        this.data.mode === 'edit'
-          ? this.httpService.put(
-              `dolphin/updategraniteblock/${block.id}`,
-              block
-            )
-          : this.httpService.post('dolphin/addgranitestocks', block);
 
-      apiCall.subscribe({
-        next: (response) => {
-          console.log('Block saved successfully:', response);
-          this.dialogRef.close(response);
-        },
-        error: (error) => {
-          console.error('Error saving block:', error);
-          this.isSubmitting = false;
-        },
-      });
-    }
+
+    const apiCall =
+      this.data.mode === 'edit'
+        ? this.httpService.put(
+            `dolphin/updategraniteblock/${block.id}`,
+            block
+          )
+        : this.httpService.post('dolphin/addgranitestocks', block);
+
+    apiCall.subscribe({
+      next: (response) => {
+        console.log('Block saved successfully:', response);
+        this.dialogRef.close(response);
+      },
+      error: (error) => {
+        console.error('Error saving block:', error);
+        this.isSubmitting = false;
+      },
+    });
   }
+}
+
+// Helper method to convert status number to string
+private convertStatusToString(status: number | string | null | undefined): string {
+  if (typeof status === 'string') {
+    return status;
+  }
+  
+  const statusMap: { [key: number]: string } = {
+    1: 'ReadyForDispatch',
+    2: 'LoadedOnTruck',
+    3: 'AtPort',
+    4: 'Shipped',
+    5: 'Cancelled',
+    6: 'InspectionCompleted'
+  };
+  
+  return statusMap[status as number] || 'ReadyForDispatch';
+}
 
   onCancel() {
     this.dialogRef.close();

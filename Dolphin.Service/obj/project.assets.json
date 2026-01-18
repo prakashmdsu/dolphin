@@ -1429,19 +1429,19 @@
     ]
   },
   "packageFolders": {
-    "/home/gahan/.nuget/packages/": {}
+    "/home/durgamma/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/gahan/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
+      "projectUniqueName": "/home/durgamma/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
       "projectName": "Dolphin.Service",
-      "projectPath": "/home/gahan/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
-      "packagesPath": "/home/gahan/.nuget/packages/",
-      "outputPath": "/home/gahan/Documents/dolphin/Dolphin.Service/obj/",
+      "projectPath": "/home/durgamma/Documents/dolphin/Dolphin.Service/Dolphin.Service.csproj",
+      "packagesPath": "/home/durgamma/.nuget/packages/",
+      "outputPath": "/home/durgamma/Documents/dolphin/Dolphin.Service/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/gahan/.nuget/NuGet/NuGet.Config"
+        "/home/durgamma/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"

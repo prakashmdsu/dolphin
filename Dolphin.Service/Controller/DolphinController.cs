@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 
@@ -277,7 +278,18 @@ public class DolphinController : ControllerBase
             {
                 return BadRequest(new { message = "Block data is required" });
             }
+         var userRole = User.FindFirst(ClaimTypes.Role)?.Value 
+                        ?? User.FindFirst("role")?.Value;
 
+            // Set status based on role
+            if (userRole?.ToLower() == "member")
+            {
+                block.Status = DispatchStatus.ReadyForDispatch;
+            }
+            else // admin or superadmin
+            {
+                block.Status = DispatchStatus.InspectionCompleted;
+            }
             var updatedBlock = await _myService.UpdateGraniteBlockAsync(id, block);
 
             if (updatedBlock == null)
